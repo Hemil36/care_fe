@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const colors = require("tailwindcss/colors");
 
 const secondary = {
@@ -116,7 +115,7 @@ module.exports = {
   },
   content: [
     "./src/**/*.{html,md,js,jsx,ts,tsx}",
-    "./apps/**/*.{html,md,js,jsx,ts,tsx}",
+    "./apps/**/!(node_modules)/*.{html,md,js,jsx,ts,tsx}",
     "./index.html",
   ],
   plugins: [

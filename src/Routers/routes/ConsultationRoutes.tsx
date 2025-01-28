@@ -3,6 +3,7 @@ import EncounterQuestionnaire from "@/components/Patient/EncounterQuestionnaire"
 import FileUploadPage from "@/components/Patient/FileUploadPage";
 
 import { AppRoutes } from "@/Routers/AppRouter";
+import CarePlan from "@/pages/CarePlan/CarePlan";
 import { EncounterShow } from "@/pages/Encounters/EncounterShow";
 import { PrintPrescription } from "@/pages/Encounters/PrintPrescription";
 
@@ -73,6 +74,17 @@ const consultationRoutes: AppRoutes = {
       patientId={patientId}
       encounterId={id}
       type="encounter"
+    />
+  ),
+  "/facility/:facilityId/encounter/:encounterId/care-plan/:careplanId": ({
+    facilityId,
+    encounterId,
+    careplanId,
+  }) => (
+    <CarePlan
+      facilityId={facilityId}
+      encounterId={encounterId}
+      careplanId={careplanId}
     />
   ),
 };

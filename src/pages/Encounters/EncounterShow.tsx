@@ -20,6 +20,7 @@ import { EncounterUpdatesTab } from "@/pages/Encounters/tabs/EncounterUpdatesTab
 import { Encounter } from "@/types/emr/encounter";
 import { Patient } from "@/types/emr/newPatient";
 
+import { EncounterCarePlanTab } from "./tabs/EncounterCarePlanTab";
 import { EncounterNotesTab } from "./tabs/EncounterNotesTab";
 
 export interface EncounterTabProps {
@@ -35,6 +36,7 @@ const defaultTabs = {
   medicines: EncounterMedicinesTab,
   files: EncounterFilesTab,
   notes: EncounterNotesTab,
+  "care-plan": EncounterCarePlanTab,
   // nursing: EncounterNursingTab,
   // neurological_monitoring: EncounterNeurologicalMonitoringTab,
   // pressure_sore: EncounterPressureSoreTab,
