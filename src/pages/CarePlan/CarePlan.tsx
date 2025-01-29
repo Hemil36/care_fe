@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Table,
+  TableBody,
   TableCell,
   TableHead,
   TableHeader,
@@ -13,7 +14,10 @@ import {
 
 import PageTitle from "@/components/Common/PageTitle";
 
-import { DummyCarePlanRetrieve } from "@/types/emr/careplan/careplanApi";
+import {
+  dummyCarePlanGoalList,
+  dummyCarePlanRetrieve,
+} from "@/types/emr/careplan/careplanApi";
 
 export default function CarePlan(props: {
   facilityId: string;
@@ -24,10 +28,16 @@ export default function CarePlan(props: {
 
   const planQuery = useQuery({
     queryKey: ["care-plan", props.careplanId],
-    queryFn: () => DummyCarePlanRetrieve(props.careplanId),
+    queryFn: () => dummyCarePlanRetrieve(props.careplanId),
+  });
+
+  const goalsQuery = useQuery({
+    queryKey: ["care-plan-goals", props.careplanId],
+    queryFn: () => dummyCarePlanGoalList(props.careplanId),
   });
 
   const careplan = planQuery.data;
+  const goals = goalsQuery.data?.results;
 
   return (
     <div className="flex flex-col-reverse md:flex-row gap-4 md:justify-between">
@@ -70,16 +80,34 @@ export default function CarePlan(props: {
                 <TableHead>Detail</TableHead>
               </TableRow>
             </TableHeader>
-            {careplan?.addresses.map((code, i) => (
-              <TableRow key={i}>
-                <TableCell>{code.code}</TableCell>
-                <TableCell>{code.display}</TableCell>
-              </TableRow>
-            ))}
+            <TableBody>
+              {careplan?.addresses.map((code, i) => (
+                <TableRow key={i}>
+                  <TableCell>{code.code}</TableCell>
+                  <TableCell>{code.display}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
           </Table>
         </div>
         <div className="mt-8">
           <b className="text-lg">Goals</b>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+            {goals?.map((goal, i) => (
+              <div
+                key={i}
+                className="bg-white p-4 border border-secondary-300 rounded-lg"
+              >
+                <div>{goal.description}</div>
+                <span className="text-sm text-gray-500">
+                  {goal.lifecycle_status}
+                </span>
+                <Button variant={"secondary"} className="w-full mt-4">
+                  Details
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       <div className="md:w-[200px] w-full flex flex-col gap-2">

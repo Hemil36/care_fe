@@ -5,13 +5,13 @@ import { Link } from "raviger";
 import SubHeading from "@/CAREUI/display/SubHeading";
 
 import { EncounterTabProps } from "@/pages/Encounters/EncounterShow";
-import { DummyCarePlanGet } from "@/types/emr/careplan/careplanApi";
+import { dummyCarePlanList } from "@/types/emr/careplan/careplanApi";
 
 export const EncounterCarePlanTab = (props: EncounterTabProps) => {
   const { patient, encounter, facilityId } = props;
   const { data: carePlans } = useQuery({
     queryKey: ["patient", patient.id, "care-plans"],
-    queryFn: DummyCarePlanGet,
+    queryFn: dummyCarePlanList,
   });
   return (
     <div className="flex flex-col">
@@ -21,7 +21,7 @@ export const EncounterCarePlanTab = (props: EncounterTabProps) => {
           <Link
             href={`/facility/${facilityId}/encounter/${encounter.id}/care-plan/${careplan.id}`}
             key={i}
-            className="bg-white border rounded-lg p-4 hover:text-inherit hover:border-primary-500"
+            className="bg-white border rounded-lg p-4 text-inherit hover:border-primary-500 transition-all"
           >
             <span className="font-bold">{careplan.title}</span>
             <div className="text-sm text-gray-500">
