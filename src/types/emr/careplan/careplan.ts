@@ -71,6 +71,7 @@ export interface CarePlanGoalRequest {
   notes?: string;
   target?: GoalTarget[];
   permitted_groups?: unknown;
+  updates?: GoalUpdateRequest[];
 }
 
 export interface CarePlanGoal extends BaseModel, CarePlanGoalRequest {
@@ -79,10 +80,16 @@ export interface CarePlanGoal extends BaseModel, CarePlanGoalRequest {
   outcome?: unknown;
 }
 
-export interface GoalUpdate extends BaseModel {
-  goal: string;
+export interface GoalUpdateRequest {
   values: GoalTarget[];
   notes?: string;
+  created_date: string;
+}
+
+export interface GoalUpdate
+  extends BaseModel,
+    Omit<GoalUpdateRequest, "created_date"> {
+  goal: string;
 }
 
 export interface CarePlanRequest {

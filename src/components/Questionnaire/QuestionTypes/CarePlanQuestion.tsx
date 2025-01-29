@@ -27,6 +27,7 @@ import {
   CarePlanGoalRequest,
   CarePlanRequest,
   GoalTarget,
+  GoalUpdate,
 } from "@/types/emr/careplan/careplan";
 import {
   QuestionnaireResponse,
@@ -138,6 +139,74 @@ export default function CarePlanQuestion({
                     ...goal,
                     target: goal.target?.map((target, k) =>
                       k === index ? { ...target, ...updates } : target,
+                    ),
+                  }
+                : goal,
+            ),
+          }
+        : careplan,
+    );
+
+    updateQuestionnaireResponseCB(
+      [{ type: "care_plan", value: newCarePlans }],
+      questionnaireResponse.question_id,
+    );
+  };
+
+  const handleGoalUpdateUpdate = (
+    cpIndex: number,
+    goalIndex: number,
+    index: number,
+    updates: Partial<GoalUpdate>,
+  ) => {
+    const newCarePlans = careplans.map((careplan, i) =>
+      i === cpIndex
+        ? {
+            ...careplan,
+            goals: careplan.goals?.map((goal, j) =>
+              j === goalIndex
+                ? {
+                    ...goal,
+                    updates: goal.updates?.map((update, k) =>
+                      k === index ? { ...update, ...updates } : update,
+                    ),
+                  }
+                : goal,
+            ),
+          }
+        : careplan,
+    );
+
+    updateQuestionnaireResponseCB(
+      [{ type: "care_plan", value: newCarePlans }],
+      questionnaireResponse.question_id,
+    );
+  };
+
+  const handleGoalUpdateValueUpdate = (
+    cpIndex: number,
+    goalIndex: number,
+    updateIndex: number,
+    index: number,
+    updates: Partial<GoalTarget>,
+  ) => {
+    const newCarePlans = careplans.map((careplan, i) =>
+      i === cpIndex
+        ? {
+            ...careplan,
+            goals: careplan.goals?.map((goal, j) =>
+              j === goalIndex
+                ? {
+                    ...goal,
+                    updates: goal.updates?.map((update, k) =>
+                      k === updateIndex
+                        ? {
+                            ...update,
+                            values: update.values.map((value, l) =>
+                              l === index ? { ...value, ...updates } : value,
+                            ),
+                          }
+                        : update,
                     ),
                   }
                 : goal,
@@ -462,6 +531,185 @@ export default function CarePlanQuestion({
                         }}
                       >
                         {t("add_target")}
+                      </Button>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="mb-2">{t("updates")}</div>
+                      <div className="flex flex-col gap-2">
+                        {goal.updates?.map((update, k) => (
+                          <div
+                            key={k}
+                            className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-black/5 rounded-lg p-2 relative"
+                          >
+                            <button
+                              className="absolute top-2 right-2"
+                              onClick={() => {
+                                handleGoalUpdate(i, j, {
+                                  updates: goal.updates?.filter(
+                                    (_, l) => l !== k,
+                                  ),
+                                });
+                              }}
+                            >
+                              <MinusCircledIcon className="h-4 w-4" />
+                            </button>
+                            <div className="space-y-2">
+                              <Label>{t("created_date")}</Label>
+                              <DateTimePicker
+                                value={
+                                  update.created_date
+                                    ? new Date(update.created_date)
+                                    : undefined
+                                }
+                                onChange={(date) => {
+                                  if (!date) return;
+                                  handleGoalUpdateUpdate(i, j, k, {
+                                    created_date: date.toISOString(),
+                                  });
+                                }}
+                                disabled={disabled}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>{t("notes")}</Label>
+                              <Input
+                                type="text"
+                                value={update.notes}
+                                onChange={(e) =>
+                                  handleGoalUpdateUpdate(i, j, k, {
+                                    notes: e.target.value,
+                                  })
+                                }
+                                disabled={disabled}
+                              />
+                            </div>
+                            <div className="col-span-2 flex flex-col gap-2">
+                              {update.values?.map((value, l) => (
+                                <div className="relative" key={l}>
+                                  <div className="space-y-2">
+                                    <button
+                                      className="absolute top-0 right-0"
+                                      onClick={() => {
+                                        handleGoalUpdateUpdate(i, j, k, {
+                                          values: update.values?.filter(
+                                            (_, m) => m !== l,
+                                          ),
+                                        });
+                                      }}
+                                    >
+                                      <MinusCircledIcon className="h-4 w-4" />
+                                    </button>
+                                    <Label>{t("measure")}</Label>
+                                    <div className="flex items-center gap-2">
+                                      <Input
+                                        type="number"
+                                        value={value.detail_integer}
+                                        onChange={(e) =>
+                                          handleGoalUpdateValueUpdate(
+                                            i,
+                                            j,
+                                            k,
+                                            l,
+                                            {
+                                              detail_integer: Number(
+                                                e.target.value,
+                                              ),
+                                            },
+                                          )
+                                        }
+                                        disabled={disabled}
+                                      />
+                                      <Select
+                                        value={value.measure.code}
+                                        onValueChange={(value) =>
+                                          handleGoalUpdateValueUpdate(
+                                            i,
+                                            j,
+                                            k,
+                                            l,
+                                            {
+                                              measure: {
+                                                code: value as string,
+                                                display: value as string,
+                                                system: "",
+                                              },
+                                            },
+                                          )
+                                        }
+                                        disabled={disabled}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue
+                                            placeholder={t("select_measure")}
+                                          />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {sampleCodes.map((code) => (
+                                            <SelectItem
+                                              key={code.code}
+                                              value={code.code}
+                                            >
+                                              {code.display}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                              <div>
+                                <Button
+                                  className="mt-2"
+                                  variant={"outline"}
+                                  onClick={() => {
+                                    handleGoalUpdateUpdate(i, j, k, {
+                                      values: [
+                                        ...(update.values || []),
+                                        {
+                                          measure: {
+                                            code: "",
+                                            display: "",
+                                            system: "",
+                                          },
+                                          detail_integer: 0,
+                                        },
+                                      ],
+                                    });
+                                  }}
+                                >
+                                  {t("add_value")}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        className="mt-2"
+                        variant={"outline"}
+                        onClick={() => {
+                          handleGoalUpdate(i, j, {
+                            updates: [
+                              ...(goal.updates || []),
+                              {
+                                created_date: new Date().toISOString(),
+                                values: [
+                                  {
+                                    measure: {
+                                      code: "",
+                                      display: "",
+                                      system: "",
+                                    },
+                                    detail_integer: 0,
+                                  },
+                                ],
+                              },
+                            ],
+                          });
+                        }}
+                      >
+                        {t("add_update")}
                       </Button>
                     </div>
                   </div>
