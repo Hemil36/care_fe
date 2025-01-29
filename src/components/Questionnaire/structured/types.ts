@@ -1,4 +1,5 @@
 import { AllergyIntoleranceRequest } from "@/types/emr/allergyIntolerance/allergyIntolerance";
+import { CarePlanRequest } from "@/types/emr/careplan/careplan";
 import { DiagnosisRequest } from "@/types/emr/diagnosis/diagnosis";
 import { Encounter, EncounterEditRequest } from "@/types/emr/encounter";
 import { MedicationRequest } from "@/types/emr/medicationRequest";
@@ -19,6 +20,7 @@ export interface StructuredDataMap {
   medication_statement: MedicationStatementRequest;
   encounter: Encounter;
   appointment: CreateAppointmentQuestion;
+  care_plan: CarePlanRequest;
 }
 
 // Map structured types to their request types
@@ -30,6 +32,7 @@ export interface StructuredRequestMap {
   medication_statement: { datapoints: MedicationStatementRequest[] };
   encounter: EncounterEditRequest;
   appointment: AppointmentCreateRequest;
+  care_plan: { datapoints: CarePlanRequest[] };
 }
 
 export type RequestTypeFor<T extends StructuredQuestionType> =

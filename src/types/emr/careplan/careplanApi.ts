@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 import { UserBareMinimum } from "@/components/Users/models";
 
 import { HttpMethod, Type } from "@/Utils/request/api";
@@ -16,24 +18,6 @@ const dummyUser: UserBareMinimum = {
   external_id: "123",
 };
 
-const dummyGoals: CarePlanGoal[] = [
-  {
-    care_plan: "12345",
-    id: "12345",
-    created_date: "2025-01-28T10:30:00Z",
-    modified_date: "2025-01-28T10:45:00Z",
-    lifecycle_status: "accepted",
-    achievement_status: "achieved",
-    is_continuous: true,
-    priority: 1,
-    description: "Reduce patient temperature to below 37°C",
-    start_date: "2025-01-01",
-    requested_by_patient: false,
-    created_by: dummyUser,
-    updated_by: dummyUser,
-  },
-];
-
 const dummyGoalUpdates: GoalUpdate[] = [
   {
     id: "12345",
@@ -42,7 +26,108 @@ const dummyGoalUpdates: GoalUpdate[] = [
     created_by: dummyUser,
     updated_by: dummyUser,
     goal: "12345",
-    target_values: {},
+    values: [
+      {
+        measure: {
+          code: "8302-2",
+          display: "Body temperature",
+          system: "LOINC",
+        },
+        detail_quantity: {
+          value: 37.5,
+          unit: "Cel",
+          system: "http://unitsofmeasure.org",
+          code: "Cel",
+        },
+        due_date: "2025-01-28T10:45:00Z",
+      },
+    ],
+  },
+  {
+    id: "123456",
+    created_date: "2025-01-27T10:30:00Z",
+    modified_date: "2025-01-27T10:45:00Z",
+    created_by: dummyUser,
+    updated_by: dummyUser,
+    goal: "12345",
+    values: [
+      {
+        measure: {
+          code: "8302-2",
+          display: "Body temperature",
+          system: "LOINC",
+        },
+        detail_quantity: {
+          value: 38.0,
+          unit: "Cel",
+          system: "http://unitsofmeasure.org",
+          code: "Cel",
+        },
+        due_date: "2025-01-27T10:45:00Z",
+      },
+    ],
+  },
+  {
+    id: "1234567",
+    created_date: "2025-01-26T10:30:00Z",
+    modified_date: "2025-01-26T10:45:00Z",
+    created_by: dummyUser,
+    updated_by: dummyUser,
+    goal: "12345",
+    values: [
+      {
+        measure: {
+          code: "8302-2",
+          display: "Body temperature",
+          system: "LOINC",
+        },
+        detail_quantity: {
+          value: 37.7,
+          unit: "Cel",
+          system: "http://unitsofmeasure.org",
+          code: "Cel",
+        },
+        due_date: "2025-01-27T10:45:00Z",
+      },
+    ],
+  },
+];
+
+const dummyGoals: CarePlanGoal[] = [
+  {
+    care_plan: "12345",
+    id: "12345",
+    created_date: "2025-01-28T10:30:00Z",
+    modified_date: "2025-01-28T10:45:00Z",
+    lifecycle_status: "accepted",
+    achievement_status: "improving",
+    continuous: true,
+    priority: 1,
+    description: "Reduce patient temperature to below 37°C",
+    start_date: "2025-01-01",
+    created_by: dummyUser,
+    updated_by: dummyUser,
+    last_goal_update: dummyGoalUpdates
+      .filter((goal) => goal.goal === "12345")
+      .sort((a, b) =>
+        dayjs(a.modified_date).isAfter(dayjs(b.modified_date)) ? -1 : 1,
+      )[0],
+    target: [
+      {
+        measure: {
+          code: "8302-2",
+          display: "Body temperature",
+          system: "LOINC",
+        },
+        detail_quantity: {
+          value: 37,
+          unit: "Cel",
+          system: "http://unitsofmeasure.org",
+          code: "Cel",
+        },
+        due_date: "2025-01-28T10:45:00Z",
+      },
+    ],
   },
 ];
 

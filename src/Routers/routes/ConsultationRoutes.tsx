@@ -4,6 +4,7 @@ import FileUploadPage from "@/components/Patient/FileUploadPage";
 
 import { AppRoutes } from "@/Routers/AppRouter";
 import CarePlan from "@/pages/CarePlan/CarePlan";
+import CarePlanGoalPage from "@/pages/CarePlan/CarePlanGoalPage";
 import { EncounterShow } from "@/pages/Encounters/EncounterShow";
 import { PrintPrescription } from "@/pages/Encounters/PrintPrescription";
 
@@ -87,6 +88,15 @@ const consultationRoutes: AppRoutes = {
       careplanId={careplanId}
     />
   ),
+  "/facility/:facilityId/encounter/:encounterId/care-plan/:careplanId/goal/:goalId":
+    ({ facilityId, encounterId, careplanId, goalId }) => (
+      <CarePlanGoalPage
+        facilityId={facilityId}
+        encounterId={encounterId}
+        careplanId={careplanId}
+        goalId={goalId}
+      />
+    ),
 };
 
 export default consultationRoutes;

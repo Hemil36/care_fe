@@ -1,4 +1,5 @@
 import { AllergyIntoleranceRequest } from "@/types/emr/allergyIntolerance/allergyIntolerance";
+import { CarePlanRequest } from "@/types/emr/careplan/careplan";
 import { DiagnosisRequest } from "@/types/emr/diagnosis/diagnosis";
 import { Encounter } from "@/types/emr/encounter";
 import { MedicationRequest } from "@/types/emr/medicationRequest";
@@ -21,7 +22,8 @@ export type ResponseValue = {
     | "symptom"
     | "diagnosis"
     | "encounter"
-    | "appointment";
+    | "appointment"
+    | "care_plan";
 
   value?:
     | string
@@ -34,7 +36,8 @@ export type ResponseValue = {
     | SymptomRequest[]
     | DiagnosisRequest[]
     | Encounter
-    | CreateAppointmentQuestion;
+    | CreateAppointmentQuestion
+    | CarePlanRequest[];
   value_code?: Code;
   value_quantity?: Quantity;
 };

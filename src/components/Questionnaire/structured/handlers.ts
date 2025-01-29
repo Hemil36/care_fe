@@ -154,6 +154,24 @@ const handlers: {
       ];
     },
   },
+  care_plan: {
+    getRequests: (carePlans, { patientId, encounterId }) => {
+      return [
+        {
+          url: `/api/v1/patient/${patientId}/care_plan/upsert/`,
+          method: "POST",
+          body: {
+            datapoints: carePlans.map((carePlan) => ({
+              ...carePlan,
+              encounter: encounterId,
+              patient: patientId,
+            })),
+          },
+          reference_id: "care_plan",
+        },
+      ];
+    },
+  },
 };
 
 export const getStructuredRequests = <T extends StructuredQuestionType>(

@@ -46,7 +46,46 @@ interface Code {
   system: string;
 }
 
-export interface CarePlan extends BaseModel {
+export interface CarePlan extends BaseModel, CarePlanRequest {}
+
+export interface GoalTarget {
+  measure: Code;
+  detail_quantity?: any;
+  detail_range?: unknown;
+  detail_codeable_concept?: unknown;
+  detail_string?: string;
+  detail_boolean?: boolean;
+  detail_integer?: number;
+  detail_ratio?: unknown;
+  due_date?: string;
+}
+
+export interface CarePlanGoalRequest {
+  lifecycle_status: (typeof CARE_PLAN_LIFECYCLE_STATUS)[number];
+  achievement_status: (typeof CARE_PLAN_ACHIEVEMENT_STATUS)[number];
+  continuous: boolean;
+  priority: number;
+  description: string;
+  start_date: string;
+  source?: string;
+  notes?: string;
+  target?: GoalTarget[];
+  permitted_groups?: unknown;
+}
+
+export interface CarePlanGoal extends BaseModel, CarePlanGoalRequest {
+  care_plan: string;
+  last_goal_update?: GoalUpdate;
+  outcome?: unknown;
+}
+
+export interface GoalUpdate extends BaseModel {
+  goal: string;
+  values: GoalTarget[];
+  notes?: string;
+}
+
+export interface CarePlanRequest {
   status: (typeof CARE_PLAN_STATUS)[number];
   intent: (typeof CARE_PLAN_INTENT)[number];
   title: string;
@@ -58,25 +97,5 @@ export interface CarePlan extends BaseModel {
   custodian: string;
   addresses: Code[];
   notes?: string;
-}
-
-export interface CarePlanGoal extends BaseModel {
-  care_plan: string;
-  lifecycle_status: (typeof CARE_PLAN_LIFECYCLE_STATUS)[number];
-  achievement_status: (typeof CARE_PLAN_ACHIEVEMENT_STATUS)[number];
-  is_continuous: boolean;
-  priority: number;
-  description: string;
-  start_date: string;
-  requested_by_patient: boolean;
-  notes?: string;
-  outcome?: unknown;
-  targets?: unknown;
-  permitted_groups?: unknown;
-}
-
-export interface GoalUpdate extends BaseModel {
-  goal: string;
-  target_values: unknown;
-  notes?: string;
+  goals?: CarePlanGoalRequest[];
 }

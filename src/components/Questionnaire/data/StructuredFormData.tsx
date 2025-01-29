@@ -120,6 +120,26 @@ const symptom_questionnaire: QuestionnaireDetail = {
   tags: [],
 };
 
+const care_plan_questionnaire: QuestionnaireDetail = {
+  id: "care_plan",
+  slug: "care_plan",
+  version: "0.0.1",
+  title: "Care Plan",
+  status: "active",
+  subject_type: "patient",
+  questions: [
+    {
+      id: "care_plan",
+      text: "Care Plan",
+      type: "structured",
+      structured_type: "care_plan",
+      link_id: "1.1",
+      required: true,
+    },
+  ],
+  tags: [],
+};
+
 export const FIXED_QUESTIONNAIRES: Record<string, QuestionnaireDetail> = {
   encounter: encounterQuestionnaire,
   medication_request: medication_request_questionnaire,
@@ -127,4 +147,5 @@ export const FIXED_QUESTIONNAIRES: Record<string, QuestionnaireDetail> = {
   medication_statement: medication_statement_questionnaire,
   diagnosis: diagnosis_questionnaire,
   symptom: symptom_questionnaire,
+  care_plan: care_plan_questionnaire,
 };

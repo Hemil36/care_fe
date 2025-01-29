@@ -16,10 +16,11 @@ import type { Question } from "@/types/questionnaire/question";
 
 import { AllergyQuestion } from "./AllergyQuestion";
 import { BooleanQuestion } from "./BooleanQuestion";
+import CarePlanQuestion from "./CarePlanQuestion";
 import { ChoiceQuestion } from "./ChoiceQuestion";
 import { DateTimeQuestion } from "./DateTimeQuestion";
 import { DiagnosisQuestion } from "./DiagnosisQuestion";
-import { EncounterQuestion } from "./EncounterQuestion";
+// import { EncounterQuestion } from "./EncounterQuestion";
 import { MedicationRequestQuestion } from "./MedicationRequestQuestion";
 import { MedicationStatementQuestion } from "./MedicationStatementQuestion";
 import { NotesInput } from "./NotesInput";
@@ -126,17 +127,34 @@ export function QuestionInput({
             return <DiagnosisQuestion {...commonProps} />;
           case "appointment":
             return <AppointmentQuestion {...commonProps} />;
+          case "care_plan":
+            return (
+              <CarePlanQuestion
+                {...commonProps}
+                encounterId={encounterId}
+                patientId={patientId}
+                facilityId={facilityId}
+              />
+            );
           case "encounter":
-            if (encounterId) {
-              return (
-                <EncounterQuestion
-                  {...commonProps}
-                  encounterId={encounterId}
-                  facilityId={facilityId}
-                />
-              );
-            }
-            return null;
+            // if (encounterId) {
+            //   return (
+            //     <EncounterQuestion
+            //       {...commonProps}
+            //       encounterId={encounterId}
+            //       facilityId={facilityId}
+            //     />
+            //   );
+            // }
+            // return null;
+            return (
+              <CarePlanQuestion
+                {...commonProps}
+                encounterId={encounterId}
+                patientId={patientId}
+                facilityId={facilityId}
+              />
+            );
         }
         return null;
 

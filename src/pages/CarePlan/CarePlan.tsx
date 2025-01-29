@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { Link, navigate } from "raviger";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -102,11 +103,38 @@ export default function CarePlan(props: {
                 <span className="text-sm text-gray-500">
                   {goal.lifecycle_status}
                 </span>
-                <Button variant={"secondary"} className="w-full mt-4">
+                {goal.last_goal_update && (
+                  <div className="mt-4">
+                    <b>Last Update</b>
+                    <div>
+                      <span className="text-xs text-gray-500">
+                        {dayjs(goal.last_goal_update.modified_date).format(
+                          "DD/MM/YYYY hh:mm a",
+                        )}
+                      </span>
+                      <div>{JSON.stringify(goal.last_goal_update.values)}</div>
+                    </div>
+                  </div>
+                )}
+                <Button
+                  variant={"secondary"}
+                  className="w-full mt-4"
+                  onClick={() =>
+                    navigate(
+                      `/facility/${props.facilityId}/encounter/${props.encounterId}/care-plan/${props.careplanId}/goal/${goal.id}`,
+                    )
+                  }
+                >
                   Details
                 </Button>
               </div>
             ))}
+            <Link
+              href={`/facility/${props.facilityId}/encounter/${props.encounterId}/care-plan/${props.careplanId}/goal/create`}
+              className="bg-white p-4 border border-secondary-300 rounded-lg flex items-center justify-center"
+            >
+              <span className="text-primary-500">Create New Goal</span>
+            </Link>
           </div>
         </div>
       </div>
