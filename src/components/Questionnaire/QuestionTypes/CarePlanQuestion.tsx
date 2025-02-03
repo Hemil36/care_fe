@@ -2,6 +2,7 @@ import { DotsVerticalIcon, MinusCircledIcon } from "@radix-ui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import {
   DropdownMenu,
@@ -18,16 +19,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 import {
+  ActivityRequest,
   CARE_PLAN_INTENT,
   CARE_PLAN_LIFECYCLE_STATUS,
   CARE_PLAN_STATUS,
+  CARE_PLAN_TASK_INTENT,
+  CARE_PLAN_TASK_PRIORITY,
+  CARE_PLAN_TASK_STATUS,
   CarePlanGoalRequest,
   CarePlanRequest,
   GoalTarget,
   GoalUpdate,
+  TaskRequest,
 } from "@/types/emr/careplan/careplan";
 import {
   QuestionnaireResponse,
@@ -77,6 +84,29 @@ const sampleCodes = [
   },
 ];
 
+const sampleTasks = [
+  {
+    code: "1",
+    system: "http://example.com",
+    display: "Take medication",
+  },
+  {
+    code: "2",
+    system: "http://example.com",
+    display: "Check blood pressure",
+  },
+  {
+    code: "3",
+    system: "http://example.com",
+    display: "Check temperature",
+  },
+  {
+    code: "4",
+    system: "http://example.com",
+    display: "Check pulse",
+  },
+];
+
 export default function CarePlanQuestion({
   questionnaireResponse,
   updateQuestionnaireResponseCB,
@@ -112,6 +142,28 @@ export default function CarePlanQuestion({
             ...careplan,
             goals: careplan.goals?.map((goal, j) =>
               j === index ? { ...goal, ...updates } : goal,
+            ),
+          }
+        : careplan,
+    );
+
+    updateQuestionnaireResponseCB(
+      [{ type: "care_plan", value: newCarePlans }],
+      questionnaireResponse.question_id,
+    );
+  };
+
+  const handleActivityUpdate = (
+    cpIndex: number,
+    index: number,
+    updates: Partial<ActivityRequest>,
+  ) => {
+    const newCarePlans = careplans.map((careplan, i) =>
+      i === cpIndex
+        ? {
+            ...careplan,
+            activities: careplan.activities?.map((activity, j) =>
+              j === index ? { ...activity, ...updates } : activity,
             ),
           }
         : careplan,
@@ -737,6 +789,243 @@ export default function CarePlanQuestion({
                   {t("add_goal")}
                 </Button>
               </div>
+            </div>
+            <div className="mt-6">
+              {t("activities")}
+              <table className="w-full">
+                <thead>
+                  {/* <th>Perf</th> */}
+                  <th>Status</th>
+                  <th>Task</th>
+                  <th>Description</th>
+                  <th>Intent</th>
+                  <th>Priority</th>
+                  {/* <th>Do not Perform</th> */}
+                  <th>Requested Period</th>
+                  <th>Actions</th>
+                </thead>
+                {careplan.activities?.map((activity, j) => (
+                  <tr className="" key={j}>
+                    {/* <td>
+                      <Switch
+                        checked={activity.performed}
+                        onCheckedChange={(checked) =>
+                          handleActivityUpdate(i, j, {
+                            performed: checked,
+                          })
+                        }
+                      />
+                    </td> */}
+                    <td>
+                      <Select
+                        value={activity.task.status}
+                        onValueChange={(value) => {
+                          handleActivityUpdate(i, j, {
+                            task: {
+                              ...activity.task,
+                              status: value as TaskRequest["status"],
+                            },
+                          });
+                        }}
+                      >
+                        <SelectTrigger
+                          ref={(el) =>
+                            el &&
+                            el.style.setProperty(
+                              "background",
+                              CARE_PLAN_TASK_STATUS.find(
+                                (s) => s.name === activity.task.status,
+                              )?.color || null,
+                              "important",
+                            )
+                          }
+                          className={`border-none shadow-none rounded-full`}
+                        >
+                          <SelectValue placeholder={t("select_status")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CARE_PLAN_TASK_STATUS.map((status) => (
+                            <SelectItem key={status.name} value={status.name}>
+                              {t(`${status.name}`)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td>
+                      <Select
+                        value={activity.task.code.code}
+                        onValueChange={(value) => {
+                          handleActivityUpdate(i, j, {
+                            task: {
+                              ...activity.task,
+                              code: {
+                                ...activity.task.code,
+                                code: value as string,
+                              },
+                            },
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="border-none shadow-none">
+                          <SelectValue placeholder={t("select_task")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sampleTasks.map((task) => (
+                            <SelectItem key={task.code} value={task.code}>
+                              {task.display}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="">
+                      <Textarea
+                        className="w-[200px] h-[50px]"
+                        value={activity.task.description}
+                        onChange={(e) =>
+                          handleActivityUpdate(i, j, {
+                            task: {
+                              ...activity.task,
+                              description: e.target.value,
+                            },
+                          })
+                        }
+                        disabled={disabled}
+                      />
+                    </td>
+
+                    <td>
+                      <Select
+                        value={activity.task.intent}
+                        onValueChange={(value) => {
+                          handleActivityUpdate(i, j, {
+                            task: {
+                              ...activity.task,
+                              intent: value as TaskRequest["intent"],
+                            },
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("select_intent")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CARE_PLAN_TASK_INTENT.map((intent) => (
+                            <SelectItem key={intent} value={intent}>
+                              {t(`${intent}`)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="">
+                      <Select
+                        value={activity.task.priority}
+                        onValueChange={(value) => {
+                          handleActivityUpdate(i, j, {
+                            task: {
+                              ...activity.task,
+                              priority: value as TaskRequest["priority"],
+                            },
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("select_priority")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CARE_PLAN_TASK_PRIORITY.map((priority) => (
+                            <SelectItem key={priority} value={priority}>
+                              {t(`${priority}`)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="hidden">
+                      <Switch
+                        checked={activity.task.do_not_perform}
+                        onCheckedChange={(checked) =>
+                          handleActivityUpdate(i, j, {
+                            task: {
+                              ...activity.task,
+                              do_not_perform: checked,
+                            },
+                          })
+                        }
+                      />
+                    </td>
+                    <td>
+                      <DateRangePicker
+                        date={{
+                          from: new Date(activity.task.requested_period.start),
+                          to: new Date(activity.task.requested_period.end),
+                        }}
+                        onChange={(date) => {
+                          if (!date) return;
+                          handleActivityUpdate(i, j, {
+                            task: {
+                              ...activity.task,
+                              requested_period: {
+                                ...activity.task.requested_period,
+                                start: date.from?.toISOString() || "",
+                                end: date.to?.toISOString() || "",
+                              },
+                            },
+                          });
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <button
+                        className=""
+                        onClick={() => {
+                          handleUpdate(i, {
+                            activities: careplan.activities?.filter(
+                              (_, k) => k !== j,
+                            ),
+                          });
+                        }}
+                      >
+                        <MinusCircledIcon className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                <Button
+                  className="mt-2"
+                  variant={"outline"}
+                  onClick={() => {
+                    handleUpdate(i, {
+                      activities: [
+                        ...(careplan.activities || []),
+                        {
+                          performed: false,
+                          task: {
+                            status: "draft",
+                            intent: "proposal",
+                            priority: "routine",
+                            do_not_perform: false,
+                            code: {
+                              code: "",
+                              system: "",
+                              display: "",
+                            },
+                            description: "",
+                            requested_period: {
+                              start: new Date().toISOString(),
+                              end: new Date().toISOString(),
+                            },
+                          },
+                        },
+                      ],
+                    });
+                  }}
+                >
+                  {t("add_activity")}
+                </Button>
+              </table>
             </div>
           </div>
         ))}
