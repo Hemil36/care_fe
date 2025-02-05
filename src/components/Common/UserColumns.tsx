@@ -1,9 +1,8 @@
-import { UserModel } from "../Users/models";
+import { UserBase } from "@/types/user/user";
 
 export type userChildProps = {
-  userData: UserModel;
+  userData: UserBase;
   username: string;
-  refetchUserData?: () => void;
 };
 
 export default function UserColumns({

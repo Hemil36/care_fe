@@ -1,3 +1,4 @@
+import careConfig from "@careConfig";
 import * as Sentry from "@sentry/browser";
 import { createRoot } from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
@@ -5,6 +6,18 @@ import { registerSW } from "virtual:pwa-register";
 import App from "@/App";
 import "@/i18n";
 import "@/style/index.css";
+
+// Extend Window interface to include CARE_API_URL
+declare global {
+  interface Window {
+    CARE_API_URL: string;
+    __CORE_ENV__: typeof careConfig;
+  }
+}
+
+// Expose Environment variable to window object for use in plugins
+window.CARE_API_URL = import.meta.env.REACT_CARE_API_URL;
+window.__CORE_ENV__ = careConfig;
 
 if ("serviceWorker" in navigator) {
   registerSW({ immediate: false });

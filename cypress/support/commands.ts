@@ -1,124 +1,35 @@
 import "cypress-localstorage-commands";
 
-const apiUrl = Cypress.env("API_URL");
+Cypress.Commands.add("loginByApi", (role: string) => {
+  const sessionName = `login-${role}`;
 
-Cypress.Commands.add("login", (username: string, password: string) => {
-  cy.log(`Logging in the user: ${username}:${password}`);
-  cy.visit("/");
-  cy.get("input[id='username']").type(username);
-  cy.get("input[id='password']").type(password);
-  cy.get("button").contains("Login").click();
-  return cy.url().should("include", "/facility");
-});
+  return cy.session(sessionName, () => {
+    cy.visit("/login");
+    cy.fixture("users").then((users) => {
+      const user = users[role];
+      if (!user) {
+        throw new Error(`User role "${role}" not found in users fixture`);
+      }
 
-Cypress.Commands.add("refreshApiLogin", (username, password) => {
-  cy.request({
-    method: "POST",
-    url: `${apiUrl}/api/v1/auth/login/`,
-    body: {
-      username,
-      password,
-    },
-    failOnStatusCode: false,
-  }).then((response) => {
-    if (response.status === 200) {
-      cy.writeFile("cypress/fixtures/token.json", {
-        username: username,
-        access: response.body.access,
-        refresh: response.body.refresh,
-      });
-      cy.setLocalStorage("care_access_token", response.body.access);
-      cy.setLocalStorage("care_refresh_token", response.body.refresh);
-    } else {
-      cy.log("An error occurred while logging in");
-    }
+      cy.get('[data-cy="username"]').type(user.username);
+      cy.get('[data-cy="password"]').type(user.password);
+      cy.get('[data-cy="submit"]').click();
+
+      // Wait for successful login
+      cy.url().should("not.include", "/login");
+    });
   });
 });
 
-Cypress.Commands.add("loginByApi", (username, password) => {
-  cy.log(`Logging in the user: ${username}:${password}`);
-  cy.task("readFileMaybe", "cypress/fixtures/token.json").then(
-    (tkn: unknown) => {
-      const token = JSON.parse(tkn as string); // Cast tkn to string
-      if (tkn && token.access && token.username === username) {
-        cy.request({
-          method: "POST",
-          url: `${apiUrl}/api/v1/auth/token/verify/`,
-          body: {
-            token: token.access,
-          },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          failOnStatusCode: false,
-        }).then((response) => {
-          if (response.status === 200) {
-            cy.setLocalStorage("care_access_token", token.access);
-            cy.setLocalStorage("care_refresh_token", token.refresh);
-          } else {
-            cy.refreshApiLogin(username, password);
-          }
-        });
-      } else {
-        cy.refreshApiLogin(username, password);
-      }
-    },
-  );
-});
-
-Cypress.on("uncaught:exception", () => {
-  // returning false here prevents Cypress from
-  // failing the test
-  return false;
-});
-
-/**
- * getAttached(selector)
- * getAttached(selectorFn)
- *
- * Waits until the selector finds an attached element, then yields it (wrapped).
- * selectorFn, if provided, is passed $(document). Don't use cy methods inside selectorFn.
- */
-Cypress.Commands.add("getAttached", (selector: string) => {
-  const getElement =
-    typeof selector === "function"
-      ? selector
-      : ($d: JQuery<Document>) =>
-          $d.find(selector) as unknown as JQuery<HTMLElement>;
-
-  let $el: JQuery<HTMLElement> | null = null;
-
+Cypress.Commands.add("verifyNotification", (text: string) => {
   return cy
-    .document()
-    .should(($d: Document) => {
-      $el = getElement(Cypress.$($d));
-      // Ensure $el is an HTMLElement before checking if it is detached
-      if ($el.length && $el[0] instanceof HTMLElement) {
-        expect(Cypress.dom.isDetached($el[0])).to.be.false; // Access the first HTMLElement
-      } else {
-        throw new Error("Element is not an HTMLElement or is detached.");
-      }
-    })
-    .then(() => cy.wrap($el));
-});
-
-Cypress.Commands.add(
-  "awaitUrl",
-  (url: string, disableLoginVerification = false) => {
-    cy.intercept(/getcurrentuser/).as("currentuser");
-    cy.visit(url);
-    disableLoginVerification
-      ? cy.wait("@currentuser")
-      : cy.wait("@currentuser").its("response.statusCode").should("eq", 200);
-  },
-);
-
-Cypress.Commands.add("verifyNotification", (text) => {
-  return cy.get(".pnotify-container").should("exist").contains(text);
-});
-
-Cypress.Commands.add("clearAllFilters", () => {
-  return cy.get("#clear-all-filters").click();
+    .get("li[data-sonner-toast] div[data-title]")
+    .should("exist")
+    .contains(text)
+    .should("be.visible")
+    .then(() => {
+      cy.closeNotification();
+    });
 });
 
 Cypress.Commands.add("clickSubmitButton", (buttonText = "Submit") => {
@@ -133,12 +44,29 @@ Cypress.Commands.add("clickCancelButton", (buttonText = "Cancel") => {
 
 Cypress.Commands.add(
   "typeAndSelectOption",
-  (element: string, reference: string) => {
-    cy.get(element)
+  (selector: string, value: string, verify: boolean = true) => {
+    // Click to open the dropdown
+    cy.get(selector)
       .click()
-      .type(reference)
       .then(() => {
-        cy.get("[role='option']").contains(reference).click();
+        // Type in the command input
+        cy.get("[cmdk-input]")
+          .should("be.visible")
+          .type(value)
+          .then(() => {
+            // Select the filtered option from command menu
+            cy.get("[cmdk-list]")
+              .find("[cmdk-item]")
+              .contains(value)
+              .should("be.visible")
+              .click()
+              .then(() => {
+                // Verify the selected value is present in the selector (if verify is true)
+                if (verify) {
+                  cy.get(selector).should("contain", value);
+                }
+              });
+          });
       });
   },
 );
@@ -157,54 +85,21 @@ Cypress.Commands.add(
       });
   },
 );
-Cypress.Commands.add(
-  "typeAndMultiSelectOption",
-  (selector: string, input: string, options: string | string[]) => {
-    const optionArray = Array.isArray(options) ? options : [options];
-    cy.get(selector)
-      .click()
-      .type(input)
-      .then(() => {
-        optionArray.forEach((options) => {
-          cy.get("[role='option']").contains(options).click();
-        });
-        cy.get(selector).find("#dropdown-toggle").click();
-      });
-  },
-);
 
 Cypress.Commands.add(
   "clickAndSelectOption",
-  (element: string, reference: string, skipVerification: boolean = false) => {
-    cy.get(element)
-      .click()
-      .then(() => {
-        cy.get("[role='option']").contains(reference).click();
-      })
-      .then(() => {
-        // Skip verification if skipVerification is true
-        if (!skipVerification) {
-          cy.get(element).should("contain", reference);
-        }
-      });
+  (element: string, reference: string) => {
+    // Click to open the select dropdown
+    cy.get(element).click();
+
+    // Select the option from the popover content
+    cy.get('[role="listbox"]')
+      .find('[role="option"]')
+      .contains(reference)
+      .should("be.visible")
+      .click();
   },
 );
-
-Cypress.Commands.add("selectRadioOption", (name: string, value: string) => {
-  cy.get(`input[type='radio'][name='${name}'][value=${value}]`).click();
-});
-
-Cypress.Commands.add("clickAndTypeDate", (selector, date) => {
-  cy.get(selector).scrollIntoView();
-  cy.get(selector).click();
-  cy.get('[data-test-id="date-input"]:visible [data-time-input]').each((el) =>
-    cy.wrap(el).clear(),
-  );
-  cy.get(`[data-test-id="date-input"]:visible [data-time-input="0"]`)
-    .click()
-    .type(date);
-  cy.get("body").click(0, 0);
-});
 
 Cypress.Commands.add(
   "verifyAndClickElement",
@@ -221,10 +116,15 @@ Cypress.Commands.add("preventPrint", () => {
 });
 
 Cypress.Commands.add("closeNotification", () => {
-  cy.get(".pnotify")
-    .should("exist")
-    .each(($div) => {
-      cy.wrap($div).click();
+  return cy
+    .get("li[data-sonner-toast] div[data-title]")
+    .first()
+    .parents("li[data-sonner-toast]")
+    .then(($toast) => {
+      cy.wrap($toast)
+        .find('button[aria-label="Close toast"]', { timeout: 5000 })
+        .should("be.visible")
+        .click();
     });
 });
 
@@ -236,15 +136,17 @@ Cypress.Commands.add("verifyContentPresence", (selector, texts) => {
   });
 });
 
-Cypress.Commands.add("verifyErrorMessages", (errorMessages: string[]) => {
-  const selector = ".error-text"; // Static selector
-  cy.get(selector).then(($errors) => {
-    const displayedErrorMessages = $errors
-      .map((_, el) => Cypress.$(el).text())
-      .get();
-    errorMessages.forEach((errorMessage) => {
-      expect(displayedErrorMessages).to.include(errorMessage);
-    });
+export interface ErrorMessageItem {
+  label: string;
+  message: string;
+}
+
+Cypress.Commands.add("verifyErrorMessages", (errors: ErrorMessageItem[]) => {
+  errors.forEach(({ label, message }) => {
+    // Verify the label is present
+    cy.contains(label).scrollIntoView().should("be.visible");
+    // Verify the error message is present
+    cy.contains(message).scrollIntoView().should("be.visible");
   });
 });
 
@@ -253,20 +155,32 @@ Cypress.Commands.add(
   (
     selector: string,
     value: string,
-    options: { clearBeforeTyping?: boolean; skipVerification?: boolean } = {},
+    options: {
+      clearBeforeTyping?: boolean;
+      skipVerification?: boolean;
+      delay?: number;
+    } = {},
   ) => {
-    const { clearBeforeTyping = false, skipVerification = false } = options;
+    const {
+      clearBeforeTyping = false,
+      skipVerification = false,
+      delay = 0,
+    } = options;
     const inputField = cy.get(selector);
 
     if (clearBeforeTyping) {
-      inputField.clear(); // Clear the input field if specified
+      inputField.clear();
     }
 
-    inputField.scrollIntoView().should("be.visible").click().type(value);
-
-    // Conditionally skip verification based on the skipVerification flag
-    if (!skipVerification) {
-      inputField.should("have.value", value); // Verify the value if skipVerification is false
-    }
+    inputField
+      .scrollIntoView()
+      .should("be.visible")
+      .click()
+      .type(value, { delay })
+      .then(() => {
+        if (!skipVerification) {
+          cy.get(selector).should("have.value", value);
+        }
+      });
   },
 );

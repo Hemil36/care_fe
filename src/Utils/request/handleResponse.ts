@@ -1,8 +1,13 @@
+import { t } from "i18next";
 import { navigate } from "raviger";
+import { toast } from "sonner";
 
 import * as Notifications from "@/Utils/Notifications";
 import { RequestResult } from "@/Utils/request/types";
 
+/**
+ * @deprecated in favor of useQuery/useMutation/callApi
+ */
 export default function handleResponse(
   { res, error }: RequestResult<unknown>,
   silent?: boolean,
@@ -10,6 +15,12 @@ export default function handleResponse(
   const notify = silent ? undefined : Notifications;
 
   if (res === undefined) {
+    return;
+  }
+
+  // 404 Not Found
+  if (res.status === 404) {
+    toast.error(t("not_found"));
     return;
   }
 
@@ -33,7 +44,7 @@ export default function handleResponse(
       return;
     }
 
-    notify?.Error({ msg: error?.detail || "Something went wrong...!" });
+    toast.error((error?.detail as string) || t("something_went_wrong"));
     return;
   }
 }

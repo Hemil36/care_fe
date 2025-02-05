@@ -4,10 +4,10 @@ import { useCallback } from "react";
 import { FacilityModel } from "@/components/Facility/models";
 import AutoCompleteAsync from "@/components/Form/AutoCompleteAsync";
 
-import routes from "@/Utils/request/api";
 import request from "@/Utils/request/request";
+import facilityApi from "@/types/facility/facilityApi";
 
-interface FacilitySelectProps {
+interface BaseFacilitySelectProps {
   name: string;
   exclude_user?: string;
   errors?: string | undefined;
@@ -17,43 +17,51 @@ interface FacilitySelectProps {
   disabled?: boolean;
   multiple?: boolean;
   facilityType?: number;
-  district?: string;
-  state?: string;
   showAll?: boolean;
   showNOptions?: number | undefined;
   freeText?: boolean;
-  selected?: FacilityModel | FacilityModel[] | null;
-  setSelected: (selected: FacilityModel | FacilityModel[] | null) => void;
   allowNone?: boolean;
   placeholder?: string;
   filter?: (facilities: FacilityModel) => boolean;
   id?: string;
 }
 
-export const FacilitySelect = (props: FacilitySelectProps) => {
-  const {
-    name,
-    exclude_user,
-    required,
-    multiple,
-    selected,
-    setSelected,
-    searchAll,
-    disabled = false,
-    showAll = true,
-    showNOptions,
-    className = "",
-    facilityType,
-    district,
-    state,
-    allowNone = false,
-    freeText = false,
-    errors = "",
-    placeholder,
-    filter,
-    id,
-  } = props;
+interface SingleFacilitySelectProps extends BaseFacilitySelectProps {
+  multiple?: false;
+  selected: FacilityModel | null;
+  setSelected: (selected: FacilityModel | null) => void;
+}
 
+interface MultipleFacilitySelectProps extends BaseFacilitySelectProps {
+  multiple: true;
+  selected: FacilityModel[];
+  setSelected: (selected: FacilityModel[] | null) => void;
+}
+
+type FacilitySelectProps =
+  | SingleFacilitySelectProps
+  | MultipleFacilitySelectProps;
+
+export const FacilitySelect = ({
+  name,
+  exclude_user,
+  required,
+  multiple,
+  selected,
+  setSelected,
+  searchAll,
+  disabled = false,
+  showAll = true,
+  showNOptions,
+  className = "",
+  facilityType,
+  allowNone = false,
+  freeText = false,
+  errors = "",
+  placeholder,
+  filter,
+  id,
+}: FacilitySelectProps) => {
   const facilitySearch = useCallback(
     async (text: string) => {
       const query = {
@@ -63,19 +71,9 @@ export const FacilitySelect = (props: FacilitySelectProps) => {
         all: searchAll,
         facility_type: facilityType,
         exclude_user: exclude_user,
-        district,
-        state,
       };
 
-      const { data } = await request(
-        showAll ? routes.getAllFacilities : routes.getPermittedFacilities,
-        { query },
-      );
-
-      if (freeText)
-        data?.results?.push({
-          name: text,
-        });
+      const { data } = await request(facilityApi.getAllFacilities, { query });
 
       if (allowNone)
         return [
@@ -85,7 +83,7 @@ export const FacilitySelect = (props: FacilitySelectProps) => {
 
       return data?.results;
     },
-    [searchAll, showAll, facilityType, district, exclude_user, freeText],
+    [searchAll, showAll, facilityType, exclude_user, freeText],
   );
 
   return (
@@ -100,10 +98,7 @@ export const FacilitySelect = (props: FacilitySelectProps) => {
       onChange={setSelected}
       fetchData={facilitySearch}
       showNOptions={showNOptions}
-      optionLabel={(option: any) =>
-        option.name +
-        (option.district_object ? `, ${option.district_object.name}` : "")
-      }
+      optionLabel={(option: any) => option.name}
       compareBy="id"
       className={className}
       error={errors}

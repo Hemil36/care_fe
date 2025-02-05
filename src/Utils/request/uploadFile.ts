@@ -1,4 +1,6 @@
+import { t } from "i18next";
 import { Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 import * as Notification from "@/Utils/Notifications";
 import { handleUploadPercentage } from "@/Utils/request/utils";
@@ -29,13 +31,8 @@ const uploadFile = async (
         } catch {
           error = xhr.responseText;
         }
-        if (typeof error === "object" && !Array.isArray(error)) {
-          Object.values(error).forEach((msg) => {
-            Notification.Error({ msg: msg || "Something went wrong!" });
-          });
-        } else {
-          Notification.Error({ msg: error || "Something went wrong!" });
-        }
+        Notification.BadRequest({ errs: error.errors });
+        reject(new Error("Client error"));
         reject(new Error("Client error"));
       } else {
         resolve();
@@ -49,9 +46,7 @@ const uploadFile = async (
     }
 
     xhr.onerror = () => {
-      Notification.Error({
-        msg: "Network Failure. Please check your internet connectivity.",
-      });
+      toast.error(t("network_failure"));
       onError();
       reject(new Error("Network error"));
     };

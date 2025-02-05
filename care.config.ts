@@ -1,9 +1,19 @@
+import { CountryCode } from "libphonenumber-js/types.cjs";
+
+import { EncounterClass } from "@/types/emr/encounter";
+
 const env = import.meta.env;
 
 interface ILogo {
   light: string;
   dark: string;
 }
+
+const boolean = (key: string, fallback = false) => {
+  if (env[key] === "true") return true;
+  if (env[key] === "false") return false;
+  return fallback;
+};
 
 const logo = (value?: string, fallback?: ILogo) => {
   if (!value) {
@@ -13,10 +23,10 @@ const logo = (value?: string, fallback?: ILogo) => {
   try {
     return JSON.parse(value) as ILogo;
   } catch {
-    // TODO: define vite plugin to validate care.config.ts during build step
     return fallback;
   }
 };
+
 const careConfig = {
   apiUrl: env.REACT_CARE_API_URL,
 
@@ -42,6 +52,9 @@ const careConfig = {
     .split(",")
     .map((l) => l.trim()),
 
+  defaultEncounterType: (env.REACT_DEFAULT_ENCOUNTER_TYPE ||
+    "hh") as EncounterClass,
+
   gmapsApiKey:
     env.REACT_GMAPS_API_KEY || "AIzaSyDsBAc3y7deI5ZO3NtK5GuzKwtUzQNJNUk",
 
@@ -51,19 +64,12 @@ const careConfig = {
   reCaptchaSiteKey:
     env.REACT_RECAPTCHA_SITE_KEY || "6LdvxuQUAAAAADDWVflgBqyHGfq-xmvNJaToM0pN",
 
-  kasp: {
-    enabled: env.REACT_KASP_ENABLED === "true",
-    string: env.REACT_KASP_STRING || "KASP",
-    fullString:
-      env.REACT_KASP_FULL_STRING || "Karunya Arogya Suraksha Padhathi",
-  },
-
   sampleFormats: {
     assetImport:
       env.REACT_SAMPLE_FORMAT_ASSET_IMPORT || "/asset-import-template.xlsx",
   },
 
-  wartimeShifting: env.REACT_WARTIME_SHIFTING === "true",
+  wartimeShifting: boolean("REACT_WARTIME_SHIFTING"),
 
   stillWatching: {
     idleTimeout: env.REACT_STILL_WATCHING_IDLE_TIMEOUT
@@ -83,12 +89,6 @@ const careConfig = {
   minEncounterDate: new Date(env.REACT_MIN_ENCOUNTER_DATE || "2020-01-01"),
 
   // Plugins related configs...
-
-  plausible: {
-    server: env.REACT_PLAUSIBLE_SERVER_URL || "https://plausible.ohc.network",
-    domain: env.REACT_PLAUSIBLE_SITE_DOMAIN || "care.ohc.network",
-  },
-
   sentry: {
     dsn:
       env.REACT_SENTRY_DSN ||
@@ -97,19 +97,61 @@ const careConfig = {
   },
 
   hcx: {
-    enabled: env.REACT_ENABLE_HCX === "true",
+    enabled: boolean("REACT_ENABLE_HCX"),
   },
 
   abdm: {
-    enabled: (env.REACT_ENABLE_ABDM ?? "true") === "true",
+    enabled: boolean("REACT_ENABLE_ABDM", true),
+  },
+
+  appointments: {
+    /**
+     * Relative number of days to show in the appointments page by default.
+     * 0 means today, positive for future days, negative for past days.
+     */
+    defaultDateFilter: env.REACT_APPOINTMENTS_DEFAULT_DATE_FILTER
+      ? parseInt(env.REACT_APPOINTMENTS_DEFAULT_DATE_FILTER)
+      : 7,
+
+    // Kill switch in-case the heatmap API doesn't scale as expected
+    useAvailabilityStatsAPI: boolean(
+      "REACT_APPOINTMENTS_USE_AVAILABILITY_STATS_API",
+      true,
+    ),
   },
 
   careApps: env.REACT_ENABLED_APPS
-    ? env.REACT_ENABLED_APPS.split(",").map((app) => ({
-        branch: app.split("@")[1],
-        package: app.split("@")[0],
-      }))
+    ? env.REACT_ENABLED_APPS.split(",").map((app) => {
+        const [module, cdn] = app.split("@");
+        const [org, repo] = module.split("/");
+
+        if (!org || !repo) {
+          throw new Error(
+            `Invalid plug configuration: ${module}. Expected 'org/repo@url'.`,
+          );
+        }
+
+        let url = "";
+        if (!cdn) {
+          url = `https://${org}.github.io/${repo}`;
+        }
+
+        if (!url.startsWith("http")) {
+          url = `${cdn.includes("localhost") ? "http" : "https"}://${cdn}`;
+        }
+
+        return {
+          url: new URL(url).toString(),
+          name: repo,
+          package: module,
+        };
+      })
     : [],
+
+  plotsConfigUrl:
+    env.REACT_OBSERVATION_PLOTS_CONFIG_URL || "/config/plots.json",
+
+  defaultCountry: (env.REACT_DEFAULT_COUNTRY || "IN") as CountryCode,
 } as const;
 
 export default careConfig;

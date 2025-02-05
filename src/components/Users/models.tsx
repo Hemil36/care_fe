@@ -1,17 +1,8 @@
-import {
-  DistrictModel,
-  LocalBodyModel,
-  StateModel,
-} from "@/components/Facility/models";
+import { Gender, UserType } from "@/components/Users/UserFormValidations";
 
-import { GENDER_TYPES, UserRole } from "@/common/constants";
+import { GENDER_TYPES } from "@/common/constants";
 
-import { FeatureFlag } from "@/Utils/featureFlags";
-
-interface HomeFacilityObjectModel {
-  id?: string;
-  name?: string;
-}
+import { Organization } from "@/types/organization/organization";
 
 export type UpdatePasswordForm = {
   old_password: string;
@@ -25,62 +16,38 @@ export type UserBareMinimum = {
   first_name: string;
   last_name: string;
   email: string;
-  user_type: UserRole;
+  user_type: UserType;
   last_login: string | undefined;
   read_profile_picture_url?: string;
+  external_id: string;
 };
 
-export type GenderType = "Male" | "Female" | "Transgender";
+export type UserFacilityModel = {
+  id: string;
+  name: string;
+};
 
 export type UserModel = UserBareMinimum & {
-  local_body?: number;
-  district?: number;
-  state?: number;
+  external_id: string;
   video_connect_link: string;
   phone_number?: string;
   alt_phone_number?: string;
-  gender?: GenderType;
+  gender?: Gender;
   read_profile_picture_url?: string;
   date_of_birth: Date | null | string;
   is_superuser?: boolean;
   verified?: boolean;
   home_facility?: string;
-  home_facility_object?: HomeFacilityObjectModel;
-  local_body_object?: LocalBodyModel;
-  district_object?: DistrictModel;
-  state_object?: StateModel;
   qualification?: string;
   doctor_experience_commenced_on?: string;
   doctor_medical_council_registration?: string;
   weekly_working_hours?: string | null;
-  user_flags?: FeatureFlag[];
+  facilities?: UserFacilityModel[];
+  organizations?: Organization[];
+  permissions: string[];
 };
-
-export type UserBaseModel = {
-  email: string;
-  first_name: string;
-  last_name: string;
-  id: number;
-  user_type: UserRole;
-  username: string;
-  last_login: string | undefined;
-};
-
-export interface SkillObjectModel {
-  id: string;
-  name: string;
-  description?: string;
-}
-
-export interface SkillModel {
-  id: string;
-  skill_object: SkillObjectModel;
-}
 
 export interface UserAssignedModel extends UserBareMinimum {
-  local_body?: number;
-  district?: number;
-  state?: number;
   phone_number?: string;
   alt_phone_number?: string;
   video_connect_link: string;
@@ -89,10 +56,8 @@ export interface UserAssignedModel extends UserBareMinimum {
   is_superuser?: boolean;
   verified?: boolean;
   home_facility?: string;
-  home_facility_object?: HomeFacilityObjectModel;
   qualification?: string;
   doctor_experience_commenced_on?: Date;
   doctor_medical_council_registration?: string;
   weekly_working_hours?: string;
-  skills: SkillObjectModel[];
 }

@@ -1,15 +1,21 @@
 import careConfig from "@careConfig";
 
 import handleResponse from "@/Utils/request/handleResponse";
-import { RequestOptions, RequestResult, Route } from "@/Utils/request/types";
+import { ApiRoute, RequestOptions, RequestResult } from "@/Utils/request/types";
 import { makeHeaders, makeUrl } from "@/Utils/request/utils";
 
 type Options<TData, TBody> = RequestOptions<TData, TBody> & {
   signal?: AbortSignal;
 };
 
+/**
+ * @deprecated use useQuery/useMutation/callApi instead
+ *
+ * This no longer ensures that the path params are provided correctly during runtime.
+ * Usages so far works as path params were passed correctly, but this should not be used anymore.
+ */
 export default async function request<TData, TBody>(
-  { path, method, noAuth }: Route<TData, TBody>,
+  { path, method, noAuth }: ApiRoute<TData, TBody>,
   {
     query,
     body,

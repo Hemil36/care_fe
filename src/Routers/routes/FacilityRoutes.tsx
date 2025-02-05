@@ -1,33 +1,16 @@
-import CentralNursingStation from "@/components/Facility/CentralNursingStation";
-import DischargedPatientsList from "@/components/Facility/DischargedPatientsList";
-import { FacilityConfigure } from "@/components/Facility/FacilityConfigure";
-import { FacilityCreate } from "@/components/Facility/FacilityCreate";
-import { FacilityHome } from "@/components/Facility/FacilityHome";
-import { FacilityList } from "@/components/Facility/FacilityList";
+import { Redirect } from "raviger";
+
 import FacilityUsers from "@/components/Facility/FacilityUsers";
 import ResourceCreate from "@/components/Resource/ResourceCreate";
 
 import { AppRoutes } from "@/Routers/AppRouter";
-import FacilityInventoryRoutes from "@/Routers/routes/FacilityInventoryRoutes";
-import FacilityLocationRoutes from "@/Routers/routes/FacilityLocationRoutes";
+import { FacilityOverview } from "@/pages/Facility/overview";
+import { SettingsLayout } from "@/pages/Facility/settings/layout";
 
 const FacilityRoutes: AppRoutes = {
-  "/facility": () => <FacilityList />,
-  "/facility/create": () => <FacilityCreate />,
-  "/facility/:facilityId/update": ({ facilityId }) => (
-    <FacilityCreate facilityId={facilityId} />
-  ),
-  "/facility/:facilityId/configure": ({ facilityId }) => (
-    <FacilityConfigure facilityId={facilityId} />
-  ),
-  "/facility/:facilityId/cns": ({ facilityId }) => (
-    <CentralNursingStation facilityId={facilityId} />
-  ),
-  "/facility/:facilityId": ({ facilityId }) => (
-    <FacilityHome facilityId={facilityId} />
-  ),
-  "/facility/:id/discharged-patients": ({ id }) => (
-    <DischargedPatientsList facility_external_id={id} />
+  "/facility": () => <Redirect to="/" />,
+  "/facility/:facilityId/overview": ({ facilityId }) => (
+    <FacilityOverview facilityId={facilityId} />
   ),
   "/facility/:facilityId/users": ({ facilityId }) => (
     <FacilityUsers facilityId={facilityId} />
@@ -35,8 +18,9 @@ const FacilityRoutes: AppRoutes = {
   "/facility/:facilityId/resource/new": ({ facilityId }) => (
     <ResourceCreate facilityId={facilityId} />
   ),
-  ...FacilityLocationRoutes,
-  ...FacilityInventoryRoutes,
+  "/facility/:facilityId/settings*": ({ facilityId }) => (
+    <SettingsLayout facilityId={facilityId} />
+  ),
 };
 
 export default FacilityRoutes;

@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
 import CareIcon from "@/CAREUI/icons/CareIcon";
 
-import { Cancel, Submit } from "@/components/Common/ButtonV2";
+import { Button } from "@/components/ui/button";
+
 import ExcelViewer from "@/components/Common/ExcelViewer";
 
 import useDragAndDrop from "@/hooks/useDragAndDrop";
@@ -14,8 +16,6 @@ import schemaParser, {
   ParsedData,
   SchemaType,
 } from "@/common/schemaParser";
-
-import * as Notification from "@/Utils/Notifications";
 
 interface Props {
   handleSubmit: (data: any) => void;
@@ -47,7 +47,7 @@ export default function ExcelFileDragAndDrop({
   const closeModal = () => {
     setSelectedFile(undefined);
     setFileData([]);
-    onClose && onClose();
+    onClose?.();
   };
 
   const onSelectFile = (file: Blob) => {
@@ -82,9 +82,7 @@ export default function ExcelFileDragAndDrop({
 
       reader.readAsBinaryString(file);
     } catch (e: any) {
-      Notification.Error({
-        msg: e.message,
-      });
+      toast.error(e.message);
     }
   };
 
@@ -98,7 +96,7 @@ export default function ExcelFileDragAndDrop({
       setParsedData(parsedData);
       setValidData(ParsedDataWithOutErrors);
       if (ParsedDataWithOutErrors.length !== 0) {
-        setIsValid && setIsValid(true);
+        setIsValid?.(true);
       }
     }
   }, [fileData]);
@@ -199,7 +197,7 @@ export default function ExcelFileDragAndDrop({
                 setFileData([]);
                 setErrors([]);
                 setValidData([]);
-                setIsValid && setIsValid(false);
+                if (setIsValid) setIsValid(false);
                 dragProps.setDragOver(false);
                 dragProps.setFileDropError("");
               }}
@@ -226,6 +224,7 @@ export default function ExcelFileDragAndDrop({
           <a
             className="focus:ring-blue mx-auto mt-4 max-w-xs items-center rounded-md border border-primary-500 bg-white px-3 py-2 text-sm font-medium leading-4 text-primary-700 transition duration-150 ease-in-out hover:text-primary-500 hover:shadow focus:border-primary-300 focus:outline-none active:bg-secondary-50 active:text-primary-800"
             href={sampleLink}
+            rel="noreferrer"
             target="_blank"
             download
             onClick={(e) => e.stopPropagation()}
@@ -248,7 +247,9 @@ export default function ExcelFileDragAndDrop({
           Upload a file
         </label>
         <div className="sm:flex-1" />
-        <Cancel
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => {
             closeModal();
             setErrors([]);
@@ -257,8 +258,12 @@ export default function ExcelFileDragAndDrop({
             dragProps.setFileDropError("");
           }}
           disabled={loading}
-        />
-        <Submit
+        >
+          {t("close")}
+        </Button>
+        <Button
+          type="submit"
+          variant="primary"
           data-testid="import-btn"
           onClick={() => handleSubmit(validData)}
           disabled={loading || !selectedFile || validData.length === 0}
@@ -273,7 +278,7 @@ export default function ExcelFileDragAndDrop({
               ? "Importing..."
               : `Import ${validData.length} valid fields`}
           </span>
-        </Submit>
+        </Button>
       </div>
     </div>
   );

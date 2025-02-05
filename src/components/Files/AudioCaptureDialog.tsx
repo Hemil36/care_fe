@@ -1,14 +1,13 @@
 import { Link } from "raviger";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import CareIcon from "@/CAREUI/icons/CareIcon";
 
 import { useTimer } from "@/hooks/useTimer";
 
-import * as Notify from "@/Utils/Notifications";
-
-import useVoiceRecorder from "../../Utils/useVoiceRecorder";
+import useVoiceRecorder from "@/Utils/useVoiceRecorder";
 
 export interface AudioCaptureDialogProps {
   show: boolean;
@@ -50,9 +49,7 @@ export default function AudioCaptureDialog(props: AudioCaptureDialogProps) {
         timer.start();
       })
       .catch(() => {
-        Notify.Error({
-          msg: t("audio__permission_message"),
-        });
+        toast.error(t("audio__permission_message"));
         setStatus("PERMISSION_DENIED");
       });
   };
@@ -91,12 +88,12 @@ export default function AudioCaptureDialog(props: AudioCaptureDialogProps) {
             ? "PERMISSION_DENIED"
             : "WAITING_TO_RECORD",
         );
-      } catch (error) {
+      } catch {
         setStatus(null);
       }
     };
 
-    show && checkMicPermission();
+    if (show) checkMicPermission();
 
     return () => {
       setStatus(null);

@@ -1,30 +1,30 @@
-import { Link, navigate } from "raviger";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "raviger";
 import { useTranslation } from "react-i18next";
+
+import { cn } from "@/lib/utils";
 
 import Loading from "@/components/Common/Loading";
 import Page from "@/components/Common/Page";
 import { userChildProps } from "@/components/Common/UserColumns";
-import Error404 from "@/components/ErrorPages/404";
-import LinkedFacilitiesTab from "@/components/Users/LinkedFacilitiesTab";
-import LinkedSkillsTab from "@/components/Users/LinkedSkillsTab";
+import ErrorPage from "@/components/ErrorPages/DefaultErrorPage";
+import UserAvailabilityTab from "@/components/Users/UserAvailabilityTab";
 import UserBanner from "@/components/Users/UserBanner";
 import UserSummaryTab from "@/components/Users/UserSummary";
-import { UserModel } from "@/components/Users/models";
 
+import useAppHistory from "@/hooks/useAppHistory";
 import useAuthUser from "@/hooks/useAuthUser";
 
-import * as Notification from "@/Utils/Notifications";
-import { editUserPermissions } from "@/Utils/permissions";
 import routes from "@/Utils/request/api";
-import useTanStackQueryInstead from "@/Utils/request/useQuery";
-import { classNames, formatName, keysOf } from "@/Utils/utils";
+import query from "@/Utils/request/query";
+import { formatName, keysOf } from "@/Utils/utils";
 
 export interface UserHomeProps {
   username?: string;
   tab: string;
+  facilityId?: string;
 }
-export interface tabChildProp {
+export interface TabChildProp {
   body: (childProps: userChildProps) => JSX.Element | undefined;
   hidden?: boolean;
 }
@@ -32,56 +32,45 @@ export interface tabChildProp {
 export default function UserHome(props: UserHomeProps) {
   const { tab } = props;
   let { username } = props;
-  const [userData, setUserData] = useState<UserModel>();
   const { t } = useTranslation();
   const authUser = useAuthUser();
+  const { goBack } = useAppHistory();
   if (!username) {
     username = authUser.username;
   }
   const loggedInUser = username === authUser.username;
-  const urlPrefix = loggedInUser ? "/user" : `/users/${username}`;
 
-  const { loading, refetch: refetchUserDetails } = useTanStackQueryInstead(
-    routes.getUserDetails,
-    {
+  const {
+    data: userData,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["getUserDetails", username],
+    queryFn: query(routes.getUserDetails, {
       pathParams: {
         username: username,
       },
-      onResponse: ({ res, data, error }) => {
-        if (res?.status === 200 && data) {
-          setUserData(data);
-        } else if (res?.status === 400) {
-          navigate("/users");
-        } else if (error) {
-          Notification.Error({
-            msg: "Error while fetching user details: " + (error?.message || ""),
-          });
-        }
-      },
-    },
-  );
+    }),
+  });
 
-  if (loading || !userData) {
+  if (isError) {
+    goBack("/");
+  }
+
+  if (isLoading || !userData) {
     return <Loading />;
   }
 
-  const editPermissions = editUserPermissions(authUser, userData);
-
-  const TABS: {
-    PROFILE: tabChildProp;
-    SKILLS: tabChildProp;
-    FACILITIES: tabChildProp;
-  } = {
-    PROFILE: { body: UserSummaryTab },
-    SKILLS: {
-      body: LinkedSkillsTab,
-      hidden: !editPermissions,
+  const TABS = {
+    PROFILE: {
+      body: UserSummaryTab,
+      hidden: false,
     },
-    FACILITIES: {
-      body: LinkedFacilitiesTab,
-      hidden: !editPermissions,
+    AVAILABILITY: {
+      body: UserAvailabilityTab,
+      hidden: !props.facilityId,
     },
-  };
+  } satisfies Record<string, TabChildProp>;
 
   const normalizedTab = tab.toUpperCase();
   const isValidTab = (tab: string): tab is keyof typeof TABS =>
@@ -89,22 +78,32 @@ export default function UserHome(props: UserHomeProps) {
   const currentTab = isValidTab(normalizedTab) ? normalizedTab : undefined;
 
   if (!currentTab) {
-    return <Error404 />;
+    return <ErrorPage />;
   }
 
   const SelectedTab = TABS[currentTab].body;
+  const userUrl = props.facilityId
+    ? `/facility/${props.facilityId}/users/${username}`
+    : `/users/${username}`;
+
+  const usernameCrumb = {
+    [username]: { name: loggedInUser ? "Profile" : username },
+  };
+
+  const hideUsersCrumb = { users: { hide: true } };
+
+  const crumbsReplacements = {
+    ...usernameCrumb,
+    ...(!props.facilityId && hideUsersCrumb),
+  };
 
   return (
     <>
       <Page
         title={formatName(userData) || userData.username || t("manage_user")}
-        crumbsReplacements={
-          loggedInUser
-            ? { [username]: { name: "Profile" } }
-            : { [username]: { name: username } }
-        }
+        crumbsReplacements={crumbsReplacements}
         focusOnLoad={true}
-        backUrl="/users"
+        backUrl={props.facilityId ? `/users` : "/"}
         hideTitleOnPage
       >
         {
@@ -123,13 +122,13 @@ export default function UserHome(props: UserHomeProps) {
                         return (
                           <Link
                             key={p}
-                            className={classNames(
+                            className={cn(
                               "min-w-max-content cursor-pointer whitespace-nowrap text-sm font-semibold capitalize",
                               currentTab === p
                                 ? "border-b-2 border-primary-500 text-primary-600 hover:border-secondary-300"
                                 : "text-secondary-700 hover:text-secondary-700",
                             )}
-                            href={`${urlPrefix}/${p.toLocaleLowerCase()}`}
+                            href={`${userUrl}/${p.toLocaleLowerCase()}`}
                           >
                             <div className="px-3 py-1.5" id={p.toLowerCase()}>
                               {t(`USERMANAGEMENT_TAB__${p}`)}
@@ -141,12 +140,7 @@ export default function UserHome(props: UserHomeProps) {
                 </div>
               </div>
             </div>
-            <SelectedTab
-              userData={userData}
-              username={username}
-              {...props}
-              refetchUserData={refetchUserDetails}
-            />
+            <SelectedTab userData={userData} username={username} {...props} />
           </>
         }
       </Page>

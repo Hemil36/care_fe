@@ -1,9 +1,14 @@
+import { t } from "i18next";
 import { navigate, useQueryParams } from "raviger";
 import { useReducer, useState } from "react";
+import { toast } from "sonner";
 
 import Card from "@/CAREUI/display/Card";
 
-import { Cancel, Submit } from "@/components/Common/ButtonV2";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
 import CircularProgress from "@/components/Common/CircularProgress";
 import { FacilitySelect } from "@/components/Common/FacilitySelect";
 import Loading from "@/components/Common/Loading";
@@ -12,42 +17,33 @@ import UserAutocomplete from "@/components/Common/UserAutocompleteFormField";
 import { FieldLabel } from "@/components/Form/FormFields/FormField";
 import RadioFormField from "@/components/Form/FormFields/RadioFormField";
 import { SelectFormField } from "@/components/Form/FormFields/SelectFormField";
-import TextAreaFormField from "@/components/Form/FormFields/TextAreaFormField";
 import TextFormField from "@/components/Form/FormFields/TextFormField";
 import { FieldChangeEvent } from "@/components/Form/FormFields/Utils";
 import { UserModel } from "@/components/Users/models";
 
 import useAppHistory from "@/hooks/useAppHistory";
 
-import { RESOURCE_CHOICES } from "@/common/constants";
+import { RESOURCE_STATUS_CHOICES } from "@/common/constants";
 
-import * as Notification from "@/Utils/Notifications";
 import routes from "@/Utils/request/api";
 import request from "@/Utils/request/request";
 import useTanStackQueryInstead from "@/Utils/request/useQuery";
+import { UpdateResourceRequest } from "@/types/resourceRequest/resourceRequest";
 
 interface resourceProps {
   id: string;
+  facilityId: string;
 }
 
-const resourceStatusOptions = RESOURCE_CHOICES.map((obj) => obj.text);
-
-const initForm: any = {
-  approving_facility_object: null,
-  assigned_facility_object: null,
-  emergency: "false",
+const initForm: Partial<UpdateResourceRequest> = {
+  assigned_facility: null,
+  emergency: false,
   title: "",
   reason: "",
-  assigned_facility_type: "",
-  assigned_to: "",
-  requested_quantity: null,
-  assigned_quantity: null,
+  assigned_to: null,
 };
 
 const requiredFields: any = {
-  approving_facility_object: {
-    errorText: "Resource approving facility can not be empty.",
-  },
   assigned_facility_type: {
     errorText: "Please Select Facility Type",
   },
@@ -141,7 +137,7 @@ export const ResourceDetailsUpdate = (props: resourceProps) => {
       onResponse: ({ res, data }) => {
         if (res && data) {
           const d = data;
-          d["status"] = qParams.status || data.status;
+          d["status"] = qParams.status || data.status.toLowerCase();
           dispatch({ type: "set_form", form: d });
         }
         setIsLoading(false);
@@ -155,21 +151,23 @@ export const ResourceDetailsUpdate = (props: resourceProps) => {
     if (validForm) {
       setIsLoading(true);
 
-      const resourceData = {
-        category: "OXYGEN",
+      const resourceData: UpdateResourceRequest = {
+        id: props.id,
         status: state.form.status,
-        origin_facility: state.form.origin_facility_object?.id,
-        approving_facility: state.form?.approving_facility_object?.id,
-        assigned_facility: state.form?.assigned_facility_object?.id,
+        origin_facility: state.form.origin_facility?.id,
+        assigned_facility: state.form?.assigned_facility?.id,
         emergency: [true, "true"].includes(state.form.emergency),
         title: state.form.title,
         reason: state.form.reason,
         assigned_to: state.form.assigned_to,
-        requested_quantity: state.form.requested_quantity || 0,
-        assigned_quantity:
-          state.form.status === "PENDING"
-            ? state.form.assigned_quantity
-            : resourceDetails?.assigned_quantity || 0,
+        category: state.form.category,
+        priority: state.form.priority,
+        referring_facility_contact_number:
+          state.form.referring_facility_contact_number,
+        referring_facility_contact_name:
+          state.form.referring_facility_contact_name,
+        approving_facility: state.form.approving_facility?.id,
+        related_patient: state.form.related_patient?.id,
       };
 
       const { res, data } = await request(routes.updateResource, {
@@ -180,11 +178,8 @@ export const ResourceDetailsUpdate = (props: resourceProps) => {
 
       if (res && res.status == 200 && data) {
         dispatch({ type: "set_form", form: data });
-        Notification.Success({
-          msg: "Resource request updated successfully",
-        });
-
-        navigate(`/resource/${props.id}`);
+        toast.success(t("request_updated_successfully"));
+        navigate(`/facility/${props.facilityId}/resource/${props.id}`);
       } else {
         setIsLoading(false);
       }
@@ -197,8 +192,8 @@ export const ResourceDetailsUpdate = (props: resourceProps) => {
 
   return (
     <Page
-      title="Update Resource Request"
-      backUrl={`/resource/${props.id}`}
+      title="Update Request"
+      backUrl={`/facility/${props.facilityId}/resource/${props.id}`}
       crumbsReplacements={{ [props.id]: { name: resourceDetails?.title } }}
     >
       <div className="mt-4">
@@ -209,9 +204,10 @@ export const ResourceDetailsUpdate = (props: resourceProps) => {
                 label="Status"
                 name="status"
                 value={state.form.status}
-                options={resourceStatusOptions}
+                options={RESOURCE_STATUS_CHOICES}
+                optionValue={(option) => option.text}
                 onChange={handleChange}
-                optionLabel={(option) => option}
+                optionLabel={(option) => t(`resource_status__${option.text}`)}
               />
             </div>
             <div className="md:col-span-1">
@@ -229,19 +225,6 @@ export const ResourceDetailsUpdate = (props: resourceProps) => {
                 )}
               </div>
             </div>
-            <div>
-              <FieldLabel>Name of resource approving facility</FieldLabel>
-              <FacilitySelect
-                multiple={false}
-                name="approving_facility"
-                facilityType={1500}
-                selected={state.form.approving_facility_object}
-                setSelected={(obj) =>
-                  setFacility(obj, "approving_facility_object")
-                }
-                errors={state.errors.approving_facility}
-              />
-            </div>
 
             <div>
               <FieldLabel>
@@ -250,31 +233,9 @@ export const ResourceDetailsUpdate = (props: resourceProps) => {
               <FacilitySelect
                 multiple={false}
                 name="assigned_facility"
-                facilityType={1510}
-                selected={state.form.assigned_facility_object}
-                setSelected={(obj) =>
-                  setFacility(obj, "assigned_facility_object")
-                }
+                selected={state.form.assigned_facility}
+                setSelected={(obj) => setFacility(obj, "assigned_facility")}
                 errors={state.errors.assigned_facility}
-              />
-            </div>
-            <div>
-              <TextFormField
-                label="Required Quantity"
-                name="requested_quantity"
-                type="number"
-                value={state.form.requested_quantity}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <TextFormField
-                name="assigned_quantity"
-                type="number"
-                label="Approved Quantity"
-                value={state.form.assigned_quantity}
-                onChange={handleChange}
-                disabled={state.form.status !== "PENDING"}
               />
             </div>
 
@@ -291,15 +252,23 @@ export const ResourceDetailsUpdate = (props: resourceProps) => {
             </div>
 
             <div className="md:col-span-2">
-              <TextAreaFormField
+              <Label className="text-gray-700 mb-3 mt-1">
+                {t("request_reason")}
+              </Label>
+              <Textarea
                 rows={5}
                 name="reason"
-                placeholder="Type your description here"
+                placeholder={t("request_reason_placeholder")}
                 value={state.form.reason}
-                onChange={handleChange}
-                label="Reason of Request*"
-                error={state.errors.reason}
+                onChange={(e) =>
+                  handleChange({ name: e.target.name, value: e.target.value })
+                }
               />
+              {state.errors.reason && (
+                <p className="text-red-500 text-sm mt-2">
+                  {state.errors.emergency}
+                </p>
+              )}
             </div>
 
             <div>
@@ -316,8 +285,12 @@ export const ResourceDetailsUpdate = (props: resourceProps) => {
             </div>
 
             <div className="mt-4 flex flex-col justify-between gap-2 md:col-span-2 md:flex-row">
-              <Cancel variant="secondary" onClick={() => goBack()} />
-              <Submit onClick={handleSubmit} />
+              <Button type="button" variant="outline" onClick={() => goBack()}>
+                {t("cancel")}
+              </Button>
+              <Button type="submit" variant="primary" onClick={handleSubmit}>
+                {t("submit")}
+              </Button>
             </div>
           </div>
         </Card>

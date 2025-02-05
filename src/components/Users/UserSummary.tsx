@@ -1,31 +1,26 @@
+import { useMutation } from "@tanstack/react-query";
 import { navigate } from "raviger";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import CareIcon from "@/CAREUI/icons/CareIcon";
 
-import ButtonV2 from "@/components/Common/ButtonV2";
+import { Button } from "@/components/ui/button";
+
 import LanguageSelector from "@/components/Common/LanguageSelector";
 import UserColumns from "@/components/Common/UserColumns";
 import UserAvatar from "@/components/Users/UserAvatar";
 import UserDeleteDialog from "@/components/Users/UserDeleteDialog";
-import {
-  UserBasicInfoView,
-  UserContactInfoView,
-  UserProfessionalInfoView,
-} from "@/components/Users/UserEditDetails";
 import UserResetPassword from "@/components/Users/UserResetPassword";
 import UserSoftwareUpdate from "@/components/Users/UserSoftwareUpdate";
 import {
   BasicInfoDetails,
   ContactInfoDetails,
-  ProfessionalInfoDetails,
 } from "@/components/Users/UserViewDetails";
-import { UserModel } from "@/components/Users/models";
 
 import useAuthUser from "@/hooks/useAuthUser";
 
-import * as Notification from "@/Utils/Notifications";
 import {
   editUserPermissions,
   showAvatarEdit,
@@ -34,47 +29,42 @@ import {
 } from "@/Utils/permissions";
 import routes from "@/Utils/request/api";
 import request from "@/Utils/request/request";
+import EditUserSheet from "@/pages/Organization/components/EditUserSheet";
+import { UserBase } from "@/types/user/user";
 
-export default function UserSummaryTab({
-  userData,
-  refetchUserData,
-}: {
-  userData?: UserModel;
-  refetchUserData?: () => void;
-}) {
+export default function UserSummaryTab({ userData }: { userData?: UserBase }) {
   const { t } = useTranslation();
   const [showDeleteDialog, setshowDeleteDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const authUser = useAuthUser();
+  const [showEditUserSheet, setShowEditUserSheet] = useState(false);
 
+  const { mutate: deleteUser, isPending: isDeleting } = useMutation({
+    mutationFn: async () => {
+      return await request(routes.deleteUser, {
+        pathParams: { username: userData?.username || "" },
+      });
+    },
+    onSuccess: () => {
+      toast.success(t("user_deleted_successfully"));
+      setshowDeleteDialog(false);
+      navigate("/users");
+    },
+    onError: () => {
+      setshowDeleteDialog(false);
+      toast.error(t("user_delete_error"));
+    },
+  });
   if (!userData) {
     return <></>;
   }
 
   const handleSubmit = async () => {
-    setIsDeleting(true);
-    const { res, error } = await request(routes.deleteUser, {
-      pathParams: { username: userData.username },
-    });
-    setIsDeleting(false);
-    if (res?.status === 204) {
-      Notification.Success({
-        msg: t("user_deleted_successfully"),
-      });
-      setshowDeleteDialog(!showDeleteDialog);
-      navigate("/users");
-    } else {
-      Notification.Error({
-        msg: t("user_delete_error") + ": " + (error || ""),
-      });
-      setshowDeleteDialog(!showDeleteDialog);
-    }
+    deleteUser();
   };
 
   const userColumnsData = {
     userData,
     username: userData.username,
-    refetchUserData,
   };
   const deletePermitted = showUserDelete(authUser, userData);
   const passwordResetPermitted = showUserPasswordReset(authUser, userData);
@@ -82,15 +72,6 @@ export default function UserSummaryTab({
   const editPermissions = editUserPermissions(authUser, userData);
 
   const renderBasicInformation = () => {
-    if (editPermissions) {
-      return (
-        <UserBasicInfoView
-          username={userData.username}
-          userData={userData}
-          onSubmitSuccess={refetchUserData}
-        />
-      );
-    }
     return (
       <div className="overflow-visible px-4 py-5 sm:px-6 rounded-lg shadow sm:rounded-lg bg-white">
         <BasicInfoDetails user={userData} />
@@ -99,35 +80,9 @@ export default function UserSummaryTab({
   };
 
   const renderContactInformation = () => {
-    if (editPermissions) {
-      return (
-        <UserContactInfoView
-          username={userData.username}
-          userData={userData}
-          onSubmitSuccess={refetchUserData}
-        />
-      );
-    }
     return (
       <div className="overflow-visible px-4 py-5 sm:px-6 rounded-lg shadow sm:rounded-lg bg-white">
         <ContactInfoDetails user={userData} />
-      </div>
-    );
-  };
-
-  const renderProfessionalInformation = () => {
-    if (editPermissions) {
-      return (
-        <UserProfessionalInfoView
-          username={userData.username}
-          userData={userData}
-          onSubmitSuccess={refetchUserData}
-        />
-      );
-    }
-    return (
-      <div className="overflow-visible px-4 py-5 sm:px-6 rounded-lg shadow sm:rounded-lg bg-white">
-        <ProfessionalInfoDetails user={userData} />
       </div>
     );
   };
@@ -143,7 +98,23 @@ export default function UserSummaryTab({
           }}
         />
       )}
+      <EditUserSheet
+        existingUsername={userData.username}
+        open={showEditUserSheet}
+        setOpen={setShowEditUserSheet}
+      />
       <div className="mt-10 flex flex-col gap-y-6">
+        {editPermissions && (
+          <Button
+            variant="outline"
+            className="w-fit self-end"
+            data-cy="edit-user-button"
+            onClick={() => setShowEditUserSheet(true)}
+          >
+            <CareIcon icon="l-pen" className="mr-2 h-4 w-4" />
+            {t("edit_user")}
+          </Button>
+        )}
         {avatarPermitted && (
           <UserColumns
             heading={t("edit_avatar")}
@@ -180,18 +151,6 @@ export default function UserSummaryTab({
           Child={renderContactInformation}
           childProps={userColumnsData}
         />
-        <UserColumns
-          heading={t("professional_info")}
-          note={
-            authUser.username === userData.username
-              ? t("professional_info_note_self")
-              : editPermissions
-                ? t("professional_info_note")
-                : t("professional_info_note_view")
-          }
-          Child={renderProfessionalInformation}
-          childProps={userColumnsData}
-        />
         {passwordResetPermitted && (
           <UserColumns
             heading={t("reset_password")}
@@ -225,17 +184,16 @@ export default function UserSummaryTab({
               </div>
             </div>
             <div className="w-3/4">
-              <ButtonV2
-                authorizeFor={() => deletePermitted}
+              <Button
                 onClick={() => setshowDeleteDialog(true)}
-                variant="danger"
+                variant="destructive"
                 data-testid="user-delete-button"
                 className="my-1 inline-flex"
                 disabled={isDeleting}
               >
                 <CareIcon icon="l-trash" className="h-4" />
                 <span className="">{t("delete_account_btn")}</span>
-              </ButtonV2>
+              </Button>
             </div>
           </div>
         )}

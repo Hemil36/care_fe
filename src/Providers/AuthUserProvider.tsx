@@ -1,6 +1,7 @@
 import careConfig from "@careConfig";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { navigate } from "raviger";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Loading from "@/components/Common/Loading";
 
@@ -9,21 +10,37 @@ import { AuthUserContext } from "@/hooks/useAuthUser";
 import { LocalStorageKeys } from "@/common/constants";
 
 import routes from "@/Utils/request/api";
+import query from "@/Utils/request/query";
 import request from "@/Utils/request/request";
-import useTanStackQueryInstead from "@/Utils/request/useQuery";
+import { TokenData } from "@/types/auth/otpToken";
 
 interface Props {
   children: React.ReactNode;
   unauthorized: React.ReactNode;
+  otpAuthorized: React.ReactNode;
 }
 
-export default function AuthUserProvider({ children, unauthorized }: Props) {
-  const {
-    res,
-    data: user,
-    loading,
-    refetch,
-  } = useTanStackQueryInstead(routes.currentUser, { silent: true });
+export default function AuthUserProvider({
+  children,
+  unauthorized,
+  otpAuthorized,
+}: Props) {
+  const queryClient = useQueryClient();
+  const [accessToken, setAccessToken] = useState(
+    localStorage.getItem(LocalStorageKeys.accessToken),
+  );
+  const [patientToken, setPatientToken] = useState<TokenData | null>(
+    JSON.parse(
+      localStorage.getItem(LocalStorageKeys.patientTokenKey) || "null",
+    ),
+  );
+
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["currentUser", accessToken],
+    queryFn: query(routes.currentUser, { silent: true }),
+    retry: false,
+    enabled: !!localStorage.getItem(LocalStorageKeys.accessToken),
+  });
 
   useEffect(() => {
     if (!user) {
@@ -42,10 +59,11 @@ export default function AuthUserProvider({ children, unauthorized }: Props) {
       const query = await request(routes.login, { body: creds });
 
       if (query.res?.ok && query.data) {
+        setAccessToken(query.data.access);
         localStorage.setItem(LocalStorageKeys.accessToken, query.data.access);
         localStorage.setItem(LocalStorageKeys.refreshToken, query.data.refresh);
 
-        await refetch();
+        await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
         if (location.pathname === "/" || location.pathname === "/login") {
           navigate(getRedirectOr("/"));
@@ -54,26 +72,41 @@ export default function AuthUserProvider({ children, unauthorized }: Props) {
 
       return query;
     },
-    [refetch],
+    [queryClient],
   );
+
+  const patientLogin = (tokenData: TokenData, redirectUrl: string) => {
+    setPatientToken(tokenData);
+    localStorage.setItem(
+      LocalStorageKeys.patientTokenKey,
+      JSON.stringify(tokenData),
+    );
+    navigate(redirectUrl);
+  };
 
   const signOut = useCallback(async () => {
     localStorage.removeItem(LocalStorageKeys.accessToken);
     localStorage.removeItem(LocalStorageKeys.refreshToken);
+    localStorage.removeItem(LocalStorageKeys.patientTokenKey);
+    setPatientToken(null);
 
-    await refetch();
+    await queryClient.resetQueries({ queryKey: ["currentUser"] });
 
     const redirectURL = getRedirectURL();
-    navigate(redirectURL ? `/?redirect=${redirectURL}` : "/");
-  }, [refetch]);
+    navigate(redirectURL ? `/login?redirect=${redirectURL}` : "/login");
+  }, [queryClient]);
 
   // Handles signout from current tab, if signed out from another tab.
   useEffect(() => {
-    const listener = (event: any) => {
+    const listener = (event: StorageEvent) => {
       if (
         !event.newValue &&
-        (LocalStorageKeys.accessToken === event.key ||
-          LocalStorageKeys.refreshToken === event.key)
+        event.key &&
+        [
+          LocalStorageKeys.accessToken,
+          LocalStorageKeys.refreshToken,
+          LocalStorageKeys.patientTokenKey,
+        ].includes(event.key)
       ) {
         signOut();
       }
@@ -86,9 +119,19 @@ export default function AuthUserProvider({ children, unauthorized }: Props) {
     };
   }, [signOut]);
 
-  if (loading || !res) {
+  if (isLoading) {
     return <Loading />;
   }
+
+  const SelectedRouter = () => {
+    if (user) {
+      return children;
+    } else if (patientToken?.token) {
+      return otpAuthorized;
+    } else {
+      return unauthorized;
+    }
+  };
 
   return (
     <AuthUserContext.Provider
@@ -96,10 +139,11 @@ export default function AuthUserProvider({ children, unauthorized }: Props) {
         signIn,
         signOut,
         user,
-        refetchUser: refetch,
+        patientLogin,
+        patientToken,
       }}
     >
-      {!res.ok || !user ? unauthorized : children}
+      <SelectedRouter />
     </AuthUserContext.Provider>
   );
 }

@@ -1,12 +1,20 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { t } from "i18next";
 import { useState } from "react";
+import { Trans } from "react-i18next";
+import { toast } from "sonner";
+
+import { cn } from "@/lib/utils";
 
 import CareIcon from "@/CAREUI/icons/CareIcon";
 
-import { Cancel, Submit } from "@/components/Common/ButtonV2";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
 import DialogModal from "@/components/Common/Dialog";
 import FilePreviewDialog from "@/components/Common/FilePreviewDialog";
 import { StateInterface } from "@/components/Files/FileUpload";
-import TextAreaFormField from "@/components/Form/FormFields/TextAreaFormField";
 import TextFormField from "@/components/Form/FormFields/TextFormField";
 import { FileUploadModel } from "@/components/Patient/models";
 
@@ -15,9 +23,9 @@ import {
   PREVIEWABLE_FILE_EXTENSIONS,
 } from "@/common/constants";
 
-import * as Notification from "@/Utils/Notifications";
 import routes from "@/Utils/request/api";
-import request from "@/Utils/request/request";
+import mutate from "@/Utils/request/mutate";
+import query from "@/Utils/request/query";
 import { formatDateTime } from "@/Utils/utils";
 
 export interface FileManagerOptions {
@@ -74,6 +82,7 @@ export default function useFileManager(
     useState<FileUploadModel | null>(null);
   const [editError, setEditError] = useState("");
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
+  const queryClient = useQueryClient();
 
   const getExtension = (url: string) => {
     const div1 = url.split("?")[0].split(".");
@@ -81,31 +90,35 @@ export default function useFileManager(
     return ext;
   };
 
+  const retrieveUpload = async (
+    file: FileUploadModel,
+    associating_id: string,
+  ) => {
+    return queryClient.fetchQuery({
+      queryKey: ["file", fileType, associating_id, file.id],
+      queryFn: () =>
+        query(routes.retrieveUpload, {
+          queryParams: {
+            file_type: fileType,
+            associating_id,
+          },
+          pathParams: { id: file.id || "" },
+        })({} as any),
+    });
+  };
+
   const viewFile = async (file: FileUploadModel, associating_id: string) => {
     const index = uploadedFiles?.findIndex((f) => f.id === file.id) ?? -1;
     setCurrentIndex(index);
     setFileUrl("");
     setFileState({ ...file_state, open: true });
-    const { data } = await request(routes.retrieveUpload, {
-      query: {
-        file_type: fileType,
-        associating_id,
-      },
-      pathParams: { id: file.id || "" },
-    });
+
+    const data = await retrieveUpload(file, associating_id);
 
     if (!data) return;
 
     const signedUrl = data.read_signed_url as string;
     const extension = getExtension(signedUrl);
-
-    const downloadFileUrl = (url: string) => {
-      fetch(url)
-        .then((res) => res.blob())
-        .then((blob) => {
-          setDownloadURL(URL.createObjectURL(blob));
-        });
-    };
 
     setFileState({
       ...file_state,
@@ -116,7 +129,7 @@ export default function useFileManager(
         extension as (typeof FILE_EXTENSIONS.IMAGE)[number],
       ),
     });
-    downloadFileUrl(signedUrl);
+    setDownloadURL(signedUrl);
     setFileUrl(signedUrl);
   };
 
@@ -130,30 +143,35 @@ export default function useFileManager(
     }
   };
 
+  const { mutateAsync: archiveUpload } = useMutation({
+    mutationFn: (body: { id: string; archive_reason: string }) =>
+      query(routes.archiveUpload, {
+        body: { archive_reason: body.archive_reason },
+        pathParams: { id: body.id },
+      })({} as any),
+    onSuccess: () => {
+      toast.success(t("file_archived_successfully"));
+      queryClient.invalidateQueries({
+        queryKey: ["files", fileType, archiveDialogueOpen?.associating_id],
+      });
+    },
+  });
+
   const handleFileArchive = async (archiveFile: typeof archiveDialogueOpen) => {
     if (!validateArchiveReason(archiveReason)) {
       setArchiving(false);
       return;
     }
 
-    const { res } = await request(routes.editUpload, {
-      body: { is_archived: true, archive_reason: archiveReason },
-      pathParams: {
-        id: archiveFile?.id || "",
-        fileType,
-        associatingId: archiveFile?.associating_id || "",
-      },
+    await archiveUpload({
+      id: archiveFile?.id || "",
+      archive_reason: archiveReason,
     });
-
-    if (res?.ok) {
-      Notification.Success({ msg: "File archived successfully" });
-    }
 
     setArchiveDialogueOpen(null);
     setArchiving(false);
     setArchiveReason("");
-    onArchive && onArchive();
-    return res;
+    onArchive?.();
   };
 
   const archiveFile = (
@@ -194,26 +212,34 @@ export default function useFileManager(
     }
   };
 
+  const { mutateAsync: editUpload } = useMutation({
+    mutationFn: (body: { id: string; name: string; associating_id: string }) =>
+      mutate(routes.editUpload, {
+        body: { name: body.name },
+        pathParams: { id: body.id },
+      })(body),
+    onSuccess: (_, { associating_id }) => {
+      toast.success(t("file_name_changed_successfully"));
+      setEditDialogueOpen(null);
+      onEdit?.();
+      queryClient.invalidateQueries({
+        queryKey: ["files", fileType, associating_id],
+      });
+    },
+  });
+
   const partialupdateFileName = async (file: FileUploadModel) => {
     if (!validateEditFileName(file.name || "")) {
       setEditing(false);
       return;
     }
 
-    const { res } = await request(routes.editUpload, {
-      body: { name: file.name },
-      pathParams: {
-        id: file.id || "",
-        fileType,
-        associatingId: file.associating_id || "",
-      },
+    await editUpload({
+      id: file.id || "",
+      name: file.name || "",
+      associating_id: file.associating_id || "",
     });
 
-    if (res?.ok) {
-      Notification.Success({ msg: "File name changed successfully" });
-      setEditDialogueOpen(null);
-      onEdit && onEdit();
-    }
     setEditing(false);
   };
 
@@ -268,26 +294,41 @@ export default function useFileManager(
           className="mx-2 my-4 flex w-full flex-col"
         >
           <div>
-            <TextAreaFormField
+            <Label className="text-gray-800 mb-2">
+              <Trans
+                i18nKey="state_reason_for_archiving"
+                values={{ name: archiveDialogueOpen?.name }}
+                components={{ strong: <strong /> }}
+              />
+            </Label>
+            <Textarea
               name="editFileName"
               id="archive-file-reason"
-              label={
-                <span>
-                  State the reason for archiving{" "}
-                  <b>{archiveDialogueOpen?.name}</b> file?
-                </span>
-              }
               rows={6}
               required
               placeholder="Type the reason..."
               value={archiveReason}
-              onChange={(e) => setArchiveReason(e.value)}
-              error={archiveReasonError}
+              onChange={(e) => setArchiveReason(e.target.value)}
+              className={cn(
+                archiveReasonError &&
+                  "border-red-500 focus-visible:ring-red-500",
+              )}
             />
+            {archiveReasonError && (
+              <p className="text-sm text-red-500">{archiveReasonError}</p>
+            )}
           </div>
           <div className="mt-4 flex flex-col-reverse justify-end gap-2 md:flex-row">
-            <Cancel onClick={() => setArchiveDialogueOpen(null)} />
-            <Submit disabled={archiving} label="Proceed" />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setArchiveDialogueOpen(null)}
+            >
+              {t("cancel")}
+            </Button>
+            <Button type="submit" variant="primary" disabled={archiving}>
+              {t("proceed")}
+            </Button>
           </div>
         </form>
       </DialogModal>
@@ -364,7 +405,13 @@ export default function useFileManager(
           ))}
         </div>
         <div className="mt-10 flex justify-end">
-          <Cancel onClick={(_) => setArchiveDialogueOpen(null)} />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setArchiveDialogueOpen(null)}
+          >
+            {t("cancel")}
+          </Button>
         </div>
       </DialogModal>
       <DialogModal
@@ -405,15 +452,24 @@ export default function useFileManager(
             />
           </div>
           <div className="mt-4 flex flex-col-reverse justify-end gap-2 md:flex-row">
-            <Cancel onClick={() => setEditDialogueOpen(null)} />
-            <Submit
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditDialogueOpen(null)}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
               disabled={
                 editing === true ||
                 editDialogueOpen?.name === "" ||
                 editDialogueOpen?.name?.length === 0
               }
-              label="Proceed"
-            />
+            >
+              {t("proceed")}
+            </Button>
           </div>
         </form>
       </DialogModal>
@@ -444,11 +500,8 @@ export default function useFileManager(
   ) => {
     try {
       if (!file.id) return;
-      Notification.Success({ msg: "Downloading file..." });
-      const { data: fileData } = await request(routes.retrieveUpload, {
-        query: { file_type: fileType, associating_id },
-        pathParams: { id: file.id },
-      });
+      toast.success(t("file_download_started"));
+      const fileData = await retrieveUpload(file, associating_id);
       const response = await fetch(fileData?.read_signed_url || "");
       if (!response.ok) throw new Error("Network response was not ok.");
 
@@ -464,8 +517,9 @@ export default function useFileManager(
       // Clean up
       window.URL.revokeObjectURL(blobUrl);
       document.body.removeChild(a);
-    } catch (err) {
-      Notification.Error({ msg: "Failed to download file" });
+      toast.success(t("file_download_completed"));
+    } catch {
+      toast.error(t("file_download_failed"));
     }
   };
 

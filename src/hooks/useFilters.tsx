@@ -1,4 +1,3 @@
-import careConfig from "@careConfig";
 import { QueryParam, setQueryParamsOptions, useQueryParams } from "raviger";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,7 +6,6 @@ import GenericFilterBadge from "@/CAREUI/display/FilterBadge";
 
 import PaginationComponent from "@/components/Common/Pagination";
 
-import { triggerGoal } from "@/Integrations/Plausible";
 import FiltersCache from "@/Utils/FiltersCache";
 import { classNames, humanizeStrings } from "@/Utils/utils";
 
@@ -50,17 +48,6 @@ export default function useFilters({
   ) => {
     query = FiltersCache.utils.clean(query);
     _setQueryParams(query, options);
-
-    // For each of the newly applied filters (additional filters compared to
-    // previously applied ones), trigger a plausible goal "Advanced filter
-    // applied" with the applied filter's query key and current location as tags.
-    Object.keys(query).forEach((filter) =>
-      triggerGoal("Advanced filter applied", {
-        filter,
-        location: location.pathname,
-      }),
-    );
-
     updateCache(query);
   };
 
@@ -143,7 +130,7 @@ export default function useFilters({
       const paramKeys = [paramKey + "_" + minKey, paramKey + "_" + maxKey];
       const values = [qParams[paramKeys[0]], qParams[paramKeys[1]]];
       if (values[0] === values[1])
-        return [{ name, value: values[0], paramKey: paramKeys }];
+        return [{ name, value: values[0], paramKey: paramKeys[0] }];
       return [name + " " + minKey, name + " " + maxKey].map((name, i) => {
         return { name, value: values[i], paramKey: paramKeys[i] };
       });
@@ -174,12 +161,6 @@ export default function useFilters({
         "";
       return { name, value, paramKey };
     },
-    kasp(nameSuffix = "", paramKey = "is_kasp") {
-      const { kasp } = careConfig;
-      const name = nameSuffix ? kasp.string + " " + nameSuffix : kasp.string;
-      const [trueLabel, falseLabel] = [kasp.string, "Non " + kasp.string];
-      return badgeUtils.boolean(name, paramKey, { trueLabel, falseLabel });
-    },
   };
 
   const FilterBadges = ({
@@ -209,7 +190,7 @@ export default function useFilters({
 
     return (
       <div
-        className={`col-span-3 my-2 flex w-full flex-wrap items-center gap-2 mt-6  ${show ? "" : "hidden"}`}
+        className={`col-span-3 flex w-full flex-wrap items-center gap-2 ${show ? "" : "hidden"}`}
       >
         {compiledBadges.map((props) => (
           <FilterBadge {...props} name={t(props.name)} key={props.name} />

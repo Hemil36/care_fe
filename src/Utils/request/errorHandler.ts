@@ -1,7 +1,9 @@
+import { t } from "i18next";
 import { navigate } from "raviger";
+import { toast } from "sonner";
 
 import * as Notifications from "@/Utils/Notifications";
-import { HTTPError } from "@/Utils/request/types";
+import { HTTPError, StructuredError } from "@/Utils/request/types";
 
 export function handleHttpError(error: Error) {
   if (error.name === "AbortError") {
@@ -9,7 +11,7 @@ export function handleHttpError(error: Error) {
   }
 
   if (!(error instanceof HTTPError)) {
-    Notifications.Error({ msg: error.message || "Something went wrong!" });
+    toast.error(error.message || t("something_went_wrong"));
     return;
   }
 
@@ -19,19 +21,33 @@ export function handleHttpError(error: Error) {
 
   const cause = error.cause;
 
+  if (isNotFound(error)) {
+    toast.error((cause?.detail as string) || t("not_found"));
+    return;
+  }
+
   if (isSessionExpired(cause)) {
     handleSessionExpired();
     return;
   }
 
   if (isBadRequest(error)) {
-    Notifications.BadRequest({ errs: cause });
+    const errs = cause?.errors;
+    if (isPydanticError(errs)) {
+      handlePydanticErrors(errs);
+      return;
+    }
+
+    if (isStructuredError(cause)) {
+      handleStructuredErrors(cause);
+      return;
+    }
+
+    Notifications.BadRequest({ errs });
     return;
   }
 
-  Notifications.Error({
-    msg: cause?.detail || "Something went wrong...!",
-  });
+  toast.error((cause?.detail as string) || t("something_went_wrong"));
 }
 
 function isSessionExpired(error: HTTPError["cause"]) {
@@ -51,4 +67,59 @@ function handleSessionExpired() {
 
 function isBadRequest(error: HTTPError) {
   return error.status === 400 || error.status === 406;
+}
+
+function isNotFound(error: HTTPError) {
+  return error.status === 404;
+}
+
+type PydanticError = {
+  type: string;
+  loc?: string[];
+  msg: string | Record<string, string>;
+  input?: unknown;
+  url?: string;
+};
+
+function isStructuredError(err: HTTPError["cause"]): err is StructuredError {
+  return typeof err === "object" && !Array.isArray(err);
+}
+
+function handleStructuredErrors(cause: StructuredError) {
+  for (const value of Object.values(cause)) {
+    if (Array.isArray(value)) {
+      value.forEach((err) => toast.error(err));
+      return;
+    }
+    if (typeof value === "string") {
+      toast.error(value);
+      return;
+    }
+  }
+}
+
+function isPydanticError(errors: unknown): errors is PydanticError[] {
+  return (
+    Array.isArray(errors) &&
+    errors.every(
+      (error) => typeof error === "object" && error !== null && "type" in error,
+    )
+  );
+}
+
+function handlePydanticErrors(errors: PydanticError[]) {
+  errors.map(({ type, loc, msg }) => {
+    const message = typeof msg === "string" ? msg : Object.values(msg)[0];
+    if (!loc) {
+      toast.error(message);
+      return;
+    }
+    type = type
+      .replace("_", " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+    toast.error(message, {
+      description: `${type}: '${loc.join(".")}'`,
+      duration: 8000,
+    });
+  });
 }

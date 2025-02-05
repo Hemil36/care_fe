@@ -1,5 +1,6 @@
 import { ValidateEnv } from "@julr/vite-plugin-validate-env";
-import react from "@vitejs/plugin-react-swc";
+import federation from "@originjs/vite-plugin-federation";
+import react from "@vitejs/plugin-react";
 import DOMPurify from "dompurify";
 import fs from "fs";
 import { JSDOM } from "jsdom";
@@ -59,28 +60,90 @@ function getPluginAliases() {
   return aliases;
 }
 
-function getPluginDependencies(): string[] {
-  const pluginsDir = path.resolve(__dirname, "apps");
-  // Make sure the `apps` folder exists
-  if (!fs.existsSync(pluginsDir)) {
-    return [];
+/**
+ * Parses a remote app configuration string into its components
+ * @param appConfig - Configuration string for a remote app
+ * @returns Parsed configuration object
+ */
+interface ParsedRemoteConfig {
+  url: string;
+  org: string;
+  repo: string;
+}
+
+function parseRemoteConfig(appConfig: string): ParsedRemoteConfig {
+  if (!appConfig.includes("/")) {
+    throw new Error(
+      `Invalid app configuration format: ${appConfig}. Expected 'org/repo' or 'org/repo@url'.`,
+    );
   }
-  const pluginFolders = fs.readdirSync(pluginsDir);
-
-  const dependencies = new Set<string>();
-
-  pluginFolders.forEach((pluginFolder) => {
-    const packageJsonPath = path.join(pluginsDir, pluginFolder, "package.json");
-    if (fs.existsSync(packageJsonPath)) {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-      const pluginDependencies = packageJson.dependencies
-        ? Object.keys(packageJson.dependencies)
-        : [];
-      pluginDependencies.forEach((dep) => dependencies.add(dep));
+  // Handle custom URLs (both localhost and custom hosted)
+  if (appConfig.includes("@")) {
+    const [package_, url] = appConfig.split("@");
+    const [org, repo] = package_.split("/");
+    if (!org || !repo || !url) {
+      throw new Error(
+        `Invalid custom URL configuration: ${appConfig}. Expected 'org/repo@url'.`,
+      );
     }
-  });
+    // Add appropriate protocol based on whether it's localhost
+    const protocol = url.includes("localhost") ? "http://" : "https://";
+    const fullUrl = url.startsWith("http") ? url : `${protocol}${url}`;
 
-  return Array.from(dependencies);
+    return {
+      url: `${fullUrl}/assets/remoteEntry.js`,
+      org,
+      repo,
+    };
+  }
+
+  // Handle GitHub Pages URLs
+  const [org, repo] = appConfig.split("/");
+  if (!org || !repo) {
+    throw new Error(
+      `Invalid GitHub Pages configuration: ${appConfig}. Expected 'org/repo'.`,
+    );
+  }
+  return {
+    url: `https://${org}.github.io/${repo}/assets/remoteEntry.js`,
+    org,
+    repo,
+  };
+}
+
+/**
+ * Generates remote module configurations for Module Federation
+ *
+ * Supports two formats for REACT_ENABLED_APPS:
+ * 1. GitHub Pages: "organization/repository"
+ *    Example: "coronasafe/care_fe"
+ *
+ * 2. Custom URL: "organization/repository@url"
+ *    Example: "coronasafe/care_fe@localhost:5173"
+ *    Example: "coronasafe/care_fe@care.coronasafe.network"
+ *    Note: Protocol (http/https) is automatically added based on the URL:
+ *    - localhost URLs use http://
+ *    - all other URLs use https://
+ *
+ * @param enabledApps - Comma-separated list of enabled apps
+ * @returns Remote module configuration object for Module Federation
+ */
+function getRemotes(enabledApps: string) {
+  if (!enabledApps) return {};
+
+  return enabledApps.split(",").reduce((acc, app) => {
+    const { repo, url } = parseRemoteConfig(app);
+    console.log(`Configuring Remote Module for ${repo}:`, url);
+
+    return {
+      ...acc,
+      [repo]: {
+        external: `Promise.resolve("${url}")`,
+        from: "vite",
+        externalType: "promise",
+      },
+    };
+  }, {});
 }
 
 /** @type {import('vite').UserConfig} */
@@ -103,6 +166,23 @@ export default defineConfig(({ mode }) => {
       ),
     },
     plugins: [
+      federation({
+        name: "core",
+        remotes: getRemotes(env.REACT_ENABLED_APPS),
+        // {
+        // care_livekit_fe: {
+        //   external: `Promise.resolve("http://localhost:5173/assets/remoteEntry.js")`,
+        //   externalType: "promise",
+        //   from: "vite",
+        // },
+        // },
+        shared: [
+          "react",
+          "react-dom",
+          "react-i18next",
+          "@tanstack/react-query",
+        ],
+      }),
       ValidateEnv({
         validator: "zod",
         schema: {
@@ -111,13 +191,6 @@ export default defineConfig(({ mode }) => {
           REACT_SENTRY_DSN: z.string().url().optional(),
           REACT_SENTRY_ENVIRONMENT: z.string().optional(),
 
-          REACT_PLAUSIBLE_SITE_DOMAIN: z
-            .string()
-            .regex(/^[a-zA-Z0-9][a-zA-Z0-9-_.]*\.[a-zA-Z]{2,}$/)
-            .optional()
-            .describe("Domain name without protocol (e.g., sub.domain.com)"),
-
-          REACT_PLAUSIBLE_SERVER_URL: z.string().url().optional(),
           REACT_CDN_URLS: z
             .string()
             .optional()
@@ -135,7 +208,16 @@ export default defineConfig(({ mode }) => {
         ],
       }),
       react(),
-      checker({ typescript: true }),
+      checker({
+        typescript: true,
+        eslint: {
+          useFlatConfig: true,
+          lintCommand: "eslint ./src",
+          dev: {
+            logLevel: ["error"],
+          },
+        },
+      }),
       treeShakeCareIcons({
         iconWhitelist: ["default"],
       }),
@@ -154,8 +236,8 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: "Care",
           short_name: "Care",
-          theme_color: "#0e9f6e",
           background_color: "#ffffff",
+          theme_color: "#ffffff",
           display: "standalone",
           icons: [
             {
@@ -192,80 +274,27 @@ export default defineConfig(({ mode }) => {
         "@core": path.resolve(__dirname, "src/"),
       },
     },
-    optimizeDeps: {
-      include: getPluginDependencies(),
-    },
+    // optimizeDeps: {
+    //   include: getPluginDependencies(),
+    // },
     build: {
+      target: "es2022",
       outDir: "build",
-      assetsDir: "bundle",
       sourcemap: true,
-      rollupOptions: {
-        output: {
-          manualChunks(id, { getModuleInfo }) {
-            if (id.includes("node_modules")) {
-              const moduleInfo = getModuleInfo(id);
-
-              // Recursive function to check if the module is statically imported by an entry point
-              function isStaticallyImportedByEntry(
-                moduleId,
-                visited = new Set(),
-              ) {
-                if (visited.has(moduleId)) return false;
-                visited.add(moduleId);
-
-                const modInfo = getModuleInfo(moduleId);
-                if (!modInfo) return false;
-
-                // Check if the module is an entry point
-                if (modInfo.isEntry) {
-                  return true;
-                }
-
-                // Check all static importers
-                for (const importerId of modInfo.importers) {
-                  if (isStaticallyImportedByEntry(importerId, visited)) {
-                    return true;
-                  }
-                }
-
-                return false;
-              }
-
-              // Determine if the module should be in the 'vendor' chunk
-              const manualVendorChunks = /tiny-invariant/;
-              if (
-                manualVendorChunks.test(id) ||
-                isStaticallyImportedByEntry(id)
-              ) {
-                return "vendor";
-              } else {
-                // group lazy-loaded dependencies by their dynamic importer
-                const dynamicImporters = moduleInfo?.dynamicImporters || [];
-                if (dynamicImporters && dynamicImporters.length > 0) {
-                  // Use the first dynamic importer to name the chunk
-                  const importerChunkName = dynamicImporters[0]
-                    ? dynamicImporters[0].split("/").pop()
-                    : "vendor".split(".")[0];
-                  return `chunk-${importerChunkName}`;
-                }
-                // If no dynamic importers are found, let Rollup handle it automatically
-              }
-            }
-          },
-        },
-      },
+    },
+    esbuild: {
+      target: "es2022",
     },
     server: {
       port: 4000,
+      host: "0.0.0.0",
     },
     preview: {
       headers: {
         "Content-Security-Policy-Report-Only": `default-src 'self';\
-        script-src 'self' blob: 'nonce-f51b9742' https://plausible.10bedicu.in;\
-        style-src 'self' 'unsafe-inline';\
-        connect-src 'self' https://plausible.10bedicu.in;\
-        img-src 'self' https://cdn.ohc.network ${cdnUrls};\
-        object-src 'self' ${cdnUrls};`,
+          style-src 'self' 'unsafe-inline';\
+          img-src 'self' https://cdn.ohc.network ${cdnUrls};\
+          object-src 'self' ${cdnUrls};`,
       },
       port: 4000,
     },

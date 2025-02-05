@@ -28,13 +28,13 @@ env:
 jobs:
   test:
     if: github.repository == 'ohcnetwork/care_fe'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     name: Test
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Cache Docker layers
         uses: actions/cache@v4
@@ -45,7 +45,7 @@ jobs:
             ${{ runner.os }}-buildx-test-
 
       - name: Test build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile
@@ -54,10 +54,6 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
-      - name: Run tests
-        run: |
-          echo "running tests..."
-
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
@@ -65,9 +61,9 @@ jobs:
 
   build:
     needs: test
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging' || startsWith(github.event.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/develop' || startsWith(github.event.ref, 'refs/tags/v')
     name: Build & Push to container registries
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
 
@@ -117,7 +113,7 @@ jobs:
             ${{ runner.os }}-buildx-build-
 
       - name: Build and push image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile
@@ -137,24 +133,8 @@ jobs:
     needs: build
     if: startsWith(github.event.ref, 'refs/tags/v')
     name: Notify release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: Notify release
         run: |
           echo "Release ${{ github.sha }} is ready to be deployed to production"
-
-  deploy-staging-gcp:
-    needs: build
-    if: github.ref == 'refs/heads/staging'
-    name: Deploy to staging GCP cluster
-    runs-on: ubuntu-latest
-    environment:
-      name: Staging-GCP
-      url: https://care-staging.ohc.network/
-    steps:
-      - name: Trigger deploy
-        run: |
-          COMMIT_SHA=${{ github.sha }}
-          JSON='{ "substitutions": { "care_be_tag":"", "care_fe_tag": "'"$COMMIT_SHA"'", "metabase_tag": "" } }'
-          curl --location "${{ secrets.STAGING_GCP_DEPLOY_URL }}" \
-            --header 'Content-Type: application/json' --data "$JSON"

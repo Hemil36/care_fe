@@ -1,71 +1,120 @@
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-import CountBlock from "@/CAREUI/display/Count";
+import CareIcon from "@/CAREUI/icons/CareIcon";
+
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import Page from "@/components/Common/Page";
-import UserListView from "@/components/Users/UserListAndCard";
+import {
+  CardGridSkeleton,
+  TableSkeleton,
+} from "@/components/Common/SkeletonLoading";
+import UserListAndCardView from "@/components/Users/UserListAndCard";
 
 import useFilters from "@/hooks/useFilters";
 
 import routes from "@/Utils/request/api";
-import useTanStackQueryInstead from "@/Utils/request/useQuery";
+import query from "@/Utils/request/query";
+import { useView } from "@/Utils/useView";
 
-export default function FacilityUsers(props: { facilityId: number }) {
+export default function FacilityUsers(props: { facilityId: string }) {
   const { t } = useTranslation();
-  const { qParams, updateQuery, Pagination, resultsPerPage } = useFilters({
-    limit: 18,
+  const { qParams, updateQuery, Pagination } = useFilters({
+    limit: 15,
     cacheBlacklist: ["username"],
   });
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useView("users", "card");
+
   const { facilityId } = props;
 
-  const { data: facilityData } = useTanStackQueryInstead(
-    routes.getAnyFacility,
-    {
-      pathParams: {
-        id: facilityId,
-      },
-      prefetch: facilityId !== undefined,
-    },
-  );
+  let usersList: JSX.Element = <></>;
 
-  const { data: userListData, loading: userListLoading } =
-    useTanStackQueryInstead(routes.getFacilityUsers, {
-      query: {
-        limit: resultsPerPage,
-        offset: (
-          (qParams.page ? qParams.page - 1 : 0) * resultsPerPage
-        ).toString(),
-        username: qParams.username,
-      },
+  const { data: userListData, isFetching: userListFetching } = useQuery({
+    queryKey: ["facilityUsers", facilityId, qParams],
+    queryFn: query.debounced(routes.facility.getUsers, {
       pathParams: { facility_id: facilityId },
-      prefetch: facilityId !== undefined,
-    });
+      queryParams: {
+        username: qParams.username,
+        limit: qParams.limit,
+        offset: (qParams.page - 1) * qParams.limit,
+      },
+    }),
+    enabled: !!facilityId,
+  });
+
+  if (userListFetching || !userListData) {
+    usersList =
+      activeTab === "card" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <CardGridSkeleton count={6} />
+        </div>
+      ) : (
+        <TableSkeleton count={7} />
+      );
+  } else {
+    usersList = (
+      <div>
+        <UserListAndCardView
+          users={userListData?.results ?? []}
+          activeTab={activeTab === "card" ? "card" : "list"}
+        />
+        <Pagination totalCount={userListData.count} />
+      </div>
+    );
+  }
 
   return (
     <Page
-      title={`${t("users")} - ${facilityData?.name}`}
-      hideBack={true}
-      breadcrumbs={false}
+      title={t("users_management")}
+      componentRight={
+        <Badge
+          className="bg-purple-50 text-purple-700 ml-2 text-sm font-medium rounded-xl px-3 m-3 w-max"
+          variant="outline"
+        >
+          {userListFetching
+            ? t("loading")
+            : t("entity_count", {
+                count: userListData?.count ?? 0,
+                entity: "User",
+              })}
+        </Badge>
+      }
     >
-      <CountBlock
-        text={t("total_users")}
-        count={userListData?.count ?? 0}
-        loading={userListLoading}
-        icon="d-people"
-        className="my-3 flex flex-col items-center sm:items-start"
-      />
-
-      <UserListView
-        users={userListData?.results ?? []}
-        onSearch={(username) => updateQuery({ username })}
-        searchValue={qParams.username}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-
-      <Pagination totalCount={userListData?.count ?? 0} />
+      <hr className="mt-4"></hr>
+      <div className="flex items-center justify-between gap-4 m-5 ml-0">
+        <Input
+          id="search-by-username"
+          name="username"
+          onChange={(e) => updateQuery({ username: e.target.value })}
+          value={qParams.username}
+          placeholder={t("search_by_username")}
+          className="w-full max-w-sm"
+        />
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as "card" | "list")}
+          className="ml-auto"
+        >
+          <TabsList className="flex">
+            <TabsTrigger value="card" id="user-card-view">
+              <div className="flex items-center gap-2">
+                <CareIcon icon="l-credit-card" className="text-lg" />
+                <span>{t("card")}</span>
+              </div>
+            </TabsTrigger>
+            <TabsTrigger value="list" id="user-list-view">
+              <div className="flex items-center gap-2">
+                <CareIcon icon="l-list-ul" className="text-lg" />
+                <span>{t("list")}</span>
+              </div>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      <div>{usersList}</div>
     </Page>
   );
 }

@@ -1,16 +1,19 @@
+import { t } from "i18next";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import PaginatedList from "@/CAREUI/misc/PaginatedList";
 
-import ButtonV2 from "@/components/Common/ButtonV2";
-import CircularProgress from "@/components/Common/CircularProgress";
-import { CommentModel } from "@/components/Facility/models";
-import TextAreaFormField from "@/components/Form/FormFields/TextAreaFormField";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
-import * as Notification from "@/Utils/Notifications";
+import { Avatar } from "@/components/Common/Avatar";
+import CircularProgress from "@/components/Common/CircularProgress";
+
 import routes from "@/Utils/request/api";
 import request from "@/Utils/request/request";
-import { formatDateTime, formatName } from "@/Utils/utils";
+import { formatName, relativeTime } from "@/Utils/utils";
+import { CommentModel } from "@/types/resourceRequest/resourceRequest";
 
 const CommentSection = (props: { id: string }) => {
   const [commentBox, setCommentBox] = useState("");
@@ -20,9 +23,7 @@ const CommentSection = (props: { id: string }) => {
       comment: commentBox,
     };
     if (!/\S+/.test(commentBox)) {
-      Notification.Error({
-        msg: "Comment Should Contain At Least 1 Character",
-      });
+      toast.error(t("comment_min_length"));
       return;
     }
     const { res } = await request(routes.addResourceComments, {
@@ -30,7 +31,7 @@ const CommentSection = (props: { id: string }) => {
       body: payload,
     });
     if (res?.ok) {
-      Notification.Success({ msg: "Comment added successfully" });
+      toast.success(t("comment_added_successfully"));
     }
     setCommentBox("");
   };
@@ -41,27 +42,28 @@ const CommentSection = (props: { id: string }) => {
     >
       {(_, query) => (
         <div className="flex w-full flex-col">
-          <TextAreaFormField
+          <Textarea
             name="comment"
-            placeholder="Type your comment"
+            placeholder={t("type_your_comment")}
             value={commentBox}
-            onChange={(e) => setCommentBox(e.value)}
+            onChange={(e) => setCommentBox(e.target.value)}
           />
 
-          <div className="flex w-full justify-end">
-            <ButtonV2
+          <div className="flex w-full justify-end mt-2">
+            <Button
+              variant="primary"
               onClick={async () => {
                 await onSubmitComment();
                 query.refetch();
               }}
             >
-              Post Your Comment
-            </ButtonV2>
+              {t("post_your_comment")}
+            </Button>
           </div>
           <div className="w-full">
             <div>
               <PaginatedList.WhenEmpty className="flex w-full justify-center border-b border-secondary-200 bg-white p-5 text-center text-2xl font-bold text-secondary-500">
-                <span>No comments available</span>
+                <span>{t("no_comments_available")}</span>
               </PaginatedList.WhenEmpty>
               <PaginatedList.WhenLoading>
                 <CircularProgress className="h-12 w-12" />
@@ -84,25 +86,26 @@ export default CommentSection;
 
 export const Comment = ({
   comment,
-  created_by_object,
-  modified_date,
+  created_by,
+  created_date,
 }: CommentModel) => (
   <div className="mt-4 flex w-full flex-col rounded-lg border border-secondary-300 bg-white p-4 text-secondary-800">
     <div className="w-full">
-      <p className="break-words">{comment}</p>
+      <p className="break-words whitespace-pre-wrap">
+        {comment.replace(/\n+/g, "\n")}
+      </p>
     </div>
-    <div className="mt-3">
-      <span className="text-xs text-secondary-500">
-        {formatDateTime(modified_date) || "-"}
-      </span>
-    </div>
-    <div className="mr-auto flex items-center rounded-md border bg-secondary-100 py-1 pl-2 pr-3">
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-700 p-1 uppercase text-white">
-        {created_by_object?.first_name?.charAt(0) || "U"}
+    <div className="flex w-full items-center">
+      <div className="mr-auto flex items-center rounded-md border bg-secondary-100 py-1 pl-2 pr-3">
+        <Avatar
+          name={`${created_by.first_name} ${created_by.last_name}`}
+          className="h-8 w-8 "
+        />
+        <span className="pl-2 text-sm text-secondary-700">
+          {formatName(created_by)}
+        </span>
       </div>
-      <span className="pl-2 text-sm text-secondary-700">
-        {formatName(created_by_object)}
-      </span>
+      <div className="text-xs">{relativeTime(created_date)}</div>
     </div>
   </div>
 );

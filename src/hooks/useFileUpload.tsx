@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import imageCompression from "browser-image-compression";
 import { t } from "i18next";
 import {
@@ -7,6 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { toast } from "sonner";
 
 import AudioCaptureDialog from "@/components/Files/AudioCaptureDialog";
 import CameraCaptureDialog from "@/components/Files/CameraCaptureDialog";
@@ -18,9 +20,8 @@ import {
 
 import { DEFAULT_ALLOWED_EXTENSIONS } from "@/common/constants";
 
-import * as Notification from "@/Utils/Notifications";
 import routes from "@/Utils/request/api";
-import request from "@/Utils/request/request";
+import mutate from "@/Utils/request/mutate";
 import uploadFile from "@/Utils/request/uploadFile";
 
 export type FileUploadOptions = {
@@ -39,11 +40,10 @@ export type FileUploadOptions = {
     }
 );
 
-export interface FileInputProps
-  extends Omit<
-    DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-    "id" | "title" | "type" | "accept" | "onChange"
-  > {}
+export type FileInputProps = Omit<
+  DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
+  "id" | "title" | "type" | "accept" | "onChange"
+> & {};
 
 export type FileUploadReturn = {
   progress: null | number;
@@ -61,6 +61,7 @@ export type FileUploadReturn = {
   removeFile: (index: number) => void;
   clearFiles: () => void;
   uploading: boolean;
+  previewing?: boolean;
 };
 
 // Array of image extensions
@@ -79,9 +80,9 @@ export default function useFileUpload(
   options: FileUploadOptions,
 ): FileUploadReturn {
   const {
-    type,
+    type: fileType,
     onUpload,
-    category = "UNSPECIFIED",
+    category = "unspecified",
     multiple,
     allowNameFallback = true,
   } = options;
@@ -92,8 +93,10 @@ export default function useFileUpload(
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const [audioModalOpen, setAudioModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
 
   const [files, setFiles] = useState<File[]>([]);
+  const queryClient = useQueryClient();
 
   const onFileChange = (e: ChangeEvent<HTMLInputElement>): any => {
     if (!e.target.files?.length) {
@@ -139,11 +142,11 @@ export default function useFileUpload(
         setError(t("file_error__file_size"));
         return false;
       }
-      const extension = file.name.split(".").pop();
+      const extension = file.name.split(".").pop()?.toLowerCase();
       if (
         "allowedExtensions" in options &&
         !options.allowedExtensions
-          ?.map((extension) => extension.replace(".", ""))
+          ?.map((extension) => extension.replace(".", "").toLowerCase())
           ?.includes(extension || "")
       ) {
         setError(
@@ -157,21 +160,32 @@ export default function useFileUpload(
     }
     return true;
   };
-  const markUploadComplete = (
-    data: CreateFileResponse,
-    associatingId: string,
-  ) => {
-    return request(routes.editUpload, {
-      body: { upload_completed: true },
-      pathParams: {
-        id: data.id,
-        fileType: type,
-        associatingId,
+  const { mutateAsync: markUploadComplete, error: markUploadCompleteError } =
+    useMutation({
+      mutationFn: (body: {
+        data: CreateFileResponse;
+        associating_id: string;
+      }) =>
+        mutate(routes.markUploadCompleted, {
+          pathParams: {
+            id: body.data.id,
+          },
+        })(body),
+      onSuccess: (_, { data, associating_id }) => {
+        queryClient.invalidateQueries({
+          queryKey: ["files", fileType, associating_id],
+        });
+        toast.success(t("file_uploaded"));
+        setError(null);
+        onUpload?.(data);
       },
     });
-  };
 
-  const uploadfile = async (data: CreateFileResponse, file: File) => {
+  const uploadfile = async (
+    data: CreateFileResponse,
+    file: File,
+    associating_id: string,
+  ) => {
     const url = data.signed_url;
     const internal_name = data.internal_name;
     const newFile = new File([file], `${internal_name}`);
@@ -182,28 +196,30 @@ export default function useFileUpload(
         newFile,
         "PUT",
         { "Content-Type": file.type },
-        (xhr: XMLHttpRequest) => {
+        async (xhr: XMLHttpRequest) => {
           if (xhr.status >= 200 && xhr.status < 300) {
             setProgress(null);
-            Notification.Success({
-              msg: t("file_uploaded"),
+            await markUploadComplete({
+              data,
+              associating_id: associating_id,
             });
-            setError(null);
-            onUpload && onUpload(data);
+            if (markUploadCompleteError) {
+              toast.error(t("file_error__mark_complete_failed"));
+              reject();
+              return;
+            }
             resolve();
           } else {
-            Notification.Error({
-              msg: t("file_error__dynamic", { statusText: xhr.statusText }),
-            });
+            toast.error(
+              t("file_error__dynamic", { statusText: xhr.statusText }),
+            );
             setProgress(null);
             reject();
           }
         },
         setProgress as any,
         () => {
-          Notification.Error({
-            msg: t("file_error__network"),
-          });
+          toast.error(t("file_error__network"));
           setProgress(null);
           reject();
         },
@@ -211,10 +227,32 @@ export default function useFileUpload(
     });
   };
 
+  const { mutateAsync: createUpload } = useMutation({
+    mutationFn: (body: {
+      original_name: string;
+      file_type: string;
+      name: string;
+      associating_id: string;
+      file_category: FileCategory;
+      mime_type: string;
+    }) =>
+      mutate(routes.createUpload, {
+        body: {
+          original_name: body.original_name,
+          file_type: body.file_type,
+          name: body.name,
+          associating_id: body.associating_id,
+          file_category: body.file_category,
+          mime_type: body.mime_type,
+        },
+      })(body),
+  });
+
   const handleUpload = async (associating_id: string) => {
     if (!validateFileUpload()) return;
 
     setProgress(0);
+    const errors: File[] = [];
 
     for (const [index, file] of files.entries()) {
       const filename =
@@ -227,30 +265,34 @@ export default function useFileUpload(
       }
       setUploading(true);
 
-      const { data } = await request(routes.createUpload, {
-        body: {
+      try {
+        const data = await createUpload({
           original_name: file.name ?? "",
-          file_type: type,
+          file_type: fileType,
           name: filename,
           associating_id,
           file_category: category,
           mime_type: file.type ?? "",
-        },
-      });
+        });
 
-      if (data) {
-        await uploadfile(data, file);
-        await markUploadComplete(data, associating_id);
+        if (data) {
+          await uploadfile(data, file, associating_id);
+        }
+      } catch {
+        errors.push(file);
       }
     }
 
     setUploading(false);
-    setFiles([]);
-    setUploadFileNames([]);
+    setFiles(errors);
+    setUploadFileNames(errors?.map((f) => f.name) ?? []);
+    setError(t("file_error__network"));
+    setCameraModalOpen(false);
   };
 
   const clearFiles = () => {
     setFiles([]);
+    setError(null);
     setUploadFileNames([]);
   };
 
@@ -263,6 +305,7 @@ export default function useFileUpload(
           setFiles((prev) => [...prev, file]);
         }}
         onResetCapture={clearFiles}
+        setPreview={setPreviewing}
       />
       <AudioCaptureDialog
         show={audioModalOpen}
@@ -317,5 +360,6 @@ export default function useFileUpload(
     },
     clearFiles,
     uploading,
+    previewing,
   };
 }

@@ -2,7 +2,6 @@ import { Dispatch, SetStateAction } from "react";
 
 import { LocalStorageKeys } from "@/common/constants";
 
-import * as Notification from "@/Utils/Notifications";
 import { QueryParams, RequestOptions } from "@/Utils/request/types";
 
 export function makeUrl(
@@ -17,8 +16,6 @@ export function makeUrl(
     );
   }
 
-  ensurePathNotMissingReplacements(path);
-
   if (query) {
     path += `?${makeQueryParams(query)}`;
   }
@@ -30,24 +27,17 @@ const makeQueryParams = (query: QueryParams) => {
   const qParams = new URLSearchParams();
 
   Object.entries(query).forEach(([key, value]) => {
-    if (value !== undefined) {
-      qParams.set(key, `${value}`);
+    if (value === undefined) return;
+
+    if (Array.isArray(value)) {
+      value.forEach((v) => qParams.append(key, `${v}`));
+      return;
     }
+
+    qParams.set(key, `${value}`);
   });
 
   return qParams.toString();
-};
-
-const ensurePathNotMissingReplacements = (path: string) => {
-  const missingParams = path.match(/\{.*\}/g);
-
-  if (missingParams) {
-    const msg = `Missing path params: ${missingParams.join(
-      ", ",
-    )}. Path: ${path}`;
-    Notification.Error({ msg });
-    throw new Error(msg);
-  }
 };
 
 export function makeHeaders(noAuth: boolean, additionalHeaders?: HeadersInit) {
@@ -58,7 +48,7 @@ export function makeHeaders(noAuth: boolean, additionalHeaders?: HeadersInit) {
 
   const authorizationHeader = getAuthorizationHeader();
   if (authorizationHeader && !noAuth) {
-    headers.append("Authorization", authorizationHeader);
+    headers.set("Authorization", authorizationHeader);
   }
 
   return headers;
