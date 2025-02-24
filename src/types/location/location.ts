@@ -1,3 +1,4 @@
+import { Encounter } from "@/types/emr/encounter";
 import { FacilityOrganization } from "@/types/facilityOrganization/facilityOrganization";
 import { Code } from "@/types/questionnaire/code";
 
@@ -45,6 +46,8 @@ export interface LocationDetail extends LocationBase {
 export interface LocationList extends LocationBase {
   id: string;
   has_children: boolean;
+  parent?: LocationList;
+  current_encounter?: Encounter;
 }
 
 export interface LocationWrite extends LocationBase {

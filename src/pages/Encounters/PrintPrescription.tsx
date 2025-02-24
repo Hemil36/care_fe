@@ -17,8 +17,9 @@ import medicationRequestApi from "@/types/emr/medicationRequest/medicationReques
 export const PrintPrescription = (props: {
   facilityId: string;
   encounterId: string;
+  patientId: string;
 }) => {
-  const { facilityId, encounterId } = props;
+  const { facilityId, encounterId, patientId } = props;
   const { t } = useTranslation();
 
   const { data: encounter } = useQuery<Encounter>({
@@ -30,12 +31,12 @@ export const PrintPrescription = (props: {
   });
 
   const { data: medications } = useQuery({
-    queryKey: ["medication_requests", encounter?.patient?.id],
+    queryKey: ["medication_requests", patientId],
     queryFn: query(medicationRequestApi.list, {
-      pathParams: { patientId: encounter?.patient?.id || "" },
+      pathParams: { patientId },
       queryParams: { encounter: encounterId, limit: 50, offset: 0 },
     }),
-    enabled: !!encounter?.patient?.id,
+    enabled: !!patientId,
   });
 
   if (!medications?.results?.length) {
@@ -60,18 +61,19 @@ export const PrintPrescription = (props: {
 
   return (
     <PrintPreview
-      title={
-        encounter?.patient
-          ? `${t("prescriptions")} - ${encounter.patient.name}`
-          : t("print_prescriptions")
-      }
-      disabled={!(encounter?.patient && medications)}
+      title={`${t("prescriptions")} - ${encounter?.patient.name}`}
+      disabled={!medications}
     >
-      <div className="min-h-screen bg-white p-2 max-w-4xl mx-auto">
+      <div className="min-h-screen bg-white md:p-2 max-w-4xl mx-auto">
         <div>
           {/* Header */}
-          <div className="flex justify-between items-start mb-4 pb-2 border-b">
-            <div>
+          <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start mb-4 pb-2 border-b">
+            <img
+              src={careConfig.mainLogo?.dark}
+              alt="Care Logo"
+              className="h-10 w-auto object-contain mb-2 sm:mb-0 sm:order-2"
+            />
+            <div className="text-center sm:text-left sm:order-1">
               <h1 className="text-3xl font-semibold">
                 {encounter?.facility?.name}
               </h1>
@@ -79,19 +81,14 @@ export const PrintPrescription = (props: {
                 {t("medicine_prescription")}
               </h2>
             </div>
-            <img
-              src={careConfig.mainLogo?.dark}
-              alt="Care Logo"
-              className="h-10 w-auto object-contain"
-            />
           </div>
 
           {/* Patient Details */}
-          <div className="grid grid-cols-2 gap-x-12 gap-y-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mb-8">
             <div className="space-y-3">
               <DetailRow
                 label={t("patient")}
-                value={encounter?.patient?.name}
+                value={encounter?.patient.name}
                 isStrong
               />
               <DetailRow
@@ -115,7 +112,7 @@ export const PrintPrescription = (props: {
               />
               <DetailRow
                 label={t("mobile_number")}
-                value={encounter?.patient?.phone_number}
+                value={encounter?.patient.phone_number}
                 isStrong
               />
             </div>
@@ -125,7 +122,7 @@ export const PrintPrescription = (props: {
           <div className="text-2xl font-semibold mb-3">℞</div>
 
           {/* Medications Table */}
-          <MedicationsTable medications={medications.results} />
+          <MedicationsTable patientId={patientId} encounterId={encounterId} />
 
           {/* Doctor's Signature */}
           <div className="mt-6 flex justify-end gap-8">
@@ -144,7 +141,7 @@ export const PrintPrescription = (props: {
           </div>
 
           {/* Footer */}
-          <div className="mt-8 space-y-1 pt-2 text-[10px] text-gray-500 flex justify-between">
+          <div className="mt-8 pt-2 text-[10px] text-gray-500 flex justify-between flex-wrap">
             <p>
               {t("generated_on")} {format(new Date(), "PPP 'at' p")}
             </p>

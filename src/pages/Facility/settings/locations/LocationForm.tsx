@@ -217,13 +217,17 @@ export default function LocationForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t("location_form")}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  disabled={!!locationId}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="max-h-[46vh]">
                     {locationFormOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}

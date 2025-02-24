@@ -64,7 +64,10 @@ export const UserStatusIndicator = ({
           </span>
         </Badge>
       ) : (
-        <Badge variant="secondary" className="bg-gray-100 whitespace-nowrap">
+        <Badge
+          variant="secondary"
+          className="bg-gray-100 whitespace-nowrap text-wrap"
+        >
           <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-gray-500 mr-2" />
           <span className="text-xs text-gray-700">{t("never_logged_in")}</span>
         </Badge>
@@ -133,9 +136,7 @@ const UserListHeader = () => {
   return (
     <thead>
       <tr className="bg-gray-50 text-sm font-medium text-gray-500">
-        <th className="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-left">
-          {t("name")}
-        </th>
+        <th className="px-4 py-3 text-left">{t("name")}</th>
         <th className="w-32 px-10 py-3 text-left">{t("status")}</th>
         <th className="px-10 py-3 text-left">{t("role")}</th>
         <th className="px-4 py-3 text-left">{t("contact_number")}</th>
@@ -151,7 +152,7 @@ const UserListRow = ({ user }: { user: UserBase }) => {
       id={`usr_${user.id}`}
       className="hover:bg-gray-50"
     >
-      <td className="sticky left-0 z-10 bg-white px-4 py-4 lg:pr-20">
+      <td className="px-4 py-4 lg:pr-20">
         <div className="flex items-center gap-3">
           <Avatar
             // TO do: adjust for facility users
