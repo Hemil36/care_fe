@@ -48,6 +48,11 @@ export interface LocationList extends LocationBase {
   parent?: LocationList;
 }
 
+export interface LocationNode extends LocationBase {
+  id: string;
+  children: LocationNode[];
+}
+
 export interface LocationWrite extends LocationBase {
   id?: string;
   parent?: string;

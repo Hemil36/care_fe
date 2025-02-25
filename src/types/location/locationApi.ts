@@ -3,7 +3,12 @@ import { PaginatedResponse } from "@/Utils/request/types";
 import { FacilityOrganization } from "@/types/facilityOrganization/facilityOrganization";
 
 import { LocationAssociation, LocationAssociationWrite } from "./association";
-import { LocationDetail, LocationList, LocationWrite } from "./location";
+import {
+  LocationDetail,
+  LocationList,
+  LocationNode,
+  LocationWrite,
+} from "./location";
 
 export default {
   list: {
@@ -15,6 +20,11 @@ export default {
     path: "/api/v1/facility/{facility_id}/location/{id}/",
     method: HttpMethod.GET,
     TRes: Type<LocationDetail>(),
+  },
+  getMapped: {
+    path: "/api/v1/facility/{facility_id}/location/map/",
+    method: HttpMethod.GET,
+    TRes: Type<LocationNode[]>(),
   },
   create: {
     path: "/api/v1/facility/{facility_id}/location/",

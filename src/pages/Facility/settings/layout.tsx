@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ErrorPage from "@/components/ErrorPages/DefaultErrorPage";
 
 import { GeneralSettings } from "./general/general";
-import LocationList from "./locations/LocationList";
+import LocationOverview from "./locations/LocationOverview";
 import LocationView from "./locations/LocationView";
 import FacilityOrganizationIndex from "./organizations/FacilityOrganizationIndex";
 import FacilityOrganizationUsers from "./organizations/FacilityOrganizationUsers";
@@ -26,7 +26,7 @@ const getRoutes = (facilityId: string) => ({
   "/departments/:id/users": ({ id }: { id: string }) => (
     <FacilityOrganizationUsers facilityId={facilityId} id={id} />
   ),
-  "/locations": () => <LocationList facilityId={facilityId} />,
+  "/locations": () => <LocationOverview facilityId={facilityId} />,
   "/location/:id": ({ id }: { id: string }) => (
     <LocationView facilityId={facilityId} id={id} />
   ),
