@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import React, {
   ChangeEventHandler,
   useCallback,
@@ -15,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -135,11 +137,12 @@ const AvatarEditModal = ({
       setSelectedFile(undefined);
       return;
     }
-    if (!isImageFile(e.target.files[0])) {
+    const file = e.target.files[0];
+    if (!isImageFile(file)) {
       toast.warning(t("please_upload_an_image_file"));
       return;
     }
-    setSelectedFile(e.target.files[0]);
+    setSelectedFile(file);
   };
 
   const uploadAvatar = async () => {
@@ -222,6 +225,9 @@ const AvatarEditModal = ({
       <DialogContent className="md:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-xl">{title}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {t("edit_avatar")}
+          </DialogDescription>
         </DialogHeader>
         <div className="flex h-full w-full items-center justify-center overflow-y-auto">
           <div className="flex max-h-screen min-h-96 w-full flex-col overflow-auto">
@@ -231,7 +237,11 @@ const AvatarEditModal = ({
                   <>
                     <div className="flex flex-1 items-center justify-center rounded-lg">
                       <img
-                        src={preview || imageUrl}
+                        src={
+                          preview && preview.startsWith("blob:")
+                            ? DOMPurify.sanitize(preview)
+                            : imageUrl
+                        }
                         alt="cover-photo"
                         className="h-full w-full object-cover"
                       />
@@ -343,6 +353,7 @@ const AvatarEditModal = ({
                       variant="destructive"
                       onClick={deleteAvatar}
                       disabled={isProcessing}
+                      data-cy="delete-avatar"
                     >
                       {t("delete")}
                     </Button>
@@ -352,6 +363,7 @@ const AvatarEditModal = ({
                     variant="outline"
                     onClick={uploadAvatar}
                     disabled={isProcessing || !selectedFile}
+                    data-cy="save-cover-image"
                   >
                     {isProcessing ? (
                       <CareIcon
