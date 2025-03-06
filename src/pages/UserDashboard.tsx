@@ -28,11 +28,11 @@ export default function UserDashboard() {
   const organizations = user.organizations || [];
   const associations =
     organizations.filter((org) => org.org_type === "role") || [];
-  const administrations =
+  const governance =
     organizations.filter((org) => org.org_type === "govt") || [];
 
   const [activeTab, setActiveTab] = useState("My Facilities");
-  const tabs = ["My Facilities", "Associations", "Administrations"];
+  const tabs = ["My Facilities", "Associations", "Governance"];
 
   return (
     <div className="container mx-auto space-y-4 md:space-y-8 max-w-5xl px-4 py-4 md:p-6">
@@ -109,8 +109,8 @@ export default function UserDashboard() {
             <Button
               variant="outline"
               size="sm"
-              className="w-full sm:w-auto
-              asChild"
+              className="w-full sm:w-auto"
+              asChild
             >
               <EllipsisVerticalIcon className="h-4 w-4" />
             </Button>
@@ -126,11 +126,14 @@ export default function UserDashboard() {
       {/* Tabs Section */}
       <div className="w-full">
         {/* Tabs Headings */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200" role="tablist">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
+              role="tab"
+              aria-selected={activeTab === tab}
+              aria-controls={`${tab.toLowerCase().replace(/\s+/g, "-")}-panel`}
               className={`px-4 py-2 text-md font-medium transition-all duration-75 ${
                 activeTab === tab
                   ? "border-b-2 border-green-600 text-green-700"
@@ -145,122 +148,155 @@ export default function UserDashboard() {
         {/* Tabs Content */}
         <div className="mt-4">
           {/* Facilities Section */}
-          {activeTab === "My Facilities" && facilities.length > 0 && (
-            <section className="space-y-3 md:space-y-4">
+          {activeTab === "My Facilities" && (
+            <section
+              className="space-y-3 md:space-y-4"
+              id="my-facilities-panel"
+              role="tabpanel"
+              aria-labelledby="My Facilities"
+            >
               <p className="text-sm text-gray-800 font-normal px-1">
                 {t("dashboard_tab_facilities")}
               </p>
-              <div
-                className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                data-cy="facility-list"
-              >
-                {facilities.map((facility) => (
-                  <Link
-                    key={facility.id}
-                    href={`/facility/${facility.id}/overview`}
-                  >
-                    <Card className="transition-all hover:shadow-md hover:border-primary/20">
-                      <CardContent className="flex items-center gap-3 p-3 md:p-4">
-                        <Avatar
-                          name={facility.name}
-                          className="h-12 w-12 md:h-14 md:w-14"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium truncate text-sm md:text-base">
-                            {facility.name}
-                          </h3>
-                          <p className="text-xs md:text-sm text-gray-500 truncate">
-                            {t("view_facility_details")}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
+              {facilities.length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                  <p>{t("no_facilities_found")}</p>
+                </div>
+              ) : (
+                <div
+                  className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                  data-cy="facility-list"
+                >
+                  {facilities.map((facility) => (
+                    <Link
+                      key={facility.id}
+                      href={`/facility/${facility.id}/overview`}
+                    >
+                      <Card className="transition-all hover:shadow-md hover:border-primary/20">
+                        <CardContent className="flex items-center gap-3 p-3 md:p-4">
+                          <Avatar
+                            name={facility.name}
+                            className="h-12 w-12 md:h-14 md:w-14"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium truncate text-sm md:text-base">
+                              {facility.name}
+                            </h3>
+                            <p className="text-xs md:text-sm text-gray-500 truncate">
+                              {t("view_facility_details")}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </section>
           )}
 
           {/*Associations Section*/}
-          {activeTab === "Associations" && associations.length > 0 && (
-            <section className="space-y-3 md:space-y-4">
+          {activeTab === "Associations" && (
+            <section
+              className="space-y-3 md:space-y-4"
+              id="my-associations-panel"
+              role="tabpanel"
+              aria-labelledby="Associations"
+            >
               <p className="text-sm text-gray-800 font-normal px-1">
                 {t("dashboard_tab_associations")}
               </p>
-              <div
-                className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                data-cy="organization-list"
-              >
-                {associations.map((association) => (
-                  <Link
-                    key={association.id}
-                    href={`/organization/${association.id}`}
-                  >
-                    <Card className="transition-all hover:shadow-md hover:border-primary/20">
-                      <CardContent className="flex items-center gap-3 p-3 md:p-4">
-                        <Avatar
-                          name={association.name}
-                          className="h-12 w-12 md:h-14 md:w-14"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium truncate text-sm md:text-base">
-                            {association.name}
-                          </h3>
-                          <p className="text-xs md:text-sm text-gray-500 truncate">
-                            {getOrgLabel(
-                              association.org_type,
-                              association.metadata,
-                            )}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
+              {associations.length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                  <p>{t("no_associations_found")}</p>
+                </div>
+              ) : (
+                <div
+                  className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                  data-cy="organization-list"
+                >
+                  {associations.map((association) => (
+                    <Link
+                      key={association.id}
+                      href={`/organization/${association.id}`}
+                    >
+                      <Card className="transition-all hover:shadow-md hover:border-primary/20">
+                        <CardContent className="flex items-center gap-3 p-3 md:p-4">
+                          <Avatar
+                            name={association.name}
+                            className="h-12 w-12 md:h-14 md:w-14"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium truncate text-sm md:text-base">
+                              {association.name}
+                            </h3>
+                            <p className="text-xs md:text-sm text-gray-500 truncate">
+                              {getOrgLabel(
+                                association.org_type,
+                                association.metadata,
+                              )}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </section>
           )}
 
-          {/*Administrations Section*/}
-          {activeTab === "Administrations" && administrations.length > 0 && (
-            <section className="space-y-3 md:space-y-4">
+          {/*Governance Section*/}
+          {activeTab === "Governance" && (
+            <section
+              className="space-y-3 md:space-y-4"
+              id="my-governance-panel"
+              role="tabpanel"
+              aria-labelledby="Governance"
+            >
               <p className="text-sm text-gray-800 font-normal px-1">
-                {t("dashboard_tab_administrations")}
+                {t("dashboard_tab_governance")}
               </p>
-              <div
-                className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                data-cy="organization-list"
-              >
-                {administrations.map((administration) => (
-                  <Link
-                    key={administration.id}
-                    href={`/organization/${administration.id}`}
-                  >
-                    <Card className="transition-all hover:shadow-md hover:border-primary/20">
-                      <CardContent className="flex items-center gap-3 p-3 md:p-4">
-                        <Avatar
-                          name={administration.name}
-                          className="h-12 w-12 md:h-14 md:w-14"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium truncate text-sm md:text-base">
-                            {administration.name}
-                          </h3>
-                          <p className="text-xs md:text-sm text-gray-500 truncate">
-                            {getOrgLabel(
-                              administration.org_type,
-                              administration.metadata,
-                            )}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
+              {governance.length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                  <p>{t("no_governance_found")}</p>
+                </div>
+              ) : (
+                <div
+                  className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                  data-cy="organization-list"
+                >
+                  {governance.map((administration) => (
+                    <Link
+                      key={administration.id}
+                      href={`/organization/${administration.id}`}
+                    >
+                      <Card className="transition-all hover:shadow-md hover:border-primary/20">
+                        <CardContent className="flex items-center gap-3 p-3 md:p-4">
+                          <Avatar
+                            name={administration.name}
+                            className="h-12 w-12 md:h-14 md:w-14"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium truncate text-sm md:text-base">
+                              {administration.name}
+                            </h3>
+                            <p className="text-xs md:text-sm text-gray-500 truncate">
+                              {getOrgLabel(
+                                administration.org_type,
+                                administration.metadata,
+                              )}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </section>
           )}
         </div>
