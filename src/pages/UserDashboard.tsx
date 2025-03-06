@@ -1,16 +1,18 @@
-import {
-  ChevronRight,
-  EllipsisVerticalIcon,
-  LogOut,
-  SquarePen,
-  User2Icon,
-} from "lucide-react";
+import { ChevronRight, LogOut, SquarePen, User2Icon } from "lucide-react";
 import { Link } from "raviger";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import CareIcon from "@/CAREUI/icons/CareIcon";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { Avatar } from "@/components/Common/Avatar";
 
@@ -19,6 +21,12 @@ import useAuthUser, { useAuthContext } from "@/hooks/useAuthUser";
 import { formatDisplayName } from "@/Utils/utils";
 import { getOrgLabel } from "@/types/organization/organization";
 
+enum DashboardTabs {
+  TAB_FACILITIES = "My Facilities",
+  TAB_ASSOCIATIONS = "Associations",
+  TAB_GOVERNANCE = "Governance",
+}
+
 export default function UserDashboard() {
   const user = useAuthUser();
   const { signOut } = useAuthContext();
@@ -26,13 +34,15 @@ export default function UserDashboard() {
   const { t } = useTranslation();
 
   const organizations = user.organizations || [];
-  const associations =
-    organizations.filter((org) => org.org_type === "role") || [];
-  const governance =
-    organizations.filter((org) => org.org_type === "govt") || [];
+  const associations = organizations.filter((org) => org.org_type === "role");
+  const governance = organizations.filter((org) => org.org_type === "govt");
 
-  const [activeTab, setActiveTab] = useState("My Facilities");
-  const tabs = ["My Facilities", "Associations", "Governance"];
+  const [activeTab, setActiveTab] = useState(DashboardTabs.TAB_FACILITIES);
+  const tabs = [
+    DashboardTabs.TAB_FACILITIES,
+    DashboardTabs.TAB_ASSOCIATIONS,
+    DashboardTabs.TAB_GOVERNANCE,
+  ];
 
   return (
     <div className="container mx-auto space-y-4 md:space-y-8 max-w-5xl px-4 py-4 md:p-6">
@@ -67,15 +77,6 @@ export default function UserDashboard() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full sm:w-auto"
-              onClick={signOut}
-            >
-              <LogOut className="h-4 w-4" />
-              {t("sign_out")}
-            </Button>
             {user.is_superuser && (
               <Button
                 variant="outline"
@@ -106,14 +107,26 @@ export default function UserDashboard() {
                 {t("edit_profile")}
               </Link>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full sm:w-auto"
-              asChild
-            >
-              <EllipsisVerticalIcon className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="px-2 w-full sm:w-auto"
+                >
+                  <CareIcon icon="l-ellipsis-v" className="text-inherit" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  className="cursor-pointer flex items-center gap-2 text-xs w-full sm:w-auto"
+                  onClick={signOut}
+                >
+                  <LogOut className="h-4 w-4" />
+                  {t("sign_out")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         {user.user_type === "doctor" && (
@@ -126,12 +139,17 @@ export default function UserDashboard() {
       {/* Tabs Section */}
       <div className="w-full">
         {/* Tabs Headings */}
-        <div className="flex border-b border-gray-200" role="tablist">
+        <div
+          className="flex border-b border-gray-200"
+          role="tablist"
+          aria-label="Dashboard Sections"
+        >
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               role="tab"
+              id={`${tab.toLowerCase().replace(/\s+/g, "-")}-tab`}
               aria-selected={activeTab === tab}
               aria-controls={`${tab.toLowerCase().replace(/\s+/g, "-")}-panel`}
               className={`px-4 py-2 text-md font-medium transition-all duration-75 ${
@@ -147,8 +165,7 @@ export default function UserDashboard() {
 
         {/* Tabs Content */}
         <div className="mt-4">
-          {/* Facilities Section */}
-          {activeTab === "My Facilities" && (
+          {activeTab === DashboardTabs.TAB_FACILITIES && (
             <section
               className="space-y-3 md:space-y-4"
               id="my-facilities-panel"
@@ -196,8 +213,7 @@ export default function UserDashboard() {
             </section>
           )}
 
-          {/*Associations Section*/}
-          {activeTab === "Associations" && (
+          {activeTab === DashboardTabs.TAB_ASSOCIATIONS && (
             <section
               className="space-y-3 md:space-y-4"
               id="my-associations-panel"
@@ -248,8 +264,7 @@ export default function UserDashboard() {
             </section>
           )}
 
-          {/*Governance Section*/}
-          {activeTab === "Governance" && (
+          {activeTab === DashboardTabs.TAB_GOVERNANCE && (
             <section
               className="space-y-3 md:space-y-4"
               id="my-governance-panel"
@@ -268,25 +283,25 @@ export default function UserDashboard() {
                   className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
                   data-cy="organization-list"
                 >
-                  {governance.map((administration) => (
+                  {governance.map((governanceOrg) => (
                     <Link
-                      key={administration.id}
-                      href={`/organization/${administration.id}`}
+                      key={governanceOrg.id}
+                      href={`/organization/${governanceOrg.id}`}
                     >
                       <Card className="transition-all hover:shadow-md hover:border-primary/20">
                         <CardContent className="flex items-center gap-3 p-3 md:p-4">
                           <Avatar
-                            name={administration.name}
+                            name={governanceOrg.name}
                             className="h-12 w-12 md:h-14 md:w-14"
                           />
                           <div className="flex-1 min-w-0">
                             <h3 className="font-medium truncate text-sm md:text-base">
-                              {administration.name}
+                              {governanceOrg.name}
                             </h3>
                             <p className="text-xs md:text-sm text-gray-500 truncate">
                               {getOrgLabel(
-                                administration.org_type,
-                                administration.metadata,
+                                governanceOrg.org_type,
+                                governanceOrg.metadata,
                               )}
                             </p>
                           </div>
