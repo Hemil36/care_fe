@@ -22,10 +22,25 @@ import { formatDisplayName } from "@/Utils/utils";
 import { getOrgLabel } from "@/types/organization/organization";
 
 enum DashboardTabs {
-  TAB_FACILITIES = "My Facilities",
+  TAB_FACILITIES = "Facilities",
   TAB_ASSOCIATIONS = "Associations",
   TAB_GOVERNANCE = "Governance",
 }
+
+type Item = {
+  id: string | number;
+  [key: string]: any;
+};
+
+type RenderLinkFunction = (item: Item) => JSX.Element;
+
+type TabContentProps = {
+  tabId: string;
+  tabItems: Item[];
+  emptyMessage: string;
+  description: string;
+  renderLink: RenderLinkFunction;
+};
 
 export default function UserDashboard() {
   const user = useAuthUser();
@@ -49,7 +64,7 @@ export default function UserDashboard() {
       {/* Welcome Section */}
       <div className="flex flex-col gap-1">
         <div className="flex justify-between gap-4 bg-card p-4 md:p-6 rounded-lg border shadow-sm w-full  mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex flex-col flex-auto sm:flex-row items-center gap-4">
             <Avatar
               name={formatDisplayName(user)}
               imageUrl={user.read_profile_picture_url}
@@ -96,7 +111,7 @@ export default function UserDashboard() {
             <Button
               variant="outline"
               size="sm"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto hidden sm:flex"
               asChild
             >
               <Link
@@ -118,12 +133,32 @@ export default function UserDashboard() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
+                {user.is_superuser && (
+                  <DropdownMenuItem className="cursor-pointer flex items-center gap-2 text-xs w-full sm:w-auto">
+                    <Link
+                      href="/admin/questionnaire"
+                      className="flex items-center gap-2 w-full text-inherit"
+                    >
+                      <User2Icon className="h-4 w-4" />
+                      {t("admin_dashboard")}
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   className="cursor-pointer flex items-center gap-2 text-xs w-full sm:w-auto"
                   onClick={signOut}
                 >
                   <LogOut className="h-4 w-4" />
                   {t("sign_out")}
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer flex sm:hidden items-center gap-2 text-xs w-full sm:w-auto">
+                  <Link
+                    href={`/users/${user.username}`}
+                    className="flex items-center gap-2 w-full text-inherit"
+                  >
+                    <SquarePen className="h-4 w-4" />
+                    {t("edit_profile")}
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -165,157 +200,140 @@ export default function UserDashboard() {
 
         {/* Tabs Content */}
         <div className="mt-4">
-          {activeTab === DashboardTabs.TAB_FACILITIES && (
-            <section
-              className="space-y-3 md:space-y-4"
-              id="my-facilities-panel"
-              role="tabpanel"
-              aria-labelledby="My Facilities"
-            >
-              <p className="text-sm text-gray-800 font-normal px-1">
-                {t("dashboard_tab_facilities")}
-              </p>
-              {facilities.length === 0 ? (
-                <div className="text-center py-6 text-gray-500">
-                  <p>{t("no_facilities_found")}</p>
-                </div>
-              ) : (
-                <div
-                  className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                  data-cy="facility-list"
+          {activeTab === DashboardTabs.TAB_FACILITIES &&
+            TabContent({
+              tabId: "facilities-panel",
+              tabItems: facilities,
+              emptyMessage: t("no_facilities_found"),
+              description: t("dashboard_tab_facilities"),
+              renderLink: (facility) => (
+                <Link
+                  key={facility.id}
+                  href={`/facility/${facility.id}/overview`}
                 >
-                  {facilities.map((facility) => (
-                    <Link
-                      key={facility.id}
-                      href={`/facility/${facility.id}/overview`}
-                    >
-                      <Card className="transition-all hover:shadow-md hover:border-primary/20">
-                        <CardContent className="flex items-center gap-3 p-3 md:p-4">
-                          <Avatar
-                            name={facility.name}
-                            className="h-12 w-12 md:h-14 md:w-14"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium truncate text-sm md:text-base">
-                              {facility.name}
-                            </h3>
-                            <p className="text-xs md:text-sm text-gray-500 truncate">
-                              {t("view_facility_details")}
-                            </p>
-                          </div>
-                          <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+                  <Card className="transition-all hover:shadow-md hover:border-primary/20">
+                    <CardContent className="flex items-center gap-3 p-3 md:p-4">
+                      <Avatar
+                        name={facility.name}
+                        className="h-12 w-12 md:h-14 md:w-14"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium truncate text-sm md:text-base">
+                          {facility.name}
+                        </h3>
+                        <p className="text-xs md:text-sm text-gray-500 truncate">
+                          {t("view_facility_details")}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              ),
+            })}
 
-          {activeTab === DashboardTabs.TAB_ASSOCIATIONS && (
-            <section
-              className="space-y-3 md:space-y-4"
-              id="my-associations-panel"
-              role="tabpanel"
-              aria-labelledby="Associations"
-            >
-              <p className="text-sm text-gray-800 font-normal px-1">
-                {t("dashboard_tab_associations")}
-              </p>
-              {associations.length === 0 ? (
-                <div className="text-center py-6 text-gray-500">
-                  <p>{t("no_associations_found")}</p>
-                </div>
-              ) : (
-                <div
-                  className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                  data-cy="organization-list"
+          {activeTab === DashboardTabs.TAB_ASSOCIATIONS &&
+            TabContent({
+              tabId: "associations-panel",
+              tabItems: associations,
+              emptyMessage: t("no_associations_found"),
+              description: t("dashboard_tab_associations"),
+              renderLink: (association) => (
+                <Link
+                  key={association.id}
+                  href={`/organization/${association.id}`}
                 >
-                  {associations.map((association) => (
-                    <Link
-                      key={association.id}
-                      href={`/organization/${association.id}`}
-                    >
-                      <Card className="transition-all hover:shadow-md hover:border-primary/20">
-                        <CardContent className="flex items-center gap-3 p-3 md:p-4">
-                          <Avatar
-                            name={association.name}
-                            className="h-12 w-12 md:h-14 md:w-14"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium truncate text-sm md:text-base">
-                              {association.name}
-                            </h3>
-                            <p className="text-xs md:text-sm text-gray-500 truncate">
-                              {getOrgLabel(
-                                association.org_type,
-                                association.metadata,
-                              )}
-                            </p>
-                          </div>
-                          <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+                  <Card className="transition-all hover:shadow-md hover:border-primary/20">
+                    <CardContent className="flex items-center gap-3 p-3 md:p-4">
+                      <Avatar
+                        name={association.name}
+                        className="h-12 w-12 md:h-14 md:w-14"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium truncate text-sm md:text-base">
+                          {association.name}
+                        </h3>
+                        <p className="text-xs md:text-sm text-gray-500 truncate">
+                          {getOrgLabel(
+                            association.org_type,
+                            association.metadata,
+                          )}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              ),
+            })}
 
-          {activeTab === DashboardTabs.TAB_GOVERNANCE && (
-            <section
-              className="space-y-3 md:space-y-4"
-              id="my-governance-panel"
-              role="tabpanel"
-              aria-labelledby="Governance"
-            >
-              <p className="text-sm text-gray-800 font-normal px-1">
-                {t("dashboard_tab_governance")}
-              </p>
-              {governance.length === 0 ? (
-                <div className="text-center py-6 text-gray-500">
-                  <p>{t("no_governance_found")}</p>
-                </div>
-              ) : (
-                <div
-                  className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                  data-cy="organization-list"
+          {activeTab === DashboardTabs.TAB_GOVERNANCE &&
+            TabContent({
+              tabId: "governance-panel",
+              tabItems: governance,
+              emptyMessage: t("no_governance_found"),
+              description: t("dashboard_tab_governance"),
+              renderLink: (governanceOrg) => (
+                <Link
+                  key={governanceOrg.id}
+                  href={`/organization/${governanceOrg.id}`}
                 >
-                  {governance.map((governanceOrg) => (
-                    <Link
-                      key={governanceOrg.id}
-                      href={`/organization/${governanceOrg.id}`}
-                    >
-                      <Card className="transition-all hover:shadow-md hover:border-primary/20">
-                        <CardContent className="flex items-center gap-3 p-3 md:p-4">
-                          <Avatar
-                            name={governanceOrg.name}
-                            className="h-12 w-12 md:h-14 md:w-14"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium truncate text-sm md:text-base">
-                              {governanceOrg.name}
-                            </h3>
-                            <p className="text-xs md:text-sm text-gray-500 truncate">
-                              {getOrgLabel(
-                                governanceOrg.org_type,
-                                governanceOrg.metadata,
-                              )}
-                            </p>
-                          </div>
-                          <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+                  <Card className="transition-all hover:shadow-md hover:border-primary/20">
+                    <CardContent className="flex items-center gap-3 p-3 md:p-4">
+                      <Avatar
+                        name={governanceOrg.name}
+                        className="h-12 w-12 md:h-14 md:w-14"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium truncate text-sm md:text-base">
+                          {governanceOrg.name}
+                        </h3>
+                        <p className="text-xs md:text-sm text-gray-500 truncate">
+                          {getOrgLabel(
+                            governanceOrg.org_type,
+                            governanceOrg.metadata,
+                          )}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              ),
+            })}
         </div>
       </div>
     </div>
   );
 }
+
+const TabContent = ({
+  tabId,
+  tabItems,
+  emptyMessage,
+  description,
+  renderLink,
+}: TabContentProps) => {
+  return (
+    <section
+      className="space-y-3 md:space-y-4"
+      id={tabId}
+      role="tabpanel"
+      aria-labelledby={tabId}
+    >
+      <p className="text-sm text-gray-800 font-normal px-1">{description}</p>
+      {tabItems.length === 0 ? (
+        <div className="text-center py-6 text-gray-500">
+          <p>{emptyMessage}</p>
+        </div>
+      ) : (
+        <div
+          className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          data-cy={`${tabId}-list`}
+        >
+          {tabItems.map((item: Item) => renderLink(item))}
+        </div>
+      )}
+    </section>
+  );
+};
