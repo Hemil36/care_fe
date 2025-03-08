@@ -90,20 +90,22 @@ export default function UserDashboard() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full sm:w-auto hidden sm:flex"
-              asChild
-            >
-              <Link
-                href="/admin/questionnaire"
-                className="gap-2 text-inherit flex items-center"
+            {user.is_superuser && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto hidden sm:flex"
+                asChild
               >
-                <User2Icon className="h-4 w-4" />
-                {t("admin_dashboard")}
-              </Link>
-            </Button>
+                <Link
+                  href="/admin/questionnaire"
+                  className="gap-2 text-inherit flex items-center"
+                >
+                  <User2Icon className="h-4 w-4" />
+                  {t("admin_dashboard")}
+                </Link>
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -115,15 +117,17 @@ export default function UserDashboard() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem className="cursor-pointer flex sm:hidden items-center gap-2 text-xs w-full sm:w-auto">
-                  <Link
-                    href="/admin/questionnaire"
-                    className="flex items-center gap-2 w-full text-inherit"
-                  >
-                    <User2Icon className="h-4 w-4" />
-                    {t("admin_dashboard")}
-                  </Link>
-                </DropdownMenuItem>
+                {user.is_superuser && (
+                  <DropdownMenuItem className="cursor-pointer flex sm:hidden items-center gap-2 text-xs w-full sm:w-auto">
+                    <Link
+                      href="/admin/questionnaire"
+                      className="flex items-center gap-2 w-full text-inherit"
+                    >
+                      <User2Icon className="h-4 w-4" />
+                      {t("admin_dashboard")}
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem className="cursor-pointer flex items-center gap-2 text-xs w-full sm:w-auto">
                   <Link
                     href={`/users/${user.username}`}
