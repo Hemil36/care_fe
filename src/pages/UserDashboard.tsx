@@ -32,14 +32,12 @@ type Item = {
   [key: string]: any;
 };
 
-type RenderLinkFunction = (item: Item) => JSX.Element;
-
 type TabContentProps = {
   tabId: string;
   tabItems: Item[];
   emptyMessage: string;
   description: string;
-  renderLink: RenderLinkFunction;
+  renderLink: (item: Item) => JSX.Element;
 };
 
 export default function UserDashboard() {
@@ -92,22 +90,6 @@ export default function UserDashboard() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            {user.is_superuser && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full sm:w-auto"
-                asChild
-              >
-                <Link
-                  href="/admin/questionnaire"
-                  className="gap-2 text-inherit flex items-center"
-                >
-                  <User2Icon className="h-4 w-4" />
-                  {t("admin_dashboard")}
-                </Link>
-              </Button>
-            )}
             <Button
               variant="outline"
               size="sm"
@@ -115,11 +97,11 @@ export default function UserDashboard() {
               asChild
             >
               <Link
-                href={`/users/${user.username}`}
+                href="/admin/questionnaire"
                 className="gap-2 text-inherit flex items-center"
               >
-                <SquarePen className="h-4 w-4" />
-                {t("edit_profile")}
+                <User2Icon className="h-4 w-4" />
+                {t("admin_dashboard")}
               </Link>
             </Button>
             <DropdownMenu>
@@ -133,25 +115,16 @@ export default function UserDashboard() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
-                {user.is_superuser && (
-                  <DropdownMenuItem className="cursor-pointer flex items-center gap-2 text-xs w-full sm:w-auto">
-                    <Link
-                      href="/admin/questionnaire"
-                      className="flex items-center gap-2 w-full text-inherit"
-                    >
-                      <User2Icon className="h-4 w-4" />
-                      {t("admin_dashboard")}
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  className="cursor-pointer flex items-center gap-2 text-xs w-full sm:w-auto"
-                  onClick={signOut}
-                >
-                  <LogOut className="h-4 w-4" />
-                  {t("sign_out")}
-                </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer flex sm:hidden items-center gap-2 text-xs w-full sm:w-auto">
+                  <Link
+                    href="/admin/questionnaire"
+                    className="flex items-center gap-2 w-full text-inherit"
+                  >
+                    <User2Icon className="h-4 w-4" />
+                    {t("admin_dashboard")}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer flex items-center gap-2 text-xs w-full sm:w-auto">
                   <Link
                     href={`/users/${user.username}`}
                     className="flex items-center gap-2 w-full text-inherit"
@@ -159,6 +132,13 @@ export default function UserDashboard() {
                     <SquarePen className="h-4 w-4" />
                     {t("edit_profile")}
                   </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer flex items-center gap-2 text-xs w-full sm:w-auto"
+                  onClick={signOut}
+                >
+                  <LogOut className="h-4 w-4" />
+                  {t("sign_out")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
