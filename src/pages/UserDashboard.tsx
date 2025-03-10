@@ -148,18 +148,13 @@ export default function UserDashboard() {
             </DropdownMenu>
           </div>
         </div>
-        {user.user_type === "doctor" && (
-          <div className="flex items-center justify-center py-1 md:py-2 bg-card bg-indigo-50 text-indigo-900 rounded-lg border border-indigo-200 shadow-sm w-full  mx-auto">
-            {t("welcome_dr_banner")}
-          </div>
-        )}
       </div>
 
       {/* Tabs Section */}
       <div className="w-full">
         {/* Tabs Headings */}
         <div
-          className="flex border-b border-gray-200"
+          className="flex flex-wrap justify-center border-b border-gray-200"
           role="tablist"
           aria-label="Dashboard Sections"
         >
