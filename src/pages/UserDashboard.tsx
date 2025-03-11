@@ -62,15 +62,15 @@ export default function UserDashboard() {
       {/* Welcome Section */}
       <div className="flex flex-col gap-1">
         <div className="flex justify-between gap-4 bg-card p-4 md:p-6 rounded-lg border shadow-sm w-full  mx-auto">
-          <div className="flex flex-col flex-auto sm:flex-row items-center gap-4">
+          <div className="flex flex-auto items-center gap-4">
             <Avatar
               name={formatDisplayName(user)}
               imageUrl={user.read_profile_picture_url}
               className="h-20 w-20 md:h-24 md:w-24 rounded-full"
             />
-            <div className="space-y-1 text-center sm:text-left">
+            <div className="space-y-1 text-left">
               <div>
-                <p className="text-sm md:text-base text-gray-500">
+                <p className="text-xs md:text-base text-gray-500">
                   {t("welcome_back")}
                 </p>
                 <h1 className="text-xl md:text-2xl">
@@ -154,7 +154,7 @@ export default function UserDashboard() {
       <div className="w-full">
         {/* Tabs Headings */}
         <div
-          className="flex flex-wrap justify-center border-b border-gray-200"
+          className="flex border-b border-gray-200"
           role="tablist"
           aria-label="Dashboard Sections"
         >
@@ -166,7 +166,7 @@ export default function UserDashboard() {
               id={`${tab.toLowerCase().replace(/\s+/g, "-")}-tab`}
               aria-selected={activeTab === tab}
               aria-controls={`${tab.toLowerCase().replace(/\s+/g, "-")}-panel`}
-              className={`px-4 py-2 text-md font-medium transition-all duration-75 ${
+              className={`px-4 py-2 text-sm md:text-base font-medium transition-all duration-75 ${
                 activeTab === tab
                   ? "border-b-2 border-green-600 text-green-700"
                   : "text-gray-500"
