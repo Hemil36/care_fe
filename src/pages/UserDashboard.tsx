@@ -15,11 +15,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { Avatar } from "@/components/Common/Avatar";
+import { UserFacilityModel } from "@/components/Users/models";
 
 import useAuthUser, { useAuthContext } from "@/hooks/useAuthUser";
 
 import { formatDisplayName } from "@/Utils/utils";
-import { getOrgLabel } from "@/types/organization/organization";
+import { Organization, getOrgLabel } from "@/types/organization/organization";
 
 enum DashboardTabs {
   TAB_FACILITIES = "Facilities",
@@ -27,17 +28,12 @@ enum DashboardTabs {
   TAB_GOVERNANCE = "Governance",
 }
 
-type Item = {
-  id: string | number;
-  [key: string]: any;
-};
-
 type TabContentProps = {
   tabId: string;
-  tabItems: Item[];
+  tabItems: UserFacilityModel[] | Organization[];
   emptyMessage: string;
   description: string;
-  renderLink: (item: Item) => JSX.Element;
+  renderChild: (item: UserFacilityModel | Organization) => JSX.Element;
 };
 
 export default function UserDashboard() {
@@ -163,9 +159,9 @@ export default function UserDashboard() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               role="tab"
-              id={`${tab.toLowerCase().replace(/\s+/g, "-")}-tab`}
+              id={`${tab.toLowerCase()}-tab`}
               aria-selected={activeTab === tab}
-              aria-controls={`${tab.toLowerCase().replace(/\s+/g, "-")}-panel`}
+              aria-controls={`${tab.toLowerCase()}-panel`}
               className={`px-4 py-2 text-sm md:text-base font-medium transition-all duration-75 ${
                 activeTab === tab
                   ? "border-b-2 border-green-600 text-green-700"
@@ -185,7 +181,7 @@ export default function UserDashboard() {
               tabItems: facilities,
               emptyMessage: t("no_facilities_found"),
               description: t("dashboard_tab_facilities"),
-              renderLink: (facility) => (
+              renderChild: (facility) => (
                 <Link
                   key={facility.id}
                   href={`/facility/${facility.id}/overview`}
@@ -217,7 +213,7 @@ export default function UserDashboard() {
               tabItems: associations,
               emptyMessage: t("no_associations_found"),
               description: t("dashboard_tab_associations"),
-              renderLink: (association) => (
+              renderChild: (association) => (
                 <Link
                   key={association.id}
                   href={`/organization/${association.id}`}
@@ -233,10 +229,11 @@ export default function UserDashboard() {
                           {association.name}
                         </h3>
                         <p className="text-xs md:text-sm text-gray-500 truncate">
-                          {getOrgLabel(
-                            association.org_type,
-                            association.metadata,
-                          )}
+                          {"org_type" in association &&
+                            getOrgLabel(
+                              association.org_type,
+                              association.metadata,
+                            )}
                         </p>
                       </div>
                       <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
@@ -252,7 +249,7 @@ export default function UserDashboard() {
               tabItems: governance,
               emptyMessage: t("no_governance_found"),
               description: t("dashboard_tab_governance"),
-              renderLink: (governanceOrg) => (
+              renderChild: (governanceOrg) => (
                 <Link
                   key={governanceOrg.id}
                   href={`/organization/${governanceOrg.id}`}
@@ -268,10 +265,11 @@ export default function UserDashboard() {
                           {governanceOrg.name}
                         </h3>
                         <p className="text-xs md:text-sm text-gray-500 truncate">
-                          {getOrgLabel(
-                            governanceOrg.org_type,
-                            governanceOrg.metadata,
-                          )}
+                          {"org_type" in governanceOrg &&
+                            getOrgLabel(
+                              governanceOrg.org_type,
+                              governanceOrg.metadata,
+                            )}
                         </p>
                       </div>
                       <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
@@ -291,7 +289,7 @@ const TabContent = ({
   tabItems,
   emptyMessage,
   description,
-  renderLink,
+  renderChild,
 }: TabContentProps) => {
   return (
     <section
@@ -310,7 +308,9 @@ const TabContent = ({
           className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
           data-cy={`${tabId}-list`}
         >
-          {tabItems.map((item: Item) => renderLink(item))}
+          {tabItems.map((item: UserFacilityModel | Organization) =>
+            renderChild(item),
+          )}
         </div>
       )}
     </section>
