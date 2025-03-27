@@ -19,6 +19,7 @@ import type { Question } from "@/types/questionnaire/question";
 import { AllergyQuestion } from "./AllergyQuestion";
 import { BooleanQuestion } from "./BooleanQuestion";
 import { ChoiceQuestion } from "./ChoiceQuestion";
+import { ConsentQuestion } from "./ConsentQuestion";
 import { DateQuestion } from "./DateQuestion";
 import { DateTimeQuestion } from "./DateTimeQuestion";
 import { TimeOfDeathQuestion } from "./DeathQuestion";
@@ -201,6 +202,13 @@ export function QuestionInput({
               );
             }
             return <span>{t("questionnaire_files_no_encounter")}</span>;
+          case "consent":
+            if (encounterId) {
+              return (
+                <ConsentQuestion {...commonProps} encounterId={encounterId} />
+              );
+            }
+            return <span>{t("questionnaire_consent_no_encounter")}</span>;
         }
         return null;
 

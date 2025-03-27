@@ -1,5 +1,6 @@
 import { StructuredQuestionType } from "@/components/Questionnaire/data/StructuredFormData";
 
+import { CreateConsentRequest } from "@/types/consent/consent";
 import { AllergyIntoleranceRequest } from "@/types/emr/allergyIntolerance/allergyIntolerance";
 import { DiagnosisRequest } from "@/types/emr/diagnosis/diagnosis";
 import { EncounterEditRequest } from "@/types/emr/encounter";
@@ -23,6 +24,7 @@ export interface StructuredDataMap {
   appointment: CreateAppointmentQuestion;
   files: FileUploadQuestion;
   time_of_death: string;
+  consent: CreateConsentRequest;
 }
 
 // Map structured types to their request types
@@ -38,6 +40,7 @@ export interface StructuredRequestMap {
   time_of_death: {
     deceased_datetime: string;
   };
+  consent: CreateConsentRequest;
 }
 
 export type RequestTypeFor<T extends StructuredQuestionType> =

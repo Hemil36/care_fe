@@ -160,6 +160,26 @@ const time_of_death_questionnaire: QuestionnaireDetail = {
   tags: [],
 };
 
+const consent_questionnaire: QuestionnaireDetail = {
+  id: "consent",
+  slug: "consent",
+  version: "0.0.1",
+  title: "Consent",
+  status: "active",
+  subject_type: "patient",
+  questions: [
+    {
+      id: "consent",
+      text: "Consent",
+      type: "structured",
+      structured_type: "consent",
+      link_id: "1.1",
+      required: true,
+    },
+  ],
+  tags: [],
+};
+
 export const STRUCTURED_QUESTIONS = [
   {
     value: "allergy_intolerance",
@@ -194,6 +214,7 @@ export const STRUCTURED_QUESTIONS = [
   },
   { value: "appointment", label: "Appointment" },
   { value: "files", label: "Files", questionnaire: files_questionnaire },
+  { value: "consent", label: "Consent", questionnaire: consent_questionnaire },
 ] as const;
 
 export const FIXED_QUESTIONNAIRES: Record<string, QuestionnaireDetail> =

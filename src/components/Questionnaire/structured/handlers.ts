@@ -194,6 +194,25 @@ export const structuredHandlers: {
       }));
     },
   },
+  consent: {
+    getRequests: async (consents, { patientId }) =>
+      await Promise.all(
+        consents.map(async (consent) => {
+          const base64 = consent.file_data
+            ? (await readFileAsDataURL(consent.file_data)).split(",")[1]
+            : null;
+          return {
+            url: `/api/v1/patient/${patientId}/consent/`,
+            method: "POST",
+            body: {
+              ...consent,
+              file_data: base64 as unknown as File,
+            },
+            reference_id: "consent",
+          };
+        }),
+      ),
+  },
 };
 
 export const getStructuredRequests = async <T extends StructuredQuestionType>(
