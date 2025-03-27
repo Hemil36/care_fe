@@ -5,6 +5,7 @@ import {
 } from "@/components/Questionnaire/structured/types";
 
 import { readFileAsDataURL } from "@/Utils/utils";
+import { BatchSubmissionResult } from "@/types/questionnaire/batch";
 
 interface StructuredHandlerContext {
   patientId: string;
@@ -21,9 +22,13 @@ type StructuredHandler<T extends StructuredQuestionType> = {
       url: string;
       method: string;
       body: RequestTypeFor<T>;
-      reference_id: string;
+      reference_id: T;
     }>
   >;
+  afterRequest?: (
+    data: BatchSubmissionResult,
+    context: StructuredHandlerContext,
+  ) => Promise<void>;
 };
 
 export const structuredHandlers: {
@@ -196,22 +201,16 @@ export const structuredHandlers: {
   },
   consent: {
     getRequests: async (consents, { patientId }) =>
-      await Promise.all(
-        consents.map(async (consent) => {
-          const base64 = consent.file_data
-            ? (await readFileAsDataURL(consent.file_data)).split(",")[1]
-            : null;
-          return {
-            url: `/api/v1/patient/${patientId}/consent/`,
-            method: "POST",
-            body: {
-              ...consent,
-              file_data: base64 as unknown as File,
-            },
-            reference_id: "consent",
-          };
-        }),
-      ),
+      consents.map((consent) => ({
+        url: `/api/v1/patient/${patientId}/consent/`,
+        method: "POST",
+        body: {
+          ...consent,
+          file: undefined as unknown as File,
+        },
+        reference_id: "consent",
+      })),
+    afterRequest: async (data, { patientId }) => {},
   },
 };
 
@@ -220,3 +219,13 @@ export const getStructuredRequests = async <T extends StructuredQuestionType>(
   data: DataTypeFor<T>[],
   context: StructuredHandlerContext,
 ) => await structuredHandlers[type].getRequests(data, context);
+
+export const processAfterRequest = async <T extends StructuredQuestionType>(
+  type: T,
+  data: BatchSubmissionResult,
+  context: StructuredHandlerContext,
+) => {
+  if (structuredHandlers[type].afterRequest) {
+    await structuredHandlers[type].afterRequest(data, context);
+  }
+};

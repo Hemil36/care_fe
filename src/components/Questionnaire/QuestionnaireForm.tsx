@@ -22,6 +22,7 @@ import { MedicationRequest } from "@/types/emr/medicationRequest";
 import { MedicationStatementRequest } from "@/types/emr/medicationStatement";
 import { FileUploadQuestion } from "@/types/files/files";
 import {
+  BatchSubmissionResult,
   DetailedValidationError,
   QuestionValidationError,
   ValidationErrorResponse,
@@ -42,7 +43,10 @@ import { validateMedicationRequestQuestion } from "./QuestionTypes/MedicationReq
 import { validateMedicationStatementQuestion } from "./QuestionTypes/MedicationStatementQuestion";
 import { QuestionnaireSearch } from "./QuestionnaireSearch";
 import { FIXED_QUESTIONNAIRES } from "./data/StructuredFormData";
-import { getStructuredRequests } from "./structured/handlers";
+import {
+  getStructuredRequests,
+  processAfterRequest,
+} from "./structured/handlers";
 
 export interface QuestionnaireFormState {
   questionnaire: QuestionnaireDetail;
@@ -341,8 +345,9 @@ export function QuestionnaireForm({
 
   const { mutate: submitBatch, isPending } = useMutation({
     mutationFn: mutate(routes.batchRequest, { silent: true }),
-    onSuccess: () => {
+    onSuccess: (data: { results: BatchSubmissionResult[] }) => {
       setServerErrors(undefined);
+      handleAfterSubmit(data);
       toast.success(t("questionnaire_submitted_successfully"));
       onSubmit?.();
     },
@@ -529,6 +534,24 @@ export function QuestionnaireForm({
   };
 
   const hasErrors = questionnaireForms.some((form) => form.errors.length > 0);
+
+  const handleAfterSubmit = ({
+    results,
+  }: {
+    results: BatchSubmissionResult[];
+  }) => {
+    const structuredResponses = results.filter(
+      (result) => result.reference_id in STRUCTURED_TYPE_VALIDATORS,
+    );
+
+    structuredResponses.forEach(async (response) => {
+      await processAfterRequest(
+        response.reference_id as keyof typeof STRUCTURED_TYPE_VALIDATORS,
+        response,
+        { patientId, encounterId: encounterId || "", facilityId },
+      );
+    });
+  };
 
   const handleSubmit = async () => {
     setIsDirty(false);

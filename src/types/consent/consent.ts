@@ -56,10 +56,10 @@ export interface ConsentModel {
   verification_details: ConsentVerification[];
 }
 
-export type CreateConsentRequest = Omit<ConsentModel, "id" | "external_id"> & {
-  file_data?: File;
-  original_name?: string;
-  file_name?: string;
+export type CreateConsentRequest = Omit<ConsentModel, "id" | "external_id">;
+
+export type CreateConsentQuestion = CreateConsentRequest & {
+  file: File;
 };
 
 export type UpdateConsentRequest = Partial<CreateConsentRequest>;
