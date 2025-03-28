@@ -31,6 +31,8 @@ import routes from "@/Utils/request/api";
 import request from "@/Utils/request/request";
 import useTanStackQueryInstead from "@/Utils/request/useQuery";
 
+import { useConsultation } from "./ConsultationDetails/ConsultationContext";
+
 interface PreDischargeFormInterface {
   new_discharge_reason: number | null;
   discharge_notes: string;
@@ -78,6 +80,8 @@ const DischargeModal = ({
   const [isSendingDischargeApi, setIsSendingDischargeApi] = useState(false);
   const [facility, setFacility] = useState<FacilityModel | null>(referred_to);
   const [errors, setErrors] = useState<any>({});
+
+  const { abhaNumber }: any = useConsultation();
 
   useEffect(() => {
     setPreDischargeForm((prev) => ({
@@ -374,11 +378,23 @@ const DischargeModal = ({
           consultation={consultationData}
         />
 
-        <div className="py-4">
+        <div className="py-4 grid gap-4">
           <span className="text-secondary-700">
             {t("encounter_duration_confirmation")}{" "}
             <strong>{encounterDuration.humanize()}</strong>.
           </span>
+
+          {!abhaNumber && (
+            <>
+              <div className="flex gap-1 font-medium text-warning-500">
+                <CareIcon icon="l-exclamation-triangle" className="text-base" />
+                <p>
+                  Discharge is disabled as the patient has no ABHA Number
+                  linked. Link ABHA Number to proceed with discharge.
+                </p>
+              </div>
+            </>
+          )}
         </div>
         <div className="cui-form-button-group">
           <Cancel onClick={onClose} />
@@ -386,6 +402,7 @@ const DischargeModal = ({
             <CircularProgress />
           ) : (
             <Submit
+              disabled={!abhaNumber}
               onClick={async () => {
                 if (!validate()) {
                   return;
