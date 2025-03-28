@@ -1,6 +1,7 @@
-import { MinusCircledIcon, Pencil2Icon } from "@radix-ui/react-icons";
+import { MinusCircledIcon } from "@radix-ui/react-icons";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "i18next";
+import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
@@ -37,7 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TooltipComponent } from "@/components/ui/tooltip";
 
 import { ComboboxQuantityInput } from "@/components/Common/ComboboxQuantityInput";
 import { MultiValueSetSelect } from "@/components/Medicine/MultiValueSetSelect";
@@ -364,95 +365,119 @@ export function MedicationRequestQuestion({
                   const isInactive = INACTIVE_MEDICATION_STATUSES.includes(
                     medication.status as (typeof INACTIVE_MEDICATION_STATUSES)[number],
                   );
+                  const dosageInstruction =
+                    medication.dosage_instruction[0] || {};
 
                   return (
-                    <React.Fragment key={medication.id}>
+                    <React.Fragment key={medication.id || index}>
                       {!desktopLayout ? (
-                        <Collapsible
-                          open={expandedMedicationIndex === index}
-                          onOpenChange={() => {
-                            setExpandedMedicationIndex(
-                              expandedMedicationIndex === index ? null : index,
-                            );
-                          }}
-                          className="border-b last:border-b-0"
+                        <Card
+                          className={cn("mb-2 rounded-lg", {
+                            "border border-primary-500":
+                              expandedMedicationIndex === index,
+                            "border-0 shadow-none":
+                              expandedMedicationIndex !== index,
+                          })}
                         >
-                          <div
-                            className={cn(
-                              "flex items-center gap-2 px-2 py-0.5 rounded-md shadow-sm text-sm",
-                              isInactive ? "opacity-40" : "hover:bg-gray-50/50",
-                              expandedMedicationIndex === index
-                                ? "bg-gray-50"
-                                : "bg-gray-100",
-                            )}
+                          <Collapsible
+                            open={expandedMedicationIndex === index}
+                            onOpenChange={() => {
+                              setExpandedMedicationIndex(
+                                expandedMedicationIndex === index
+                                  ? null
+                                  : index,
+                              );
+                            }}
+                            className="w-full"
                           >
-                            <CollapsibleTrigger className="flex-1 text-left">
-                              <div
+                            <CollapsibleTrigger asChild>
+                              <CardHeader
                                 className={cn(
-                                  "font-medium text-gray-900",
-                                  isInactive &&
-                                    medication.status !== "ended" &&
-                                    "line-through",
+                                  "p-2 rounded-lg shadow-none bg-gray-50 cursor-pointer active:bg-gray-100 transition-colors",
+                                  {
+                                    "bg-gray-200 border border-gray-300":
+                                      expandedMedicationIndex !== index,
+                                  },
                                 )}
                               >
-                                {medication.medication?.display}
-                              </div>
+                                <div className="flex flex-col space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0 mr-2">
+                                      <CardTitle
+                                        className={cn(
+                                          "text-base text-gray-950 break-words",
+                                          isInactive &&
+                                            medication.status !== "ended" &&
+                                            "line-through",
+                                        )}
+                                        title={medication.medication?.display}
+                                      >
+                                        {medication.medication?.display}
+                                      </CardTitle>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      {expandedMedicationIndex === index ? (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRemoveMedication(index);
+                                          }}
+                                          disabled={isInactive || disabled}
+                                          className="size-10 p-4 border border-gray-400 bg-white shadow text-destructive"
+                                          data-cy="remove-medication"
+                                        >
+                                          <MinusCircledIcon className="size-5" />
+                                        </Button>
+                                      ) : null}
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 border border-gray-400 bg-white shadow p-4 pointer-events-none"
+                                      >
+                                        {expandedMedicationIndex === index ? (
+                                          <ChevronsDownUp className="size-5" />
+                                        ) : (
+                                          <ChevronsUpDown className="size-5" />
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  {expandedMedicationIndex !== index && (
+                                    <div className="text-sm mt-1 text-gray-600">
+                                      {dosageInstruction?.dose_and_rate
+                                        ?.dose_quantity &&
+                                        `${dosageInstruction.dose_and_rate.dose_quantity.value} ${dosageInstruction.dose_and_rate.dose_quantity.unit?.display || ""}`}
+                                      {dosageInstruction?.as_needed_boolean
+                                        ? ` · ${t("as_needed_prn")}`
+                                        : dosageInstruction?.timing?.code
+                                            ?.code &&
+                                          ` · ${MEDICATION_REQUEST_TIMING_OPTIONS[dosageInstruction.timing.code.code]?.display || ""}`}
+                                      {dosageInstruction?.route &&
+                                        ` · ${dosageInstruction.route.display}`}
+                                    </div>
+                                  )}
+                                </div>
+                              </CardHeader>
                             </CollapsibleTrigger>
-                            <div className="flex items-center gap-1">
-                              {expandedMedicationIndex !== index && (
-                                <Button
-                                  aria-label="Expand Medication Request"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="size-8 text-gray-500 hover:text-gray-900"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpandedMedicationIndex(index);
-                                  }}
+                            <CollapsibleContent>
+                              <CardContent className="p-3 pt-2 space-y-3 rounded-lg bg-gray-50">
+                                <MedicationRequestGridRow
+                                  medication={medication}
                                   disabled={disabled}
-                                >
-                                  <Pencil2Icon className="size-4" />
-                                </Button>
-                              )}
-                              <TooltipComponent
-                                content={
-                                  medication.status === "entered_in_error"
-                                    ? t("medication_already_marked_as_error")
-                                    : t("remove_medication")
-                                }
-                              >
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveMedication(index);
-                                  }}
-                                  disabled={isInactive || disabled}
-                                  className="size-8"
-                                  data-cy="remove-medication"
-                                >
-                                  <MinusCircledIcon className="size-4" />
-                                </Button>
-                              </TooltipComponent>
-                            </div>
-                          </div>
-                          <CollapsibleContent>
-                            <div className="py-4 space-y-4 bg-white mx-2 mb-1">
-                              <MedicationRequestGridRow
-                                medication={medication}
-                                disabled={disabled}
-                                onUpdate={(updates) =>
-                                  handleUpdateMedication(index, updates)
-                                }
-                                onRemove={() => handleRemoveMedication(index)}
-                                index={index}
-                                questionId={questionnaireResponse.question_id}
-                                errors={errors}
-                              />
-                            </div>
-                          </CollapsibleContent>
-                        </Collapsible>
+                                  onUpdate={(updates) =>
+                                    handleUpdateMedication(index, updates)
+                                  }
+                                  onRemove={() => handleRemoveMedication(index)}
+                                  index={index}
+                                  questionId={questionnaireResponse.question_id}
+                                  errors={errors}
+                                />
+                              </CardContent>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        </Card>
                       ) : (
                         <MedicationRequestGridRow
                           medication={medication}
@@ -508,7 +533,7 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
 }) => {
   const [showDosageDialog, setShowDosageDialog] = useState(false);
   const desktopLayout = useBreakpoints({ lg: true, default: false });
-  const dosageInstruction = medication.dosage_instruction[0];
+  const dosageInstruction = medication.dosage_instruction[0] || {};
   const isReadOnly = !!medication.id;
   const { hasError } = useFieldError(questionId, errors, index);
 
