@@ -44,6 +44,8 @@ import request from "@/Utils/request/request";
 import useTanStackQueryInstead from "@/Utils/request/useQuery";
 import { parsePhoneNumber } from "@/Utils/utils";
 
+import { ConsultationProvider } from "../Facility/ConsultationDetails/ConsultationContext";
+
 interface patientShiftProps {
   id: string;
 }
@@ -62,6 +64,8 @@ export const ShiftDetailsUpdate = (props: patientShiftProps) => {
   const [showDischargeModal, setShowDischargeModal] = useState(false);
   const [dischargeReason, setDischargeReason] = useState<number>();
   const { t } = useTranslation();
+
+  console.log(consultationData);
 
   const initForm: any = {
     shifting_approving_facility_object: null,
@@ -319,16 +323,26 @@ export const ShiftDetailsUpdate = (props: patientShiftProps) => {
 
   return (
     <Page title={t("update_shift_request")} backUrl={`/shifting/${props.id}`}>
-      <DischargeModal
-        show={showDischargeModal}
-        onClose={() => setShowDischargeModal(false)}
-        consultationData={consultationData}
-        referred_to={state.form.assigned_facility_object}
-        new_discharge_reason={dischargeReason}
-        afterSubmit={() => {
-          handleSubmit(true);
+      <ConsultationProvider
+        initialContext={{
+          consultation: consultationData,
+          patient: {
+            id: consultationData.patient,
+            facility: consultationData.facility,
+          },
         }}
-      />
+      >
+        <DischargeModal
+          show={showDischargeModal}
+          onClose={() => setShowDischargeModal(false)}
+          consultationData={consultationData}
+          referred_to={state.form.assigned_facility_object}
+          new_discharge_reason={dischargeReason}
+          afterSubmit={() => {
+            handleSubmit(true);
+          }}
+        />
+      </ConsultationProvider>
       <Card className="mx-auto mt-4 w-full max-w-4xl md:p-6 lg:p-8">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <SelectFormField
