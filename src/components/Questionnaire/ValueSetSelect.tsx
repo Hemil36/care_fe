@@ -112,36 +112,69 @@ export default function ValueSetSelect({
     </Command>
   );
 
+  // Mobile render with drawer
+  const renderMobileDrawer = (triggerButton: React.ReactNode) => (
+    <>
+      {triggerButton}
+      <CommandDrawer open={internalOpen} onOpenChange={setInternalOpen}>
+        {content}
+      </CommandDrawer>
+    </>
+  );
+
+  if (
+    isMobile &&
+    !hideTrigger &&
+    (system === "system-additional-instruction" ||
+      system === "system-route" ||
+      system === "system-body-site" ||
+      system === "system-administration-method")
+  ) {
+    return renderMobileDrawer(
+      <Button
+        variant="outline"
+        role="combobox"
+        onClick={() => setInternalOpen(true)}
+        className={cn(
+          "w-full justify-between",
+          wrapTextForSmallScreen
+            ? "h-auto md:h-9 whitespace-normal text-left md:truncate"
+            : "truncate",
+          !value?.display && "text-gray-400",
+        )}
+        disabled={disabled}
+      >
+        <span>{value?.display || placeholder}</span>
+        <CaretSortIcon className="ml-2 size-4 shrink-0 opacity-50" />
+      </Button>,
+    );
+  }
+
   if (isMobile && !hideTrigger) {
-    return (
-      <>
-        <Button
-          variant="outline"
-          role="combobox"
-          onClick={() => setInternalOpen(true)}
-          className={cn(
-            "w-full justify-between border border-primary rounded-md p-5",
-            wrapTextForSmallScreen
-              ? "h-auto md:h-9 whitespace-normal text-left md:truncate"
-              : "truncate",
-            !value?.display && "text-gray-400",
-          )}
-          disabled={disabled}
-        >
-          <div className="flex items-center">
-            <CareIcon
-              icon="l-plus"
-              className="mr-2 text-5xl text-primary-700 font-normal"
-            />
-            <span className="text-primary-700 flex items-center font-semibold text-base text-wrap">
-              {value?.display || placeholder}
-            </span>
-          </div>
-        </Button>
-        <CommandDrawer open={internalOpen} onOpenChange={setInternalOpen}>
-          {content}
-        </CommandDrawer>
-      </>
+    return renderMobileDrawer(
+      <Button
+        variant="outline"
+        role="combobox"
+        onClick={() => setInternalOpen(true)}
+        className={cn(
+          "w-full justify-between border border-primary rounded-md p-5",
+          wrapTextForSmallScreen
+            ? "h-auto md:h-9 whitespace-normal text-left md:truncate"
+            : "truncate",
+          !value?.display && "text-gray-400",
+        )}
+        disabled={disabled}
+      >
+        <div className="flex items-center">
+          <CareIcon
+            icon="l-plus"
+            className="mr-2 text-5xl text-primary-700 font-normal"
+          />
+          <span className="text-primary-700 flex items-center font-semibold text-base text-wrap">
+            {value?.display || placeholder}
+          </span>
+        </div>
+      </Button>,
     );
   }
 
