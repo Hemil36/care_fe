@@ -31,15 +31,31 @@ export const DOSAGE_UNITS_CODES = [
 ] as const;
 
 export const UCUM_TIME_UNITS = [
-  // TODO: Are these smaller units required?
-  // "ms",
-  // "s,
-  // "min",
-  "d",
-  "h",
-  "wk",
-  "mo",
-  "a",
+  {
+    code: "h",
+    display: "Hour",
+    system: "http://unitsofmeasure.org",
+  },
+  {
+    code: "d",
+    display: "Day",
+    system: "http://unitsofmeasure.org",
+  },
+  {
+    code: "wk",
+    display: "Week",
+    system: "http://unitsofmeasure.org",
+  },
+  {
+    code: "mo",
+    display: "Month",
+    system: "http://unitsofmeasure.org",
+  },
+  {
+    code: "a",
+    display: "Year",
+    system: "http://unitsofmeasure.org",
+  },
 ] as const;
 
 export const ACTIVE_MEDICATION_STATUSES = [
@@ -190,6 +206,12 @@ export interface MedicationRequestRead {
   authored_on: string;
 }
 
+export const getTimeUnit = (code: string) => {
+  return (
+    UCUM_TIME_UNITS.find((unit) => unit.code === code) || UCUM_TIME_UNITS[0]
+  );
+};
+
 export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
   string,
   {
@@ -203,10 +225,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 2,
         period: 1,
-        period_unit: "d",
+        period_unit: getTimeUnit("d"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -222,10 +244,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 3,
         period: 1,
-        period_unit: "d",
+        period_unit: getTimeUnit("d"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -241,10 +263,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 4,
         period: 1,
-        period_unit: "d",
+        period_unit: getTimeUnit("d"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -260,10 +282,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 1,
-        period_unit: "d",
+        period_unit: getTimeUnit("d"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -279,10 +301,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 1,
-        period_unit: "d",
+        period_unit: getTimeUnit("d"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -298,10 +320,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 1,
-        period_unit: "d",
+        period_unit: getTimeUnit("d"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -317,10 +339,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 2,
-        period_unit: "d",
+        period_unit: getTimeUnit("d"),
         bounds_duration: {
           value: 2,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -336,10 +358,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 1,
-        period_unit: "h",
+        period_unit: getTimeUnit("h"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -355,10 +377,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 2,
-        period_unit: "h",
+        period_unit: getTimeUnit("h"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -374,10 +396,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 3,
-        period_unit: "h",
+        period_unit: getTimeUnit("h"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -393,10 +415,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 4,
-        period_unit: "h",
+        period_unit: getTimeUnit("h"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -412,10 +434,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 6,
-        period_unit: "h",
+        period_unit: getTimeUnit("h"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -431,10 +453,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 8,
-        period_unit: "h",
+        period_unit: getTimeUnit("h"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -450,10 +472,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 1,
-        period_unit: "d",
+        period_unit: getTimeUnit("d"),
         bounds_duration: {
           value: 1,
-          unit: "d",
+          unit: getTimeUnit("d"),
         },
       },
       code: {
@@ -469,10 +491,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 1,
-        period_unit: "wk",
+        period_unit: getTimeUnit("wk"),
         bounds_duration: {
           value: 1,
-          unit: "wk",
+          unit: getTimeUnit("wk"),
         },
       },
       code: {
@@ -488,10 +510,10 @@ export const MEDICATION_REQUEST_TIMING_OPTIONS: Record<
       repeat: {
         frequency: 1,
         period: 1,
-        period_unit: "mo",
+        period_unit: getTimeUnit("mo"),
         bounds_duration: {
           value: 1,
-          unit: "mo",
+          unit: getTimeUnit("mo"),
         },
       },
       code: {

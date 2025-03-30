@@ -58,6 +58,7 @@ import {
   MedicationRequestDosageInstruction,
   MedicationRequestIntent,
   UCUM_TIME_UNITS,
+  getTimeUnit,
   parseMedicationStringToRequest,
 } from "@/types/emr/medicationRequest";
 import medicationRequestApi from "@/types/emr/medicationRequest/medicationRequestApi";
@@ -454,8 +455,9 @@ export function MedicationRequestQuestion({
                                         : dosageInstruction?.timing?.code
                                             ?.code &&
                                           ` · ${MEDICATION_REQUEST_TIMING_OPTIONS[dosageInstruction.timing.code.code]?.display || ""}`}
-                                      {dosageInstruction?.route &&
-                                        ` · ${dosageInstruction.route.display}`}
+                                      {dosageInstruction?.timing?.repeat
+                                        ?.bounds_duration?.value &&
+                                        ` · ${dosageInstruction.timing.repeat.bounds_duration.value} ${dosageInstruction.timing.repeat.bounds_duration.unit.display}`}
                                     </div>
                                   )}
                                 </div>
@@ -870,14 +872,15 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
           )}
           <Select
             value={
-              dosageInstruction?.timing?.repeat?.bounds_duration?.unit ??
-              UCUM_TIME_UNITS[0]
+              dosageInstruction?.timing?.repeat?.bounds_duration?.unit?.code ||
+              UCUM_TIME_UNITS[0].code
             }
-            onValueChange={(unit: (typeof UCUM_TIME_UNITS)[number]) => {
+            onValueChange={(code: string) => {
               if (dosageInstruction?.timing?.repeat) {
                 const value =
                   dosageInstruction?.timing?.repeat?.bounds_duration?.value ??
                   0;
+                const unit = getTimeUnit(code);
                 handleUpdateDosageInstruction({
                   timing: {
                     ...dosageInstruction.timing,
@@ -901,8 +904,8 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
             </SelectTrigger>
             <SelectContent>
               {UCUM_TIME_UNITS.map((unit) => (
-                <SelectItem key={unit} value={unit}>
-                  {unit}
+                <SelectItem key={unit.code} value={unit.code}>
+                  {unit.display}
                 </SelectItem>
               ))}
             </SelectContent>

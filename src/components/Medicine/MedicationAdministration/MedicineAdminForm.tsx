@@ -237,7 +237,7 @@ export const MedicineAdminForm: React.FC<MedicineAdminFormProps> = ({
             {medication.dosage_instruction[0]?.timing?.repeat?.bounds_duration
               ?.value || "-"}{" "}
             {medication.dosage_instruction[0]?.timing?.repeat?.bounds_duration
-              ?.unit || ""}
+              ?.unit?.display || ""}
           </p>
         </div>
       </div>
