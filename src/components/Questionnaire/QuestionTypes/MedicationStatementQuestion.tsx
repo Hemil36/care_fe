@@ -1,5 +1,6 @@
-import { MinusCircledIcon, Pencil2Icon } from "@radix-ui/react-icons";
+import { MinusCircledIcon } from "@radix-ui/react-icons";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import React, { useEffect } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
@@ -34,7 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TooltipComponent } from "@/components/ui/tooltip";
 
 import { NotesInput } from "@/components/Questionnaire/QuestionTypes/NotesInput";
 import ValueSetSelect from "@/components/Questionnaire/ValueSetSelect";
@@ -304,77 +305,118 @@ export function MedicationStatementQuestion({
                             expandedMedicationIndex === index ? null : index,
                           );
                         }}
-                        className="border-b last:border-b-0"
+                        className="mb-2"
                       >
-                        <div
-                          className={cn(
-                            "flex items-center gap-2 px-2 py-0.5 rounded-md shadow-xs text-sm",
-                            expandedMedicationIndex === index
-                              ? "bg-gray-50"
-                              : "bg-gray-100",
-                          )}
+                        <Card
+                          className={cn("rounded-lg", {
+                            "border border-primary-500":
+                              expandedMedicationIndex === index,
+                            "border-0 shadow-none":
+                              expandedMedicationIndex !== index,
+                          })}
                         >
-                          <CollapsibleTrigger className="flex-1 text-left">
-                            <div className="font-medium text-gray-900">
-                              {medication.medication?.display}
-                            </div>
-                          </CollapsibleTrigger>
-                          <div className="flex items-center gap-1">
-                            {expandedMedicationIndex !== index && (
-                              <Button
-                                aria-label="Expand Medication Statement"
-                                variant="ghost"
-                                size="icon"
-                                className="size-8 text-gray-500 hover:text-gray-900"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setExpandedMedicationIndex(index);
-                                }}
-                                disabled={disabled}
-                              >
-                                <Pencil2Icon className="size-4" />
-                              </Button>
-                            )}
-                            <TooltipComponent
-                              content={
-                                medication.status === "entered_in_error"
-                                  ? t("medication_already_marked_as_error")
-                                  : t("remove_medication")
-                              }
+                          <CollapsibleTrigger asChild>
+                            <CardHeader
+                              className={cn(
+                                "p-2 rounded-lg shadow-none bg-gray-50 cursor-pointer active:bg-gray-100 transition-colors",
+                                {
+                                  "bg-gray-200 border border-gray-300":
+                                    expandedMedicationIndex !== index,
+                                  "opacity-40 pointer-events-none":
+                                    medication.status === "entered_in_error",
+                                },
+                              )}
                             >
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveMedication(index);
-                                }}
-                                disabled={
-                                  disabled ||
-                                  medication.status === "entered_in_error"
+                              <div className="flex flex-col space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1 min-w-0 mr-2">
+                                    <CardTitle
+                                      className="text-base text-gray-950 break-words"
+                                      title={medication.medication?.display}
+                                    >
+                                      {medication.medication?.display}
+                                    </CardTitle>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    {expandedMedicationIndex === index && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled={
+                                          disabled ||
+                                          medication.status ===
+                                            "entered_in_error"
+                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRemoveMedication(index);
+                                        }}
+                                        className="h-10 w-10 p-4 border border-gray-400 bg-white shadow text-destructive"
+                                      >
+                                        <MinusCircledIcon className="size-5" />
+                                      </Button>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-10 w-10 border border-gray-400 bg-white shadow p-4 pointer-events-none"
+                                    >
+                                      {expandedMedicationIndex === index ? (
+                                        <ChevronsDownUp className="size-5" />
+                                      ) : (
+                                        <ChevronsUpDown className="size-5" />
+                                      )}
+                                    </Button>
+                                  </div>
+                                </div>
+                                {expandedMedicationIndex !== index && (
+                                  <div className="text-sm mt-1 text-gray-600">
+                                    {medication.dosage_text && (
+                                      <span>{medication.dosage_text} · </span>
+                                    )}
+                                    {medication.effective_period?.start ? (
+                                      <span>
+                                        {new Date(
+                                          medication.effective_period.start,
+                                        ).toLocaleDateString()}
+                                        {" - "}
+                                        {medication.effective_period?.end
+                                          ? new Date(
+                                              medication.effective_period.end,
+                                            ).toLocaleDateString()
+                                          : t("ongoing")}
+                                      </span>
+                                    ) : null}
+                                    {medication.status &&
+                                      medication.status !== "active" && (
+                                        <span className="ml-1">
+                                          ·{" "}
+                                          {t(
+                                            `medication_status_${medication.status}`,
+                                          )}
+                                        </span>
+                                      )}
+                                  </div>
+                                )}
+                              </div>
+                            </CardHeader>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <CardContent className="p-3 pt-2 space-y-3 rounded-lg bg-gray-50">
+                              <MedicationStatementGridRow
+                                medication={medication}
+                                disabled={disabled}
+                                onUpdate={(updates) =>
+                                  handleUpdateMedication(index, updates)
                                 }
-                                className="size-8"
-                              >
-                                <MinusCircledIcon className="size-4" />
-                              </Button>
-                            </TooltipComponent>
-                          </div>
-                        </div>
-                        <CollapsibleContent>
-                          <div className="py-4 space-y-4 bg-white mx-2 mb-1">
-                            <MedicationStatementGridRow
-                              medication={medication}
-                              disabled={disabled}
-                              onUpdate={(updates) =>
-                                handleUpdateMedication(index, updates)
-                              }
-                              onRemove={() => handleRemoveMedication(index)}
-                              index={index}
-                              questionId={question.id}
-                              errors={errors}
-                            />
-                          </div>
-                        </CollapsibleContent>
+                                onRemove={() => handleRemoveMedication(index)}
+                                index={index}
+                                questionId={question.id}
+                                errors={errors}
+                              />
+                            </CardContent>
+                          </CollapsibleContent>
+                        </Card>
                       </Collapsible>
                     ) : (
                       <MedicationStatementGridRow
@@ -443,11 +485,13 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
         },
       )}
     >
-      <div className="lg:p-4 lg:px-2 lg:py-1 flex items-center justify-between lg:justify-start lg:col-span-1 lg:border-r border-gray-200 font-medium overflow-hidden text-sm">
-        <h4 className="text-base font-semibold break-words line-clamp-2 hidden lg:block">
-          {index + 1}. {medication.medication?.display}
-        </h4>
-      </div>
+      {desktopLayout && (
+        <div className="lg:p-4 lg:px-2 lg:py-1 flex items-center justify-between lg:justify-start lg:col-span-1 lg:border-r border-gray-200 font-medium overflow-hidden text-sm">
+          <h4 className="text-base font-semibold break-words line-clamp-2">
+            {index + 1}. {medication.medication?.display}
+          </h4>
+        </div>
+      )}
 
       {/* Source */}
       <div className="lg:px-2 lg:py-1 lg:border-r border-gray-200 overflow-hidden">
@@ -554,10 +598,13 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
           className={cn(
             "flex sm:flex-row flex-col gap-2 w-full justify-between",
             hasError(MEDICATION_STATEMENT_FIELDS.PERIOD.key) &&
-              "border border-red-500 rounded-md",
+              "border border-red-500 rounded-md p-2",
           )}
         >
           <div className="w-full sm:w-1/2">
+            <Label className="text-xs text-gray-500 mb-1 block">
+              {t("start_date")}
+            </Label>
             <CombinedDatePicker
               value={
                 medication.effective_period?.start
@@ -572,9 +619,14 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
                   },
                 })
               }
+              buttonClassName="h-9 w-full"
+              disabled={disabled || isReadOnly}
             />
           </div>
           <div className="w-full sm:w-1/2">
+            <Label className="text-xs text-gray-500 mb-1 block">
+              {t("end_date")}
+            </Label>
             <CombinedDatePicker
               value={
                 medication.effective_period?.end
@@ -589,6 +641,8 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
                   },
                 })
               }
+              buttonClassName="h-9 w-full"
+              disabled={disabled || isReadOnly}
             />
           </div>
         </div>
@@ -617,18 +671,13 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
       <div className="lg:px-2 lg:py-1 lg:border-r border-gray-200 overflow-hidden">
         <Label className="mb-1.5 block text-sm lg:hidden">{t("notes")}</Label>
         {desktopLayout ? (
-          <>
-            <Label className="mb-1.5 block text-sm lg:hidden">
-              {t("notes")}
-            </Label>
-            <Input
-              value={medication.note || ""}
-              onChange={(e) => onUpdate?.({ note: e.target.value })}
-              placeholder={t("add_notes")}
-              disabled={disabled}
-              className="h-9 text-sm"
-            />
-          </>
+          <Input
+            value={medication.note || ""}
+            onChange={(e) => onUpdate?.({ note: e.target.value })}
+            placeholder={t("add_notes")}
+            disabled={disabled}
+            className="h-9 text-sm"
+          />
         ) : (
           <NotesInput
             className="mt-2"
@@ -648,17 +697,19 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
       </div>
 
       {/* Remove Button */}
-      <div className="hidden lg:flex lg:px-2 lg:py-1 items-center justify-center sticky right-0 bg-white shadow-[-12px_0_15px_-4px_rgba(0,0,0,0.15)] w-12">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onRemove}
-          disabled={disabled}
-          className="size-8"
-        >
-          <MinusCircledIcon className="size-4" />
-        </Button>
-      </div>
+      {desktopLayout && (
+        <div className="hidden lg:flex lg:px-2 lg:py-1 items-center justify-center sticky right-0 bg-white shadow-[-12px_0_15px_-4px_rgba(0,0,0,0.15)] w-12">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onRemove}
+            disabled={disabled}
+            className="size-8"
+          >
+            <MinusCircledIcon className="size-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
