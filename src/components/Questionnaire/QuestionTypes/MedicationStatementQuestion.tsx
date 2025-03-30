@@ -322,7 +322,7 @@ export function MedicationStatementQuestion({
                                 {
                                   "bg-gray-200 border border-gray-300":
                                     expandedMedicationIndex !== index,
-                                  "opacity-40 pointer-events-none":
+                                  "opacity-40":
                                     medication.status === "entered_in_error",
                                 },
                               )}
