@@ -58,6 +58,7 @@ import {
   MedicationRequestDosageInstruction,
   MedicationRequestIntent,
   UCUM_TIME_UNITS,
+  UcumTimeUnitCode,
   getTimeUnit,
   parseMedicationStringToRequest,
 } from "@/types/emr/medicationRequest";
@@ -457,7 +458,7 @@ export function MedicationRequestQuestion({
                                           ` · ${MEDICATION_REQUEST_TIMING_OPTIONS[dosageInstruction.timing.code.code]?.display || ""}`}
                                       {dosageInstruction?.timing?.repeat
                                         ?.bounds_duration?.value &&
-                                        ` · ${dosageInstruction.timing.repeat.bounds_duration.value} ${dosageInstruction.timing.repeat.bounds_duration.unit.display}`}
+                                        ` · ${dosageInstruction.timing.repeat.bounds_duration.value} ${getTimeUnit(dosageInstruction.timing.repeat.bounds_duration.unit).display}`}
                                     </div>
                                   )}
                                 </div>
@@ -872,7 +873,7 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
           )}
           <Select
             value={
-              dosageInstruction?.timing?.repeat?.bounds_duration?.unit?.code ||
+              dosageInstruction?.timing?.repeat?.bounds_duration?.unit ||
               UCUM_TIME_UNITS[0].code
             }
             onValueChange={(code: string) => {
@@ -880,13 +881,15 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
                 const value =
                   dosageInstruction?.timing?.repeat?.bounds_duration?.value ??
                   0;
-                const unit = getTimeUnit(code);
                 handleUpdateDosageInstruction({
                   timing: {
                     ...dosageInstruction.timing,
                     repeat: {
                       ...dosageInstruction.timing.repeat,
-                      bounds_duration: { value, unit },
+                      bounds_duration: {
+                        value,
+                        unit: code as UcumTimeUnitCode,
+                      },
                     },
                   },
                 });

@@ -36,6 +36,7 @@ import {
   MedicationAdministrationStatus,
 } from "@/types/emr/medicationAdministration/medicationAdministration";
 import { MedicationRequestRead } from "@/types/emr/medicationRequest";
+import { getTimeUnit } from "@/types/emr/medicationRequest";
 
 interface MedicineAdminFormProps {
   medication: MedicationRequestRead;
@@ -237,7 +238,12 @@ export const MedicineAdminForm: React.FC<MedicineAdminFormProps> = ({
             {medication.dosage_instruction[0]?.timing?.repeat?.bounds_duration
               ?.value || "-"}{" "}
             {medication.dosage_instruction[0]?.timing?.repeat?.bounds_duration
-              ?.unit?.display || ""}
+              ?.unit
+              ? getTimeUnit(
+                  medication.dosage_instruction[0]?.timing?.repeat
+                    ?.bounds_duration.unit,
+                ).display
+              : ""}
           </p>
         </div>
       </div>
