@@ -471,7 +471,7 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
   return (
     <div
       className={cn(
-        "grid grid-cols-1 lg:grid-cols-[300px_180px_170px_250px_450px_190px_200px_48px] border-b border-gray-200 hover:bg-gray-50/50",
+        "grid grid-cols-1 space-y-4 lg:space-y-0 lg:grid-cols-[300px_180px_170px_250px_450px_190px_200px_48px] border-b border-gray-200 hover:bg-gray-50/50",
         {
           "opacity-40 pointer-events-none":
             medication.status === "entered_in_error",
@@ -582,7 +582,7 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
       </div>
 
       {/* Period */}
-      <div className="lg:px-2 lg:py-1 lg:border-r border-gray-200 overflow-hidden">
+      <div className="lg:px-2 lg:py-1 lg:border-r border-gray-200 overflow-hidden bg-gray-100 rounded-md p-2 lg:bg-transparent lg:rounded-none lg:p-0">
         <Label className="mb-1.5 block text-sm lg:hidden">
           {t("medication_taken_between")}
           <span className="text-red-500 ml-0.5">*</span>
