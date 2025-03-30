@@ -595,7 +595,7 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
           )}
         >
           <div className="w-full sm:w-1/2">
-            <Label className="text-xs text-gray-500 mb-1 block">
+            <Label className="text-xs text-gray-500 mb-1 block lg:hidden">
               {t("start_date")}
             </Label>
             <CombinedDatePicker
@@ -617,7 +617,7 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
             />
           </div>
           <div className="w-full sm:w-1/2">
-            <Label className="text-xs text-gray-500 mb-1 block">
+            <Label className="text-xs text-gray-500 mb-1 block lg:hidden">
               {t("end_date")}
             </Label>
             <CombinedDatePicker
