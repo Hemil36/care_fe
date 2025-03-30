@@ -37,7 +37,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { NotesInput } from "@/components/Questionnaire/QuestionTypes/NotesInput";
 import ValueSetSelect from "@/components/Questionnaire/ValueSetSelect";
 
 import useBreakpoints from "@/hooks/useBreakpoints";
@@ -371,9 +370,12 @@ export function MedicationStatementQuestion({
                                 </div>
                                 {expandedMedicationIndex !== index && (
                                   <div className="text-sm mt-1 text-gray-600">
-                                    {medication.dosage_text && (
-                                      <span>{medication.dosage_text} · </span>
-                                    )}
+                                    <span>
+                                      {t(
+                                        `medication_status_${medication.status}`,
+                                      )}
+                                      {" · "}
+                                    </span>
                                     {medication.effective_period?.start ? (
                                       <span>
                                         {new Date(
@@ -387,15 +389,6 @@ export function MedicationStatementQuestion({
                                           : t("ongoing")}
                                       </span>
                                     ) : null}
-                                    {medication.status &&
-                                      medication.status !== "active" && (
-                                        <span className="ml-1">
-                                          ·{" "}
-                                          {t(
-                                            `medication_status_${medication.status}`,
-                                          )}
-                                        </span>
-                                      )}
                                   </div>
                                 )}
                               </div>
@@ -670,30 +663,13 @@ const MedicationStatementGridRow: React.FC<MedicationStatementGridRowProps> = ({
       {/* Notes */}
       <div className="lg:px-2 lg:py-1 lg:border-r border-gray-200 overflow-hidden">
         <Label className="mb-1.5 block text-sm lg:hidden">{t("notes")}</Label>
-        {desktopLayout ? (
-          <Input
-            value={medication.note || ""}
-            onChange={(e) => onUpdate?.({ note: e.target.value })}
-            placeholder={t("add_notes")}
-            disabled={disabled}
-            className="h-9 text-sm"
-          />
-        ) : (
-          <NotesInput
-            className="mt-2"
-            questionnaireResponse={{
-              question_id: "",
-              structured_type: "medication_statement",
-              link_id: "",
-              values: [],
-              note: medication.note,
-            }}
-            handleUpdateNote={(note) => {
-              onUpdate?.({ note: note });
-            }}
-            disabled={disabled}
-          />
-        )}
+        <Input
+          value={medication.note || ""}
+          onChange={(e) => onUpdate?.({ note: e.target.value })}
+          placeholder={t("add_notes")}
+          disabled={disabled}
+          className="h-9 text-sm"
+        />
       </div>
 
       {/* Remove Button */}
