@@ -55,12 +55,12 @@ interface AllergyListProps {
 }
 
 export const CATEGORY_ICONS: Record<AllergyCategory, ReactNode> = {
-  food: <CookingPotIcon className="size-4" aria-label="Food allergy" />,
-  medication: <BeakerIcon className="size-4" aria-label="Medication allergy" />,
+  food: <CookingPotIcon className="size-5" aria-label="Food allergy" />,
+  medication: <BeakerIcon className="size-5" aria-label="Medication allergy" />,
   environment: (
-    <LeafIcon className="size-4" aria-label="Environmental allergy" />
+    <LeafIcon className="size-5" aria-label="Environmental allergy" />
   ),
-  biologic: <HeartPulseIcon className="size-4" aria-label="Biologic allergy" />,
+  biologic: <HeartPulseIcon className="size-5" aria-label="Biologic allergy" />,
 };
 
 export function AllergyList({
