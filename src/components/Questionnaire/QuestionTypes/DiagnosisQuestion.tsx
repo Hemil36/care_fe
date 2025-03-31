@@ -893,20 +893,20 @@ const DiagnosisItem: React.FC<DiagnosisItemProps> = ({
                             e.stopPropagation();
                             onRemove?.();
                           }}
-                          className="h-10 w-10 p-4 border border-gray-400 bg-white shadow text-destructive"
+                          className="size-10 p-4 border border-gray-400 bg-white shadow text-destructive"
                         >
-                          <MinusCircledIcon className="h-5 w-5" />
+                          <MinusCircledIcon className="size-5" />
                         </Button>
                       )}
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 border border-gray-400 bg-white shadow p-4"
+                        className="size-10 border border-gray-400 bg-white shadow p-4"
                       >
                         {isOpen ? (
-                          <ChevronsDownUp className="h-5 w-5" />
+                          <ChevronsDownUp className="size-5" />
                         ) : (
-                          <ChevronsUpDown className="h-5 w-5" />
+                          <ChevronsUpDown className="size-5" />
                         )}
                       </Button>
                     </div>
