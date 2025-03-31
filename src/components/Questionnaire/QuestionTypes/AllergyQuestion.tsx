@@ -1,17 +1,24 @@
-"use client";
-
 import {
   CheckCircledIcon,
   CircleBackslashIcon,
-  DotsVerticalIcon,
   MinusCircledIcon,
   Pencil2Icon,
 } from "@radix-ui/react-icons";
+import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "i18next";
+import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { CombinedDatePicker } from "@/components/ui/combined-date-picker";
 import {
   DropdownMenu,
@@ -40,6 +47,8 @@ import {
 
 import { CATEGORY_ICONS } from "@/components/Patient/allergy/list";
 import ValueSetSelect from "@/components/Questionnaire/ValueSetSelect";
+
+import useBreakpoints from "@/hooks/useBreakpoints";
 
 import query from "@/Utils/request/query";
 import { dateQueryString } from "@/Utils/utils";
@@ -114,6 +123,9 @@ export function AllergyQuestion({
   const allergies =
     (questionnaireResponse.values?.[0]?.value as AllergyIntoleranceRequest[]) ||
     [];
+  const [expandedAllergyIndex, setExpandedAllergyIndex] = useState<
+    number | null
+  >(null);
 
   const { data: patientAllergies } = useQuery({
     queryKey: ["allergies", patientId],
@@ -149,6 +161,7 @@ export function AllergyQuestion({
       [{ type: "allergy_intolerance", value: newAllergies }],
       questionnaireResponse.question_id,
     );
+    setExpandedAllergyIndex(newAllergies.length - 1);
   };
 
   const handleRemoveAllergy = (index: number) => {
@@ -200,7 +213,7 @@ export function AllergyQuestion({
   return (
     <>
       {allergies.length > 0 && (
-        <div className="rounded-lg border border-gray-200">
+        <div className="rounded-lg lg:border lg:border-gray-200">
           <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
@@ -233,216 +246,163 @@ export function AllergyQuestion({
             </Table>
           </div>
 
-          <div className="md:hidden divide-y divide-gray-200">
+          <div className="md:hidden">
             {allergies.map((allergy, index) => (
-              <div
+              <Collapsible
                 key={index}
-                className={`p-3 space-y-3 ${
-                  allergy.verification_status === "entered_in_error"
-                    ? "opacity-40 pointer-events-none"
-                    : allergy.clinical_status === "inactive"
-                      ? "opacity-60"
-                      : allergy.clinical_status === "resolved"
-                        ? "line-through"
-                        : ""
-                }`}
+                open={expandedAllergyIndex === index}
+                onOpenChange={() => {
+                  setExpandedAllergyIndex(
+                    expandedAllergyIndex === index ? null : index,
+                  );
+                }}
+                className="mb-2 "
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={allergy.category}
-                      onValueChange={(value) =>
-                        handleUpdateAllergy(index, { category: value })
-                      }
-                      disabled={disabled || !!allergy.id}
+                <Card
+                  className={cn("rounded-lg", {
+                    "border border-primary-500 bg-gray-50":
+                      expandedAllergyIndex === index,
+                    "border-0 shadow-none": expandedAllergyIndex !== index,
+                  })}
+                >
+                  <CollapsibleTrigger asChild>
+                    <CardHeader
+                      className={cn(
+                        "p-2 rounded-lg shadow-none bg-gray-50 cursor-pointer active:bg-gray-100 transition-colors",
+                        {
+                          "bg-gray-200 border border-gray-300":
+                            expandedAllergyIndex !== index,
+                          "opacity-60":
+                            allergy.verification_status ===
+                              "entered_in_error" ||
+                            allergy.clinical_status === "inactive",
+                        },
+                      )}
                     >
-                      <SelectTrigger className="h-8 w-[2rem] px-0 [&>svg]:hidden flex items-center justify-center">
-                        <SelectValue>
-                          {allergy.category &&
-                            CATEGORY_ICONS[allergy.category as AllergyCategory]}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(ALLERGY_CATEGORIES).map(
-                          ([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              <div className="flex items-center gap-2">
-                                {CATEGORY_ICONS[value as AllergyCategory]}
-                                <span>{label}</span>
-                              </div>
-                            </SelectItem>
-                          ),
+                      <div className="flex flex-col space-y-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <CardTitle
+                              className={cn(
+                                "text-base text-gray-950 break-words",
+                                allergy.clinical_status === "resolved" &&
+                                  "line-through",
+                                allergy.clinical_status === "inactive" &&
+                                  "opacity-60",
+                              )}
+                              title={allergy.code.display}
+                            >
+                              {allergy.code.display}
+                            </CardTitle>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Select
+                              value={allergy.category}
+                              onValueChange={(value) =>
+                                handleUpdateAllergy(index, { category: value })
+                              }
+                              disabled={disabled || !!allergy.id}
+                            >
+                              <SelectTrigger
+                                className="size-10 px-0 [&>svg]:hidden flex items-center justify-center"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <SelectValue>
+                                  {allergy.category &&
+                                    CATEGORY_ICONS[
+                                      allergy.category as AllergyCategory
+                                    ]}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.entries(ALLERGY_CATEGORIES).map(
+                                  ([value, label]) => (
+                                    <SelectItem
+                                      key={value}
+                                      value={value}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        {
+                                          CATEGORY_ICONS[
+                                            value as AllergyCategory
+                                          ]
+                                        }
+                                        <span>{label}</span>
+                                      </div>
+                                    </SelectItem>
+                                  ),
+                                )}
+                              </SelectContent>
+                            </Select>
+                            {expandedAllergyIndex === index && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={
+                                  disabled ||
+                                  allergy.verification_status ===
+                                    "entered_in_error"
+                                }
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveAllergy(index);
+                                }}
+                                className="size-10 p-4 border border-gray-400 bg-white shadow text-destructive"
+                              >
+                                <MinusCircledIcon className="size-5" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-10 border border-gray-400 bg-white shadow p-4 pointer-events-none"
+                            >
+                              {expandedAllergyIndex === index ? (
+                                <ChevronsDownUp className="size-5" />
+                              ) : (
+                                <ChevronsUpDown className="size-5" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        {expandedAllergyIndex !== index && (
+                          <div
+                            className={cn("text-sm mt-1 text-gray-600", {
+                              "line-through":
+                                allergy.clinical_status === "resolved",
+                            })}
+                          >
+                            {t(allergy.criticality)}
+                            {" · "}
+                            {t(allergy.verification_status)}
+                            {allergy.last_occurrence && (
+                              <>
+                                {" · "}
+                                {new Date(
+                                  allergy.last_occurrence,
+                                ).toLocaleDateString()}
+                              </>
+                            )}
+                          </div>
                         )}
-                      </SelectContent>
-                    </Select>
-                    <span className="font-medium">{allergy.code.display}</span>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="p-3 pt-2 space-y-3 rounded-lg bg-gray-50">
+                      <AllergyTableRow
+                        allergy={allergy}
                         disabled={disabled}
-                        className="size-8"
-                      >
-                        <DotsVerticalIcon className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() =>
-                          handleUpdateAllergy(index, {
-                            note: allergy.note !== undefined ? undefined : "",
-                          })
+                        onUpdate={(updates) =>
+                          handleUpdateAllergy(index, updates)
                         }
-                      >
-                        <Pencil2Icon className="size-4 mr-2" />
-                        {allergy.note !== undefined
-                          ? "Hide Notes"
-                          : "Add Notes"}
-                      </DropdownMenuItem>
-                      {allergy.clinical_status !== "active" && (
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleUpdateAllergy(index, {
-                              clinical_status: "active",
-                            })
-                          }
-                        >
-                          <CheckCircledIcon className="size-4 mr-2" />
-                          {t("mark_active")}
-                        </DropdownMenuItem>
-                      )}
-                      {allergy.clinical_status !== "inactive" && (
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleUpdateAllergy(index, {
-                              clinical_status: "inactive",
-                            })
-                          }
-                        >
-                          <CircleBackslashIcon className="size-4 mr-2" />
-                          {t("mark_inactive")}
-                        </DropdownMenuItem>
-                      )}
-                      {allergy.clinical_status !== "resolved" && (
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleUpdateAllergy(index, {
-                              clinical_status: "resolved",
-                            })
-                          }
-                        >
-                          <CheckCircledIcon className="size-4 mr-2 text-green-600" />
-                          {t("mark_resolved")}
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={() => handleRemoveAllergy(index)}
-                      >
-                        <MinusCircledIcon className="size-4 mr-2" />
-                        {t("remove_allergy")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs text-gray-500">
-                      {t("criticality")}
-                    </Label>
-                    <Select
-                      value={allergy.criticality}
-                      onValueChange={(value) =>
-                        handleUpdateAllergy(index, { criticality: value })
-                      }
-                      disabled={disabled}
-                    >
-                      <SelectTrigger className="h-8 mt-1">
-                        <SelectValue placeholder="Critical" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="unable_to_assess">
-                          Unable to Assess
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label className="text-xs text-gray-500">
-                      {t("status")}
-                    </Label>
-                    <Select
-                      value={allergy.verification_status}
-                      onValueChange={(value) =>
-                        handleUpdateAllergy(index, {
-                          verification_status:
-                            value as AllergyVerificationStatus,
-                        })
-                      }
-                      disabled={disabled}
-                    >
-                      <SelectTrigger className="h-8 mt-1">
-                        <SelectValue placeholder="Verify" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(ALLERGY_VERIFICATION_STATUS).map(
-                          ([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ),
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label className="text-xs text-gray-500">
-                      {t("occurrence")}
-                    </Label>
-
-                    <CombinedDatePicker
-                      value={
-                        allergy.last_occurrence
-                          ? new Date(allergy.last_occurrence)
-                          : undefined
-                      }
-                      onChange={(date) =>
-                        handleUpdateAllergy(index, {
-                          last_occurrence: dateQueryString(date),
-                        })
-                      }
-                      disabled={disabled}
-                      buttonClassName="h-7 text-sm px-2 justify-start font-normal w-full"
-                    />
-                  </div>
-                </div>
-
-                {allergy.note !== undefined && (
-                  <div>
-                    <Label className="text-xs text-gray-500">
-                      {t("notes")}
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Add notes about the allergy..."
-                      value={allergy.note ?? ""}
-                      onChange={(e) =>
-                        handleUpdateAllergy(index, { note: e.target.value })
-                      }
-                      disabled={disabled}
-                      className="mt-1"
-                    />
-                  </div>
-                )}
-              </div>
+                        onRemove={() => handleRemoveAllergy(index)}
+                      />
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             ))}
           </div>
         </div>
@@ -471,14 +431,23 @@ const AllergyTableRow = ({
   onRemove,
 }: AllergyItemProps) => {
   const [showNotes, setShowNotes] = useState(allergy.note !== undefined);
+  const desktopLayout = useBreakpoints({ lg: true, default: false });
+
+  const isInactive =
+    allergy.verification_status === "entered_in_error" || disabled;
+
+  const notesDisabled = disabled;
+
+  const isResolved = allergy.clinical_status === "resolved";
+  const isInactiveStatus = allergy.clinical_status === "inactive";
 
   const rowClassName = `group ${
     allergy.verification_status === "entered_in_error"
       ? "opacity-40 pointer-events-none"
-      : allergy.clinical_status === "inactive"
+      : isInactiveStatus
         ? "opacity-60"
-        : allergy.clinical_status === "resolved"
-          ? "line-through"
+        : isResolved
+          ? "[&_*]:line-through"
           : ""
   }`;
 
@@ -492,170 +461,311 @@ const AllergyTableRow = ({
     }
   };
 
-  return (
-    <>
-      <TableRow className={rowClassName}>
-        <TableCell className="py-1 pr-0">
-          <Select
-            value={allergy.category}
-            onValueChange={(value) => onUpdate?.({ category: value })}
-            disabled={disabled || !!allergy.id}
-          >
-            <SelectTrigger className="h-7 w-[2rem] px-0 [&>svg]:hidden flex items-center justify-center">
-              <SelectValue
-                placeholder="Cat"
-                className="text-center h-full flex items-center justify-center m-0 p-0"
-              >
-                {allergy.category &&
-                  CATEGORY_ICONS[allergy.category as AllergyCategory]}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {(
-                Object.entries(ALLERGY_CATEGORIES) as [
-                  AllergyCategory,
-                  string,
-                ][]
-              ).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  <div className="flex items-center gap-2">
-                    {CATEGORY_ICONS[value]}
-                    <span>{label}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </TableCell>
-        <TableCell className="font-medium py-1 pl-1">
-          {allergy.code.display}
-        </TableCell>
-        <TableCell className="py-1 px-0.5">
-          <Select
-            value={allergy.criticality}
-            onValueChange={(value) => onUpdate?.({ criticality: value })}
-            disabled={disabled}
-          >
-            <SelectTrigger className="h-7 w-full px-1 text-sm">
-              <SelectValue placeholder={t("critical")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="low">{t("low")}</SelectItem>
-              <SelectItem value="high">{t("high")}</SelectItem>
-              <SelectItem value="unable_to_assess">
-                {t("unable_to_assess")}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </TableCell>
-        <TableCell className="py-1 px-0.5">
-          <Select
-            value={allergy.verification_status}
-            onValueChange={(value) => {
-              if (value in ALLERGY_VERIFICATION_STATUS) {
-                onUpdate?.({
-                  verification_status: value as AllergyVerificationStatus,
-                });
-              }
-            }}
-            disabled={disabled}
-          >
-            <SelectTrigger className="h-7 w-full px-1 text-sm">
-              <SelectValue placeholder={t("verify")} />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(ALLERGY_VERIFICATION_STATUS).map(
-                ([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ),
-              )}
-            </SelectContent>
-          </Select>
-        </TableCell>
-        <TableCell className="py-1 px-1">
-          <CombinedDatePicker
-            value={
-              allergy.last_occurrence
-                ? new Date(allergy.last_occurrence)
-                : undefined
-            }
-            onChange={(date) =>
-              onUpdate?.({ last_occurrence: dateQueryString(date) })
-            }
-            disabled={disabled}
-            buttonClassName="h-7 text-sm px-2 justify-start font-normal w-full"
-          />
-        </TableCell>
-        <TableCell className="py-1 px-0 flex justify-center items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={disabled}
-                className="h-7 w-6 px-0"
-              >
-                <DotsVerticalIcon className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleNotesToggle}>
-                <Pencil2Icon className="size-4 mr-2" />
-                {showNotes ? t("hide_notes") : t("add_notes")}
-              </DropdownMenuItem>
-              {allergy.clinical_status !== "active" && (
-                <DropdownMenuItem
-                  onClick={() => onUpdate?.({ clinical_status: "active" })}
+  const categorySelect = (
+    <Select
+      value={allergy.category}
+      onValueChange={(value) => onUpdate?.({ category: value })}
+      disabled={isInactive || !!allergy.id}
+    >
+      <SelectTrigger
+        className={
+          desktopLayout
+            ? "h-7 w-[2rem] px-0 [&>svg]:hidden flex items-center justify-center"
+            : "h-8 w-full"
+        }
+      >
+        <SelectValue
+          placeholder="Cat"
+          className={
+            desktopLayout
+              ? "text-center h-full flex items-center justify-center m-0 p-0"
+              : ""
+          }
+        >
+          {allergy.category &&
+            CATEGORY_ICONS[allergy.category as AllergyCategory]}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {(
+          Object.entries(ALLERGY_CATEGORIES) as [AllergyCategory, string][]
+        ).map(([value, label]) => (
+          <SelectItem key={value} value={value}>
+            <div className="flex items-center gap-2">
+              {CATEGORY_ICONS[value]}
+              <span>{label}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  const criticalitySelect = (
+    <Select
+      value={allergy.criticality}
+      onValueChange={(value) => onUpdate?.({ criticality: value })}
+      disabled={isInactive}
+    >
+      <SelectTrigger
+        className={
+          desktopLayout
+            ? "h-7 w-full px-1 text-sm"
+            : cn("h-8 mt-1", {
+                "line-through": isResolved,
+              })
+        }
+      >
+        <SelectValue placeholder={desktopLayout ? t("critical") : "Critical"} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="low">{t("low")}</SelectItem>
+        <SelectItem value="high">{t("high")}</SelectItem>
+        <SelectItem value="unable_to_assess">
+          {t("unable_to_assess")}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  );
+
+  const statusSelect = (
+    <Select
+      value={allergy.verification_status}
+      onValueChange={(value) => {
+        if (value in ALLERGY_VERIFICATION_STATUS) {
+          onUpdate?.({
+            verification_status: value as AllergyVerificationStatus,
+          });
+        }
+      }}
+      disabled={isInactive}
+    >
+      <SelectTrigger
+        className={
+          desktopLayout
+            ? "h-7 w-full px-1 text-sm"
+            : cn("h-8 mt-1", {
+                "line-through": isResolved,
+              })
+        }
+      >
+        <SelectValue placeholder={desktopLayout ? t("verify") : "Verify"} />
+      </SelectTrigger>
+      <SelectContent>
+        {Object.entries(ALLERGY_VERIFICATION_STATUS).map(([value, label]) => (
+          <SelectItem key={value} value={value}>
+            {label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  const occurrencePicker = (
+    <CombinedDatePicker
+      value={
+        allergy.last_occurrence ? new Date(allergy.last_occurrence) : undefined
+      }
+      onChange={(date) =>
+        onUpdate?.({
+          last_occurrence: dateQueryString(date),
+        })
+      }
+      disabled={isInactive}
+      buttonClassName={
+        desktopLayout
+          ? "h-7 text-sm px-2 justify-start font-normal w-full"
+          : cn("h-7 text-sm px-2 justify-start font-normal w-full", {
+              "line-through": isResolved,
+            })
+      }
+    />
+  );
+
+  const statusButtons = (
+    <div className="flex flex-col gap-2 col-span-2">
+      {allergy.clinical_status !== "active" && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            onUpdate?.({
+              clinical_status: "active",
+            })
+          }
+          disabled={isInactive}
+        >
+          <CheckCircledIcon className="size-4 mr-2" />
+          {t("mark_active")}
+        </Button>
+      )}
+      {allergy.clinical_status !== "inactive" && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            onUpdate?.({
+              clinical_status: "inactive",
+            })
+          }
+          disabled={isInactive}
+        >
+          <CircleBackslashIcon className="size-4 mr-2" />
+          {t("mark_inactive")}
+        </Button>
+      )}
+      {allergy.clinical_status !== "resolved" && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            onUpdate?.({
+              clinical_status: "resolved",
+            })
+          }
+          disabled={isInactive}
+        >
+          <CheckCircledIcon className="size-4 mr-2 text-green-600" />
+          {t("mark_resolved")}
+        </Button>
+      )}
+    </div>
+  );
+
+  const notesInput = (
+    <Input
+      type="text"
+      placeholder={t("add_notes_about_the_allergy")}
+      value={allergy.note ?? ""}
+      onChange={(e) => onUpdate?.({ note: e.target.value })}
+      disabled={notesDisabled}
+      className={cn(desktopLayout ? "mt-0.5" : "mt-1", {
+        "line-through": isResolved,
+      })}
+    />
+  );
+
+  // Mobile view layout
+  const formContent = (
+    <div className="grid grid-cols-2 gap-2">
+      <div>
+        <Label className="text-xs text-gray-500">{t("criticality")}</Label>
+        {criticalitySelect}
+      </div>
+
+      <div>
+        <Label className="text-xs text-gray-500">{t("status")}</Label>
+        {statusSelect}
+      </div>
+
+      <div className="col-span-2">
+        <Label className="text-xs text-gray-500">{t("occurrence")}</Label>
+        {occurrencePicker}
+      </div>
+
+      {statusButtons}
+
+      <div className="col-span-2">
+        <Label className="text-xs text-gray-500">{t("notes")}</Label>
+        {notesInput}
+      </div>
+    </div>
+  );
+
+  if (desktopLayout) {
+    return (
+      <>
+        <TableRow className={rowClassName}>
+          <TableCell className="py-1 pr-0">{categorySelect}</TableCell>
+          <TableCell className="font-medium py-1 pl-1">
+            {allergy.code.display}
+          </TableCell>
+          <TableCell className="py-1 px-0.5">{criticalitySelect}</TableCell>
+          <TableCell className="py-1 px-0.5">{statusSelect}</TableCell>
+          <TableCell className="py-1 px-1">{occurrencePicker}</TableCell>
+          <TableCell className="py-1 px-0 flex justify-center items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={isInactive}
+                  className="size-8"
                 >
-                  <CheckCircledIcon className="size-4 mr-2" />
-                  {t("mark_active")}
+                  <DotsVerticalIcon className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleNotesToggle}>
+                  <Pencil2Icon className="size-4 mr-2" />
+                  {showNotes ? t("hide_notes") : t("add_notes")}
                 </DropdownMenuItem>
-              )}
-              {allergy.clinical_status !== "inactive" && (
+                <DropdownMenuSeparator />
+                {allergy.clinical_status !== "active" && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      onUpdate?.({
+                        clinical_status: "active",
+                      })
+                    }
+                    disabled={isInactive}
+                  >
+                    <CheckCircledIcon className="size-4 mr-2" />
+                    {t("mark_active")}
+                  </DropdownMenuItem>
+                )}
+                {allergy.clinical_status !== "inactive" && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      onUpdate?.({
+                        clinical_status: "inactive",
+                      })
+                    }
+                    disabled={isInactive}
+                  >
+                    <CircleBackslashIcon className="size-4 mr-2" />
+                    {t("mark_inactive")}
+                  </DropdownMenuItem>
+                )}
+                {allergy.clinical_status !== "resolved" && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      onUpdate?.({
+                        clinical_status: "resolved",
+                      })
+                    }
+                    disabled={isInactive}
+                  >
+                    <CheckCircledIcon className="size-4 mr-2 text-green-600" />
+                    {t("mark_resolved")}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => onUpdate?.({ clinical_status: "inactive" })}
+                  className="text-destructive focus:text-destructive"
+                  onClick={onRemove}
+                  disabled={allergy.verification_status === "entered_in_error"}
                 >
-                  <CircleBackslashIcon className="size-4 mr-2" />
-                  {t("mark_inactive")}
+                  <MinusCircledIcon className="size-4 mr-2" />
+                  {allergy.verification_status === "entered_in_error"
+                    ? t("already_marked_as_error")
+                    : t("remove_allergy")}
                 </DropdownMenuItem>
-              )}
-              {allergy.clinical_status !== "resolved" && (
-                <DropdownMenuItem
-                  onClick={() => onUpdate?.({ clinical_status: "resolved" })}
-                >
-                  <CheckCircledIcon className="size-4 mr-2 text-green-600" />
-                  {t("mark_resolved")}
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={onRemove}
-              >
-                <MinusCircledIcon className="size-4 mr-2" />
-                {t("remove_allergy")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
-      {showNotes && (
-        <TableRow>
-          <TableCell colSpan={6} className="px-4 py-2">
-            <Label className="text-xs text-gray-500">{t("notes")}</Label>
-            <Input
-              type="text"
-              placeholder={t("add_notes_about_the_allergy")}
-              value={allergy.note ?? ""}
-              onChange={(e) => onUpdate?.({ note: e.target.value })}
-              disabled={disabled}
-              className="mt-0.5"
-            />
+              </DropdownMenuContent>
+            </DropdownMenu>
           </TableCell>
         </TableRow>
-      )}
-    </>
-  );
+        {showNotes && (
+          <TableRow>
+            <TableCell colSpan={6} className="px-4 py-2">
+              <Label className="text-xs text-gray-500">{t("notes")}</Label>
+              {notesInput}
+            </TableCell>
+          </TableRow>
+        )}
+      </>
+    );
+  }
+
+  return formContent;
 };
