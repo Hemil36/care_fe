@@ -6,6 +6,8 @@ import React, { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
+import CareIcon from "@/CAREUI/icons/CareIcon";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +25,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Command, CommandDrawer, CommandList } from "@/components/ui/command";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -215,20 +218,58 @@ export function MedicationRequestQuestion({
     null,
   );
   const desktopLayout = useBreakpoints({ lg: true, default: false });
+  const isMobile = useBreakpoints({ default: true, lg: false });
+
+  // Drawer state
+  const [showMedicationDetails, setShowMedicationDetails] = useState(false);
+  const [selectedMedication, setSelectedMedication] = useState<Code | null>(
+    null,
+  );
+  const [newMedicationDetails, setNewMedicationDetails] =
+    useState<MedicationRequest | null>(null);
 
   const handleAddMedication = (medication: Code) => {
-    const newMedications: MedicationRequest[] = [
-      ...medications,
-      {
-        ...parseMedicationStringToRequest(medication),
-        authored_on: new Date().toISOString(),
-      },
-    ];
+    const newMedication = {
+      ...parseMedicationStringToRequest(medication),
+      authored_on: new Date().toISOString(),
+    };
+
+    if (isMobile) {
+      setSelectedMedication(medication);
+      setNewMedicationDetails(newMedication);
+      setShowMedicationDetails(true);
+    } else {
+      addNewMedication(newMedication);
+    }
+  };
+
+  const addNewMedication = (medication: MedicationRequest) => {
+    const newMedications: MedicationRequest[] = [...medications, medication];
+
     updateQuestionnaireResponseCB(
       [{ type: "medication_request", value: newMedications }],
       questionnaireResponse.question_id,
     );
+
     setExpandedMedicationIndex(newMedications.length - 1);
+    setSelectedMedication(null);
+    setNewMedicationDetails(null);
+    setShowMedicationDetails(false);
+  };
+
+  const handleConfirmMedication = () => {
+    if (!newMedicationDetails) return;
+    addNewMedication(newMedicationDetails);
+  };
+
+  const handleCloseDrawer = () => {
+    setShowMedicationDetails(false);
+    handleBackToValueSet();
+  };
+
+  const handleBackToValueSet = () => {
+    setSelectedMedication(null);
+    setNewMedicationDetails(null);
   };
 
   const handleRemoveMedication = (index: number) => {
@@ -276,6 +317,30 @@ export function MedicationRequestQuestion({
       questionnaireResponse.question_id,
     );
   };
+
+  // New medication details content for mobile drawer
+  const medicationDetailsContent = (
+    <div className="space-y-4 pb-20">
+      {newMedicationDetails && (
+        <MedicationRequestGridRow
+          medication={newMedicationDetails}
+          disabled={disabled}
+          onUpdate={(updates) => {
+            if (newMedicationDetails) {
+              setNewMedicationDetails({
+                ...newMedicationDetails,
+                ...updates,
+              });
+            }
+          }}
+          onRemove={handleBackToValueSet}
+          index={-1}
+          questionId={questionnaireResponse.question_id}
+          errors={errors}
+        />
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -502,15 +567,83 @@ export function MedicationRequestQuestion({
           </div>
         </div>
       )}
-      <div className="max-w-4xl" data-cy="add-medication-request">
-        <ValueSetSelect
-          system="system-medication"
-          placeholder={t("search_for_medications_to_add")}
-          onSelect={handleAddMedication}
-          disabled={disabled}
-          searchPostFix=" clinical drug"
-        />
-      </div>
+
+      {isMobile ? (
+        <>
+          <ValueSetSelect
+            system="system-medication"
+            placeholder={t("add_another_medication")}
+            onSelect={handleAddMedication}
+            disabled={disabled}
+            searchPostFix=" clinical drug"
+            title={t("select_medication")}
+            onBack={handleCloseDrawer}
+          />
+          <CommandDrawer
+            open={showMedicationDetails}
+            onOpenChange={setShowMedicationDetails}
+          >
+            <Command className="px-0 relative">
+              {selectedMedication ? (
+                <>
+                  <div className="py-3 px-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">
+                      {selectedMedication.display}
+                    </h3>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={handleBackToValueSet}
+                    >
+                      <CareIcon icon="l-times" className="h-5 w-5" />
+                    </Button>
+                  </div>
+                  <div className="p-4">
+                    <CommandList className="max-h-[65vh] overflow-y-auto">
+                      {medicationDetailsContent}
+                    </CommandList>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 flex justify-between space-x-2">
+                    <Button variant="outline" onClick={handleBackToValueSet}>
+                      {t("cancel")}
+                    </Button>
+                    <Button onClick={handleConfirmMedication}>
+                      {t("add")}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <ValueSetSelect
+                    system="system-medication"
+                    placeholder={t("search_for_medications")}
+                    onSelect={handleAddMedication}
+                    disabled={disabled}
+                    hideTrigger={true}
+                    controlledOpen={true}
+                    searchPostFix=" clinical drug"
+                    title={t("select_medication")}
+                    onBack={handleCloseDrawer}
+                  />
+                </>
+              )}
+            </Command>
+          </CommandDrawer>
+        </>
+      ) : (
+        <div className="max-w-4xl" data-cy="add-medication-request">
+          <ValueSetSelect
+            system="system-medication"
+            placeholder={t("add_another_medication")}
+            onSelect={handleAddMedication}
+            disabled={disabled}
+            searchPostFix=" clinical drug"
+            title={t("select_medication")}
+            onBack={handleCloseDrawer}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -655,7 +788,7 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
   return (
     <div
       className={cn(
-        "grid grid-cols-1 lg:grid-cols-[280px_180px_170px_160px_300px_180px_250px_180px_160px_200px_180px_48px] border-b border-gray-200 hover:bg-gray-50/50",
+        "grid grid-cols-1 lg:grid-cols-[280px_180px_170px_160px_300px_180px_250px_180px_160px_200px_180px_48px] border-b border-gray-200 hover:bg-gray-50/50 space-y-3 lg:space-y-0",
         {
           "opacity-40 pointer-events-none": disabled,
         },
