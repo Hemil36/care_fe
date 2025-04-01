@@ -409,7 +409,7 @@ export function AllergyQuestion({
       )}
       <ValueSetSelect
         system="system-allergy-code"
-        placeholder={t("search_for_allergies_to_add")}
+        placeholder={t("add_another_allergy")}
         onSelect={handleAddAllergy}
         disabled={disabled}
       />
