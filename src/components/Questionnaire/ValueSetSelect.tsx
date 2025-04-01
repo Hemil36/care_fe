@@ -40,6 +40,8 @@ interface Props {
   wrapTextForSmallScreen?: boolean;
   hideTrigger?: boolean;
   controlledOpen?: boolean;
+  title?: string;
+  onBack?: () => void;
 }
 
 export default function ValueSetSelect({
@@ -53,6 +55,8 @@ export default function ValueSetSelect({
   wrapTextForSmallScreen = false,
   hideTrigger = false,
   controlledOpen = false,
+  title,
+  onBack,
 }: Props) {
   const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
@@ -75,6 +79,24 @@ export default function ValueSetSelect({
 
   const content = (
     <Command filter={() => 1}>
+      {title && (
+        <div className="py-3 px-3 border-b border-gray-200 flex justify-between items-center">
+          <h3 className="text-base font-semibold">{title}</h3>
+          {onBack && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              onClick={() => {
+                onBack?.();
+                setInternalOpen(false);
+              }}
+            >
+              <CareIcon icon="l-times" className="size-10" />
+            </Button>
+          )}
+        </div>
+      )}
       <CommandInput
         placeholder={t("value_set_search_placeholder")}
         className="outline-hidden border-none ring-0 shadow-none"
