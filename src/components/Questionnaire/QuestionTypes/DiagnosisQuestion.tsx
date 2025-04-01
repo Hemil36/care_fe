@@ -18,8 +18,6 @@ import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
-import CareIcon from "@/CAREUI/icons/CareIcon";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -28,7 +26,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { CombinedDatePicker } from "@/components/ui/combined-date-picker";
-import { Command, CommandDrawer, CommandList } from "@/components/ui/command";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { EntitySelectionDrawer } from "@/components/Questionnaire/EntitySelectionDrawer";
 import ValueSetSelect from "@/components/Questionnaire/ValueSetSelect";
 
 import useBreakpoints from "@/hooks/useBreakpoints";
@@ -301,24 +299,25 @@ export function DiagnosisQuestion({
     );
   };
 
-  const handleCloseDrawer = () => {
-    setShowCategorySelection(false);
-    handleBackToValueSet();
-  };
-
-  const handleBackToValueSet = () => {
-    setSelectedCode(null);
-    setSelectedCategory("encounter_diagnosis");
-    setNewDiagnosis({
-      ...DIAGNOSIS_INITIAL_VALUE,
-      onset: {
-        onset_datetime: new Date().toISOString().split("T")[0],
-      },
-    });
+  const handleBack = () => {
+    if (selectedCode) {
+      // If a diagnosis is selected, go back to search
+      setSelectedCode(null);
+      setSelectedCategory("encounter_diagnosis");
+      setNewDiagnosis({
+        ...DIAGNOSIS_INITIAL_VALUE,
+        onset: {
+          onset_datetime: new Date().toISOString().split("T")[0],
+        },
+      });
+    } else {
+      // Otherwise close the drawer
+      setShowCategorySelection(false);
+    }
   };
 
   const diagnosisDetailsContent = (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 pb-20 mr-2">
       <CategorySelector
         categories={DIAGNOSIS_CATEGORY}
         selectedCategory={selectedCategory}
@@ -419,13 +418,6 @@ export function DiagnosisQuestion({
           />
         </div>
       </div>
-
-      <div className="flex justify-between space-x-2">
-        <Button variant="outline" onClick={handleBackToValueSet}>
-          {t("cancel")}
-        </Button>
-        <Button onClick={handleCategoryConfirm}>{t("add_diagnosis")}</Button>
-      </div>
     </div>
   );
 
@@ -439,7 +431,7 @@ export function DiagnosisQuestion({
             </Label>
           )}
         </div>
-        <Button variant="ghost" size="sm" onClick={handleCloseDrawer}>
+        <Button variant="ghost" size="sm" onClick={handleBack}>
           {t("cancel")}
         </Button>
       </div>
@@ -564,67 +556,20 @@ export function DiagnosisQuestion({
       )}
 
       {isMobile && showCategorySelection ? (
-        <>
-          <ValueSetSelect
-            system="system-condition-code"
-            placeholder={t("add_another_diagnosis")}
-            onSelect={handleCodeSelect}
-            disabled={disabled}
-          />
-          <CommandDrawer
-            open={showCategorySelection}
-            onOpenChange={setShowCategorySelection}
-          >
-            <Command className="px-0">
-              {selectedCode ? (
-                <>
-                  <div className="py-3 px-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">
-                      {selectedCode.display}
-                    </h3>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={handleBackToValueSet}
-                    >
-                      <CareIcon icon="l-times" className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  <CommandList className="max-h-[100vh] overflow-y-auto pb-1">
-                    {diagnosisDetailsContent}
-                  </CommandList>
-                </>
-              ) : (
-                <>
-                  <div className="py-3 px-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">
-                      {t("select_diagnosis")}
-                    </h3>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={handleCloseDrawer}
-                    >
-                      <CareIcon icon="l-times" className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  <CommandList className="max-h-[70vh] overflow-y-auto pb-8">
-                    <ValueSetSelect
-                      system="system-condition-code"
-                      placeholder={t("add_another_diagnosis")}
-                      onSelect={handleCodeSelect}
-                      disabled={disabled}
-                      hideTrigger={true}
-                      controlledOpen={true}
-                    />
-                  </CommandList>
-                </>
-              )}
-            </Command>
-          </CommandDrawer>
-        </>
+        <EntitySelectionDrawer
+          open={showCategorySelection}
+          onOpenChange={setShowCategorySelection}
+          selectedEntity={selectedCode}
+          system="system-condition-code"
+          entityType="diagnosis"
+          disabled={disabled}
+          onSelect={handleCodeSelect}
+          onBack={handleBack}
+          onConfirm={handleCategoryConfirm}
+          entityDetailsContent={diagnosisDetailsContent}
+          searchPlaceholder={t("search_for_diagnosis")}
+          addPlaceholder={t("add_another_diagnosis")}
+        />
       ) : showCategorySelection ? (
         desktopDiagnosisContent
       ) : (

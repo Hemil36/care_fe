@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { EntitySelectionDrawer } from "@/components/Questionnaire/EntitySelectionDrawer";
 import ValueSetSelect from "@/components/Questionnaire/ValueSetSelect";
 
 import useBreakpoints from "@/hooks/useBreakpoints";
@@ -131,12 +132,21 @@ export function MedicationStatementQuestion({
   const { t } = useTranslation();
   const isPreview = patientId === "preview";
   const desktopLayout = useBreakpoints({ lg: true, default: false });
+  const isMobile = useBreakpoints({ default: true, lg: false });
   const [expandedMedicationIndex, setExpandedMedicationIndex] = useState<
     number | null
   >(null);
   const [medicationToDelete, setMedicationToDelete] = useState<number | null>(
     null,
   );
+
+  // Drawer state
+  const [showMedicationDetails, setShowMedicationDetails] = useState(false);
+  const [selectedMedication, setSelectedMedication] = useState<Code | null>(
+    null,
+  );
+  const [newMedicationDetails, setNewMedicationDetails] =
+    useState<MedicationStatementRequest | null>(null);
 
   const medications =
     (questionnaireResponse.values?.[0]
@@ -164,15 +174,54 @@ export function MedicationStatementQuestion({
   }, [patientMedications]);
 
   const handleAddMedication = (medication: Code) => {
+    const newMedication = {
+      ...MEDICATION_STATEMENT_INITIAL_VALUE,
+      medication,
+    };
+
+    if (isMobile) {
+      setSelectedMedication(medication);
+      setNewMedicationDetails(newMedication);
+      setShowMedicationDetails(true);
+    } else {
+      addNewMedication(newMedication);
+    }
+  };
+
+  const addNewMedication = (medication: MedicationStatementRequest) => {
     const newMedications: MedicationStatementRequest[] = [
       ...medications,
-      { ...MEDICATION_STATEMENT_INITIAL_VALUE, medication },
+      medication,
     ];
+
     updateQuestionnaireResponseCB(
       [{ type: "medication_statement", value: newMedications }],
       questionnaireResponse.question_id,
     );
+
     setExpandedMedicationIndex(newMedications.length - 1);
+    setSelectedMedication(null);
+    setNewMedicationDetails(null);
+    setShowMedicationDetails(false);
+  };
+
+  const handleConfirmMedication = () => {
+    if (!newMedicationDetails) return;
+    addNewMedication(newMedicationDetails);
+  };
+
+  const handleBack = () => {
+    if (selectedMedication) {
+      setSelectedMedication(null);
+      setNewMedicationDetails(null);
+    } else {
+      setShowMedicationDetails(false);
+    }
+  };
+
+  const handleBackToValueSet = () => {
+    setSelectedMedication(null);
+    setNewMedicationDetails(null);
   };
 
   const handleRemoveMedication = (index: number) => {
@@ -220,6 +269,30 @@ export function MedicationStatementQuestion({
       questionnaireResponse.question_id,
     );
   };
+
+  // New medication details content for mobile drawer
+  const medicationDetailsContent = (
+    <div className="pb-20 mr-2 space-y-4">
+      {newMedicationDetails && (
+        <MedicationStatementGridRow
+          medication={newMedicationDetails}
+          disabled={disabled}
+          onUpdate={(updates) => {
+            if (newMedicationDetails) {
+              setNewMedicationDetails({
+                ...newMedicationDetails,
+                ...updates,
+              });
+            }
+          }}
+          onRemove={handleBackToValueSet}
+          index={-1}
+          questionId={question.id}
+          errors={errors}
+        />
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -431,15 +504,34 @@ export function MedicationStatementQuestion({
           </div>
         </div>
       )}
-      <div className="max-w-4xl">
-        <ValueSetSelect
+
+      {isMobile ? (
+        <EntitySelectionDrawer
+          open={showMedicationDetails}
+          onOpenChange={setShowMedicationDetails}
+          selectedEntity={selectedMedication}
           system="system-medication"
-          placeholder={t("add_another_medication")}
-          onSelect={handleAddMedication}
-          disabled={disabled}
+          entityType="medication"
           searchPostFix=" clinical drug"
+          disabled={disabled}
+          onSelect={handleAddMedication}
+          onBack={handleBack}
+          onConfirm={handleConfirmMedication}
+          entityDetailsContent={medicationDetailsContent}
+          searchPlaceholder={t("search_for_medications")}
+          addPlaceholder={t("add_another_medication")}
         />
-      </div>
+      ) : (
+        <div className="max-w-4xl">
+          <ValueSetSelect
+            system="system-medication"
+            placeholder={t("add_another_medication")}
+            onSelect={handleAddMedication}
+            disabled={disabled}
+            searchPostFix=" clinical drug"
+          />
+        </div>
+      )}
     </div>
   );
 }

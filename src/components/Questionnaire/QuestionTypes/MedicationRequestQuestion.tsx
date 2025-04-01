@@ -3,10 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { t } from "i18next";
 import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
-
-import CareIcon from "@/CAREUI/icons/CareIcon";
 
 import {
   AlertDialog,
@@ -25,7 +24,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Command, CommandDrawer, CommandList } from "@/components/ui/command";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -45,6 +43,7 @@ import {
 
 import { ComboboxQuantityInput } from "@/components/Common/ComboboxQuantityInput";
 import { MultiValueSetSelect } from "@/components/Medicine/MultiValueSetSelect";
+import { EntitySelectionDrawer } from "@/components/Questionnaire/EntitySelectionDrawer";
 import { FieldError } from "@/components/Questionnaire/QuestionTypes/FieldError";
 import ValueSetSelect from "@/components/Questionnaire/ValueSetSelect";
 
@@ -228,17 +227,29 @@ export function MedicationRequestQuestion({
     useState<MedicationRequest | null>(null);
 
   const handleAddMedication = (medication: Code) => {
-    const newMedication = {
-      ...parseMedicationStringToRequest(medication),
-      authored_on: new Date().toISOString(),
-    };
+    const isDuplicate = medications.some(
+      (req) =>
+        req.medication?.code === medication.code &&
+        req.status !== "entered_in_error",
+    );
+
+    if (isDuplicate) {
+      toast.warning(t("medication_already_exists"));
+      return;
+    }
 
     if (isMobile) {
       setSelectedMedication(medication);
-      setNewMedicationDetails(newMedication);
+      setNewMedicationDetails({
+        ...parseMedicationStringToRequest(medication),
+        authored_on: new Date().toISOString(),
+      });
       setShowMedicationDetails(true);
     } else {
-      addNewMedication(newMedication);
+      addNewMedication({
+        ...parseMedicationStringToRequest(medication),
+        authored_on: new Date().toISOString(),
+      });
     }
   };
 
@@ -261,14 +272,16 @@ export function MedicationRequestQuestion({
     addNewMedication(newMedicationDetails);
   };
 
-  const handleCloseDrawer = () => {
-    setShowMedicationDetails(false);
-    handleBackToValueSet();
+  const handleBack = () => {
+    if (selectedMedication) {
+      setSelectedMedication(null);
+    } else {
+      setShowMedicationDetails(false);
+    }
   };
 
   const handleBackToValueSet = () => {
     setSelectedMedication(null);
-    setNewMedicationDetails(null);
   };
 
   const handleRemoveMedication = (index: number) => {
@@ -319,7 +332,7 @@ export function MedicationRequestQuestion({
 
   // New medication details content for mobile drawer
   const medicationDetailsContent = (
-    <div className="space-y-4 pb-20">
+    <div className="space-y-4 pb-20 mr-2">
       {newMedicationDetails && (
         <MedicationRequestGridRow
           medication={newMedicationDetails}
@@ -568,68 +581,21 @@ export function MedicationRequestQuestion({
       )}
 
       {isMobile ? (
-        <>
-          <ValueSetSelect
-            system="system-medication"
-            placeholder={t("add_another_medication")}
-            onSelect={handleAddMedication}
-            disabled={disabled}
-            searchPostFix=" clinical drug"
-            title={t("select_medication")}
-            onBack={handleCloseDrawer}
-          />
-          <CommandDrawer
-            open={showMedicationDetails}
-            onOpenChange={setShowMedicationDetails}
-          >
-            <Command className="px-0 relative">
-              {selectedMedication ? (
-                <>
-                  <div className="py-3 px-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">
-                      {selectedMedication.display}
-                    </h3>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={handleBackToValueSet}
-                    >
-                      <CareIcon icon="l-times" className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  <div className="p-4">
-                    <CommandList className="max-h-[65vh] overflow-y-auto">
-                      {medicationDetailsContent}
-                    </CommandList>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 flex justify-between space-x-2">
-                    <Button variant="outline" onClick={handleBackToValueSet}>
-                      {t("cancel")}
-                    </Button>
-                    <Button onClick={handleConfirmMedication}>
-                      {t("add")}
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <ValueSetSelect
-                    system="system-medication"
-                    placeholder={t("search_for_medications")}
-                    onSelect={handleAddMedication}
-                    disabled={disabled}
-                    hideTrigger={true}
-                    controlledOpen={true}
-                    searchPostFix=" clinical drug"
-                    title={t("select_medication")}
-                    onBack={handleCloseDrawer}
-                  />
-                </>
-              )}
-            </Command>
-          </CommandDrawer>
-        </>
+        <EntitySelectionDrawer
+          open={showMedicationDetails}
+          onOpenChange={setShowMedicationDetails}
+          selectedEntity={selectedMedication}
+          system="system-medication"
+          entityType="medication"
+          searchPostFix=" clinical drug"
+          disabled={disabled}
+          onSelect={handleAddMedication}
+          onBack={handleBack}
+          onConfirm={handleConfirmMedication}
+          entityDetailsContent={medicationDetailsContent}
+          searchPlaceholder={t("search_for_medications")}
+          addPlaceholder={t("add_another_medication")}
+        />
       ) : (
         <div className="max-w-4xl" data-cy="add-medication-request">
           <ValueSetSelect
@@ -639,7 +605,7 @@ export function MedicationRequestQuestion({
             disabled={disabled}
             searchPostFix=" clinical drug"
             title={t("select_medication")}
-            onBack={handleCloseDrawer}
+            onBack={() => {}}
           />
         </div>
       )}
