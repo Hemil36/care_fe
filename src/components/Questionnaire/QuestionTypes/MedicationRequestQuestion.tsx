@@ -46,7 +46,6 @@ import {
 import { ComboboxQuantityInput } from "@/components/Common/ComboboxQuantityInput";
 import { MultiValueSetSelect } from "@/components/Medicine/MultiValueSetSelect";
 import { FieldError } from "@/components/Questionnaire/QuestionTypes/FieldError";
-import { NotesInput } from "@/components/Questionnaire/QuestionTypes/NotesInput";
 import ValueSetSelect from "@/components/Questionnaire/ValueSetSelect";
 
 import useBreakpoints from "@/hooks/useBreakpoints";
@@ -1198,35 +1197,13 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
         data-cy="notes"
       >
         <Label className="mb-1.5 block text-sm lg:hidden">{t("notes")}</Label>
-        {desktopLayout ? (
-          <>
-            <Label className="mb-1.5 block text-sm lg:hidden">
-              {t("notes")}
-            </Label>
-            <Input
-              value={medication.note || ""}
-              onChange={(e) => onUpdate?.({ note: e.target.value })}
-              placeholder={t("add_notes")}
-              disabled={disabled}
-              className="h-9 text-sm"
-            />
-          </>
-        ) : (
-          <NotesInput
-            className="mt-2"
-            questionnaireResponse={{
-              question_id: "",
-              structured_type: "medication_request",
-              link_id: "",
-              values: [],
-              note: medication.note,
-            }}
-            handleUpdateNote={(note) => {
-              onUpdate?.({ note: note });
-            }}
-            disabled={disabled}
-          />
-        )}
+        <Input
+          value={medication.note || ""}
+          onChange={(e) => onUpdate?.({ note: e.target.value })}
+          placeholder={t("add_notes")}
+          disabled={disabled}
+          className="h-9 text-sm"
+        />
       </div>
 
       {/* Remove Button */}
