@@ -86,7 +86,7 @@ export default function ValueSetSelect({
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8"
+              className="size-10"
               onClick={() => {
                 onBack?.();
                 setInternalOpen(false);
