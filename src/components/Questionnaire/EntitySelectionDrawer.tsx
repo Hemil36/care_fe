@@ -188,9 +188,11 @@ export function EntitySelectionDrawer({
                   onClick={onBack}
                   className={buttonClassName}
                 >
+                  <CareIcon icon="l-times" className="size-6" />
                   {t("cancel")}
                 </Button>
                 <Button onClick={onConfirm} className={buttonClassName}>
+                  <CareIcon icon="l-check-circle" className="size-6" />
                   {t(confirmButtonText || "add")}
                 </Button>
               </div>
