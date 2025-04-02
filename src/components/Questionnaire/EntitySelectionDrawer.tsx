@@ -161,7 +161,7 @@ export function EntitySelectionDrawer({
         onBack={onBack}
       />
       <CommandDrawer open={open} onOpenChange={onOpenChange}>
-        <Command className="flex flex-col h-full">
+        <Command className="flex flex-col">
           {selectedEntity ? (
             <>
               <div className="py-3 px-4 border-b border-gray-200 flex justify-between items-center">
@@ -174,7 +174,7 @@ export function EntitySelectionDrawer({
                   className="h-8 w-8"
                   onClick={onBack}
                 >
-                  <CareIcon icon="l-times" className="h-5 w-5" />
+                  <CareIcon icon="l-times" className="size-6" />
                 </Button>
               </div>
               <div className="p-3 flex-1 overflow-y-auto">
