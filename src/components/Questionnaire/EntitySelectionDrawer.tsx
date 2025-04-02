@@ -177,7 +177,7 @@ export function EntitySelectionDrawer({
                   <CareIcon icon="l-times" className="size-6" />
                 </Button>
               </div>
-              <div className="p-3 flex-1 overflow-y-auto">
+              <div className="p-3 flex-1">
                 <CommandList>{entityDetailsContent}</CommandList>
               </div>
               <div className="p-4 bg-white border-t border-gray-200 flex justify-between space-x-2">
