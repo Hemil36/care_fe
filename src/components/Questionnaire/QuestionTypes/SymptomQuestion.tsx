@@ -717,7 +717,6 @@ export function SymptomQuestion({
           onBack={handleBack}
           onConfirm={handleConfirmSymptom}
           entityDetailsContent={symptomDetailsContent}
-          searchPlaceholder={t("search_symptom")}
           addPlaceholder={t("add_another_symptom")}
         />
       ) : (

@@ -491,7 +491,6 @@ export function AllergyQuestion({
           onBack={handleBack}
           onConfirm={handleConfirmAllergy}
           entityDetailsContent={allergyDetailsContent}
-          searchPlaceholder={t("search_for_allergies")}
           addPlaceholder={t("add_another_allergy")}
         />
       ) : (

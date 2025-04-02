@@ -567,7 +567,6 @@ export function DiagnosisQuestion({
           onBack={handleBack}
           onConfirm={handleCategoryConfirm}
           entityDetailsContent={diagnosisDetailsContent}
-          searchPlaceholder={t("search_for_diagnosis")}
           addPlaceholder={t("add_another_diagnosis")}
         />
       ) : showCategorySelection ? (

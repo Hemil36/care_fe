@@ -518,7 +518,6 @@ export function MedicationStatementQuestion({
           onBack={handleBack}
           onConfirm={handleConfirmMedication}
           entityDetailsContent={medicationDetailsContent}
-          searchPlaceholder={t("search_for_medications")}
           addPlaceholder={t("add_another_medication")}
         />
       ) : (

@@ -11,40 +11,8 @@
  * 4. Providing buttons for confirming or canceling the addition
  *
  * The component is generic and can be used across different entity types by providing
- * the appropriate props. It handles translation keys automatically based on entity type.
+ * the appropriate props
  *
- * Usage example:
- *
- * ```tsx
- * // For medications
- * <EntitySelectionDrawer
- *   open={showMedicationDetails}
- *   onOpenChange={setShowMedicationDetails}
- *   selectedEntity={selectedMedication}
- *   system="system-medication"
- *   entityType="medication"
- *   searchPostFix=" clinical drug"
- *   disabled={disabled}
- *   onSelect={handleAddMedication}
- *   onBack={handleCloseDrawer}
- *   onConfirm={handleConfirmMedication}
- *   entityDetailsContent={medicationDetailsContent}
- * />
- *
- * // For diagnoses
- * <EntitySelectionDrawer
- *   open={showCategorySelection}
- *   onOpenChange={setShowCategorySelection}
- *   selectedEntity={selectedCode}
- *   system="system-condition-code"
- *   entityType="diagnosis"
- *   disabled={disabled}
- *   onSelect={handleCodeSelect}
- *   onBack={handleCloseDrawer}
- *   onConfirm={handleCategoryConfirm}
- *   entityDetailsContent={diagnosisDetailsContent}
- * />
- * ```
  */
 import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -139,13 +107,7 @@ interface EntitySelectionDrawerProps {
    */
   entityDetailsContent: ReactNode;
   /**
-   * Optional search placeholder text override
-   * By default, uses "search_for_{entityType}s" as the translation key
-   */
-  searchPlaceholder?: string;
-  /**
    * Optional add placeholder text override
-   * By default, uses "add_another_{entityType}" as the translation key
    */
   addPlaceholder?: string;
   /**
@@ -179,20 +141,17 @@ export function EntitySelectionDrawer({
   onConfirm,
   titleAddition = "",
   entityDetailsContent,
-  searchPlaceholder,
   addPlaceholder,
   confirmButtonText,
   buttonClassName,
 }: EntitySelectionDrawerProps) {
   const { t } = useTranslation();
-  const defaultSearchPlaceholder = `search_for_${entityType}s`;
-  const defaultAddPlaceholder = `add_another_${entityType}`;
 
   return (
     <>
       <ValueSetSelect
         system={system}
-        placeholder={addPlaceholder || t(defaultAddPlaceholder)}
+        placeholder={addPlaceholder}
         onSelect={onSelect}
         disabled={disabled}
         searchPostFix={searchPostFix}
@@ -240,7 +199,7 @@ export function EntitySelectionDrawer({
             <>
               <ValueSetSelect
                 system={system}
-                placeholder={searchPlaceholder || t(defaultSearchPlaceholder)}
+                placeholder={addPlaceholder}
                 onSelect={onSelect}
                 disabled={disabled}
                 hideTrigger={true}
