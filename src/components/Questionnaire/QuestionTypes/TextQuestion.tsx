@@ -46,7 +46,8 @@ export function TextQuestion({
         <Textarea
           value={questionnaireResponse.values[0]?.value?.toString() || ""}
           onChange={(e) => handleChange(e.target.value)}
-          className="min-h-[100px]"
+          className="field-sizing-content"
+          rows={1}
           disabled={disabled}
         />
       ) : (
