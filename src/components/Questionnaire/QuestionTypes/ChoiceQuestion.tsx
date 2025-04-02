@@ -90,7 +90,7 @@ export const ChoiceQuestion = memo(function ChoiceQuestion({
           onValueChange={handleValueChange}
           disabled={disabled}
         >
-          <SelectTrigger className="w-full rounded-r-none border border-gray-300">
+          <SelectTrigger className="w-full rounded-none border border-gray-300">
             <SelectValue placeholder="Select an option" />
           </SelectTrigger>
           <SelectContent className="max-w-[var(--radix-select-trigger-width)] w-full">

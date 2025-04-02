@@ -299,8 +299,9 @@ export function QuestionInput({
                   {!question.structured_type && !question.repeats && (
                     <NoteToggle
                       className={cn("w-min", {
-                        "border border-gray-300 rounded-l-none -ml-2 bg-white":
-                          !(question.type === "text"),
+                        "border border-gray-300 rounded-none -ml-2 bg-white": !(
+                          question.type === "text"
+                        ),
 
                         "mt-2": question.type === "text",
                       })}
