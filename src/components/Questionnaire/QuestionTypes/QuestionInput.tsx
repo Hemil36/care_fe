@@ -252,7 +252,7 @@ export function QuestionInput({
                 )}
                 <div
                   className={cn("w-full", {
-                    "flex flex-col md:flex-row": !question.structured_type,
+                    "flex flex-row": !question.structured_type,
                     "flex-col": question.repeats || question.type === "text",
                   })}
                 >
@@ -263,8 +263,9 @@ export function QuestionInput({
                   {!question.structured_type && !question.repeats && (
                     <NotesInput
                       className={cn("w-min", {
-                        "bg-white border md:rounded-l-none md:-ml-2 mt-2 md:mt-0":
-                          !(question.type === "text"),
+                        "bg-white border rounded-l-none -ml-2": !(
+                          question.type === "text"
+                        ),
                         "mt-2": question.type === "text",
                       })}
                       questionnaireResponse={questionnaireResponse}
