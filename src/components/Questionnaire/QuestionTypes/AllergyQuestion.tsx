@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { t } from "i18next";
 import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
@@ -46,6 +47,7 @@ import {
 } from "@/components/ui/table";
 
 import { CATEGORY_ICONS } from "@/components/Patient/allergy/list";
+import { EntitySelectionDrawer } from "@/components/Questionnaire/EntitySelectionDrawer";
 import ValueSetSelect from "@/components/Questionnaire/ValueSetSelect";
 
 import useBreakpoints from "@/hooks/useBreakpoints";
@@ -127,6 +129,13 @@ export function AllergyQuestion({
     number | null
   >(null);
 
+  // Drawer state for mobile
+  const [showAllergyDetails, setShowAllergyDetails] = useState(false);
+  const [selectedAllergy, setSelectedAllergy] = useState<Code | null>(null);
+  const [newAllergyDetails, setNewAllergyDetails] =
+    useState<AllergyIntoleranceRequest | null>(null);
+  const isMobile = useBreakpoints({ default: true, md: false });
+
   const { data: patientAllergies } = useQuery({
     queryKey: ["allergies", patientId],
     queryFn: query(allergyIntoleranceApi.getAllergy, {
@@ -153,15 +162,56 @@ export function AllergyQuestion({
   }, [patientAllergies]);
 
   const handleAddAllergy = (code: Code) => {
-    const newAllergies = [
-      ...allergies,
-      { ...ALLERGY_INITIAL_VALUE, code },
-    ] as AllergyIntoleranceRequest[];
+    const isDuplicate = allergies.some(
+      (allergy) =>
+        allergy.code.code === code.code &&
+        allergy.verification_status !== "entered_in_error",
+    );
+
+    if (isDuplicate) {
+      toast?.warning(t("allergy_already_added"));
+      return;
+    }
+
+    if (isMobile) {
+      setSelectedAllergy(code);
+      setNewAllergyDetails({
+        ...ALLERGY_INITIAL_VALUE,
+        code,
+      } as AllergyIntoleranceRequest);
+      setShowAllergyDetails(true);
+    } else {
+      addNewAllergy({
+        ...ALLERGY_INITIAL_VALUE,
+        code,
+      } as AllergyIntoleranceRequest);
+    }
+  };
+
+  const addNewAllergy = (allergy: AllergyIntoleranceRequest) => {
+    const newAllergies = [...allergies, allergy];
     updateQuestionnaireResponseCB(
       [{ type: "allergy_intolerance", value: newAllergies }],
       questionnaireResponse.question_id,
     );
     setExpandedAllergyIndex(newAllergies.length - 1);
+    setSelectedAllergy(null);
+    setNewAllergyDetails(null);
+    setShowAllergyDetails(false);
+  };
+
+  const handleConfirmAllergy = () => {
+    if (!newAllergyDetails) return;
+    addNewAllergy(newAllergyDetails);
+  };
+
+  const handleBack = () => {
+    if (selectedAllergy) {
+      setSelectedAllergy(null);
+      setNewAllergyDetails(null);
+    } else {
+      setShowAllergyDetails(false);
+    }
   };
 
   const handleRemoveAllergy = (index: number) => {
@@ -209,6 +259,27 @@ export function AllergyQuestion({
       questionnaireResponse.question_id,
     );
   };
+
+  // New allergy details content for mobile drawer
+  const allergyDetailsContent = (
+    <div className="space-y-4 pb-20 mr-2">
+      {newAllergyDetails && (
+        <AllergyTableRow
+          allergy={newAllergyDetails}
+          disabled={disabled}
+          onUpdate={(updates) => {
+            if (newAllergyDetails) {
+              setNewAllergyDetails({
+                ...newAllergyDetails,
+                ...updates,
+              });
+            }
+          }}
+          onRemove={() => handleBack()}
+        />
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -407,12 +478,30 @@ export function AllergyQuestion({
           </div>
         </div>
       )}
-      <ValueSetSelect
-        system="system-allergy-code"
-        placeholder={t("add_another_allergy")}
-        onSelect={handleAddAllergy}
-        disabled={disabled}
-      />
+
+      {isMobile ? (
+        <EntitySelectionDrawer
+          open={showAllergyDetails}
+          onOpenChange={setShowAllergyDetails}
+          selectedEntity={selectedAllergy}
+          system="system-allergy-code"
+          entityType="allergy"
+          disabled={disabled}
+          onSelect={handleAddAllergy}
+          onBack={handleBack}
+          onConfirm={handleConfirmAllergy}
+          entityDetailsContent={allergyDetailsContent}
+          searchPlaceholder={t("search_for_allergies")}
+          addPlaceholder={t("add_another_allergy")}
+        />
+      ) : (
+        <ValueSetSelect
+          system="system-allergy-code"
+          placeholder={t("add_another_allergy")}
+          onSelect={handleAddAllergy}
+          disabled={disabled}
+        />
+      )}
     </>
   );
 }
@@ -431,7 +520,7 @@ const AllergyTableRow = ({
   onRemove,
 }: AllergyItemProps) => {
   const [showNotes, setShowNotes] = useState(allergy.note !== undefined);
-  const desktopLayout = useBreakpoints({ lg: true, default: false });
+  const desktopLayout = useBreakpoints({ md: true, default: false });
 
   const isInactive =
     allergy.verification_status === "entered_in_error" || disabled;
@@ -647,7 +736,7 @@ const AllergyTableRow = ({
 
   // Mobile view layout
   const formContent = (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-2 space-y-4">
       <div>
         <Label className="text-xs text-gray-500">{t("criticality")}</Label>
         {criticalitySelect}
