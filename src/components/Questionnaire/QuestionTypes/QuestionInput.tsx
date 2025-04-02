@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
@@ -5,6 +6,7 @@ import { cn } from "@/lib/utils";
 import CareIcon from "@/CAREUI/icons/CareIcon";
 
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 import { QuestionLabel } from "@/components/Questionnaire/QuestionLabel";
 import { AppointmentQuestion } from "@/components/Questionnaire/QuestionTypes/AppointmentQuestion";
@@ -27,7 +29,7 @@ import { EncounterQuestion } from "./EncounterQuestion";
 import { FilesQuestion } from "./FileQuestion";
 import { MedicationRequestQuestion } from "./MedicationRequestQuestion";
 import { MedicationStatementQuestion } from "./MedicationStatementQuestion";
-import { NotesInput } from "./NotesInput";
+import { NoteToggle } from "./NoteToggle";
 import { NumberQuestion } from "./NumberQuestion";
 import { QuantityQuestion } from "./QuantityQuestion";
 import { SymptomQuestion } from "./SymptomQuestion";
@@ -63,6 +65,8 @@ export function QuestionInput({
   isSubQuestion,
 }: QuestionInputProps) {
   const { t } = useTranslation();
+  const [showNotes, setShowNotes] = useState<Record<string, boolean>>({});
+
   const questionnaireResponse = questionnaireResponses.find(
     (v) => v.question_id === question.id,
   );
@@ -214,10 +218,42 @@ export function QuestionInput({
     }
   };
 
+  const renderNoteTextarea = () => {
+    return (
+      <div className="w-full mt-2">
+        <Textarea
+          value={questionnaireResponse.note || ""}
+          onChange={(e) => {
+            updateQuestionnaireResponseCB(
+              [...questionnaireResponse.values],
+              questionnaireResponse.question_id,
+              e.target.value,
+            );
+          }}
+          placeholder="Add notes..."
+          disabled={disabled}
+          data-cy="notes-textarea"
+          className="w-full field-sizing-content"
+          rows={1}
+        />
+      </div>
+    );
+  };
+
   const renderInput = () => {
     const values = !questionnaireResponse.values.length
       ? [{ value: "", type: "string" } as ResponseValue]
       : questionnaireResponse.values;
+
+    const handleNoteToggle = (isVisible: boolean) => {
+      setShowNotes((prev) => ({
+        ...prev,
+        [questionnaireResponse.question_id]: isVisible,
+      }));
+    };
+
+    const isNotesVisible =
+      showNotes[questionnaireResponse.question_id] || false;
 
     return (
       <div className="bg-gray-100 md:bg-transparent px-2 py-3">
@@ -259,55 +295,53 @@ export function QuestionInput({
                   <div className="flex-1 min-w-0">
                     {renderSingleInput(index)}
                   </div>
-                  {/* Notes are not available for structured questions */}
+
                   {!question.structured_type && !question.repeats && (
-                    <NotesInput
+                    <NoteToggle
                       className={cn("w-min", {
-                        "bg-white border rounded-l-none -ml-2": !(
-                          question.type === "text"
-                        ),
+                        "border border-gray-300 rounded-l-none -ml-2 bg-white":
+                          !(question.type === "text"),
+
                         "mt-2": question.type === "text",
                       })}
                       questionnaireResponse={questionnaireResponse}
-                      handleUpdateNote={(note) => {
-                        updateQuestionnaireResponseCB(
-                          [...questionnaireResponse.values],
-                          questionnaireResponse.question_id,
-                          note,
-                        );
-                      }}
                       disabled={disabled}
+                      onToggle={handleNoteToggle}
                     />
                   )}
                 </div>
+
+                {!question.structured_type &&
+                  !question.repeats &&
+                  isNotesVisible &&
+                  renderNoteTextarea()}
               </div>
               {removeButton}
             </div>
           );
         })}
+
         {question.repeats && (
-          <div className="mt-2 flex items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAddValue}
-              className=""
-              disabled={disabled}
-            >
-              <CareIcon icon="l-plus" className="mr-2 size-4" />
-              {t("add_another")}
-            </Button>
-            <NotesInput
-              questionnaireResponse={questionnaireResponse}
-              handleUpdateNote={(note) => {
-                updateQuestionnaireResponseCB(
-                  [...questionnaireResponse.values],
-                  questionnaireResponse.question_id,
-                  note,
-                );
-              }}
-              disabled={disabled}
-            />
+          <div className="mt-2 flex flex-col">
+            <div className="flex flex-row items-center space-x-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddValue}
+                className="w-fit"
+                disabled={disabled}
+              >
+                <CareIcon icon="l-plus" className="mr-2 size-4" />
+                {t("add_another")}
+              </Button>
+              <NoteToggle
+                questionnaireResponse={questionnaireResponse}
+                disabled={disabled}
+                onToggle={handleNoteToggle}
+              />
+            </div>
+
+            {isNotesVisible && renderNoteTextarea()}
           </div>
         )}
       </div>
