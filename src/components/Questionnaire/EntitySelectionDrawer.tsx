@@ -18,7 +18,12 @@ import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
-import { Command, CommandDrawer, CommandList } from "@/components/ui/command";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 import { Code } from "@/types/questionnaire/code";
 
@@ -157,11 +162,11 @@ export function EntitySelectionDrawer({
         )}
         onBack={onBack}
       />
-      <CommandDrawer open={open} onOpenChange={onOpenChange}>
-        <Command className="px-0">
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[85vh] mx-2 rounded-t-md">
           {selectedEntity ? (
-            <div>
-              <div className="flex justify-between w-full">
+            <div className="flex flex-col">
+              <div className="flex justify-between w-full p-2">
                 <Button
                   variant="link"
                   onClick={onBack}
@@ -177,36 +182,33 @@ export function EntitySelectionDrawer({
                   {t(confirmButtonText || "add")}
                 </Button>
               </div>
-              <div className="py-2 px-2 border-b border-gray-200 flex justify-center items-center w-full">
-                <h3 className="text-lg font-semibold">
+              <DrawerHeader className="py-2 px-2 border-b border-gray-200">
+                <DrawerTitle className="text-center text-base font-semibold">
                   {selectedEntity.display}
-                </h3>
-              </div>
-              <div className="p-3 w-full flex-1">
-                <CommandList className="max-h-[100vh] overflow-y-auto pb-6 min-h-[50vh]">
-                  {entityDetailsContent}
-                </CommandList>
+                </DrawerTitle>
+              </DrawerHeader>
+              <div
+                className="pb-20 p-3 w-full overflow-auto"
+                style={{ maxHeight: "calc(85vh - 120px)" }}
+              >
+                {entityDetailsContent}
               </div>
             </div>
           ) : (
-            <>
-              <CommandList className="max-h-[70vh] overflow-y-auto pb-8">
-                <ValueSetSelect
-                  system={system}
-                  placeholder={addPlaceholder}
-                  onSelect={onSelect}
-                  disabled={disabled}
-                  hideTrigger={true}
-                  controlledOpen={true}
-                  searchPostFix={searchPostFix}
-                  title={t(`select_${entityType}`)}
-                  onBack={onBack}
-                />
-              </CommandList>
-            </>
+            <ValueSetSelect
+              system={system}
+              placeholder={addPlaceholder}
+              onSelect={onSelect}
+              disabled={disabled}
+              hideTrigger={true}
+              controlledOpen={true}
+              searchPostFix={searchPostFix}
+              title={t(`select_${entityType}`)}
+              onBack={onBack}
+            />
           )}
-        </Command>
-      </CommandDrawer>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }
