@@ -179,20 +179,22 @@ export function EntitySelectionDrawer({
               </div>
               <div className="p-3">
                 <CommandList className="max-h-[65vh] overflow-y-auto">
-                  {entityDetailsContent}
-                  <div className="py-3 bg-white border-t border-gray-200 flex justify-between pr-2">
-                    <Button
-                      variant="outline"
-                      onClick={onBack}
-                      className={buttonClassName}
-                    >
-                      <CareIcon icon="l-times" className="size-6" />
-                      {t("cancel")}
-                    </Button>
-                    <Button onClick={onConfirm} className={buttonClassName}>
-                      <CareIcon icon="l-check-circle" className="size-6" />
-                      {t(confirmButtonText || "add")}
-                    </Button>
+                  <div className="px-1">
+                    {entityDetailsContent}
+                    <div className="py-3 bg-white border-t border-gray-200 flex justify-between pr-2">
+                      <Button
+                        variant="outline"
+                        onClick={onBack}
+                        className={buttonClassName}
+                      >
+                        <CareIcon icon="l-times" className="size-6" />
+                        {t("cancel")}
+                      </Button>
+                      <Button onClick={onConfirm} className={buttonClassName}>
+                        <CareIcon icon="l-check-circle" className="size-6" />
+                        {t(confirmButtonText || "add")}
+                      </Button>
+                    </div>
                   </div>
                 </CommandList>
               </div>
