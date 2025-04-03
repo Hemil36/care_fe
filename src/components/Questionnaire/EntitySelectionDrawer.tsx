@@ -165,7 +165,7 @@ export function EntitySelectionDrawer({
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="mx-2 rounded-t-md">
           {selectedEntity ? (
-            <div className="flex flex-col">
+            <div className="flex flex-col" style={{ minHeight: "400px" }}>
               <div className="flex justify-between w-full p-2">
                 <Button
                   variant="link"
@@ -189,23 +189,25 @@ export function EntitySelectionDrawer({
               </DrawerHeader>
               <div
                 className="p-3 pb-32 w-full overflow-auto"
-                style={{ minHeight: "400px" }}
+                style={{ flex: 1 }}
               >
                 {entityDetailsContent}
               </div>
             </div>
           ) : (
-            <ValueSetSelect
-              system={system}
-              placeholder={addPlaceholder}
-              onSelect={onSelect}
-              disabled={disabled}
-              hideTrigger={true}
-              controlledOpen={true}
-              searchPostFix={searchPostFix}
-              title={t(`select_${entityType}`)}
-              onBack={onBack}
-            />
+            <div style={{ minHeight: "400px" }}>
+              <ValueSetSelect
+                system={system}
+                placeholder={addPlaceholder}
+                onSelect={onSelect}
+                disabled={disabled}
+                hideTrigger={true}
+                controlledOpen={true}
+                searchPostFix={searchPostFix}
+                title={t(`select_${entityType}`)}
+                onBack={onBack}
+              />
+            </div>
           )}
         </DrawerContent>
       </Drawer>
