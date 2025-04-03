@@ -17,8 +17,6 @@
 import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import CareIcon from "@/CAREUI/icons/CareIcon";
-
 import { Button } from "@/components/ui/button";
 import { Command, CommandDrawer, CommandList } from "@/components/ui/command";
 
@@ -143,7 +141,6 @@ export function EntitySelectionDrawer({
   entityDetailsContent,
   addPlaceholder,
   confirmButtonText,
-  buttonClassName,
 }: EntitySelectionDrawerProps) {
   const { t } = useTranslation();
 
@@ -164,38 +161,30 @@ export function EntitySelectionDrawer({
         <Command className="px-0 relative">
           {selectedEntity ? (
             <>
-              <div className="py-3 px-4 border-b border-gray-200 flex justify-between items-center">
+              <div className="flex justify-between">
+                <Button
+                  variant="link"
+                  onClick={onBack}
+                  className="underline text-sm"
+                >
+                  {t("cancel")}
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={onConfirm}
+                  className="underline text-sm"
+                >
+                  {t(confirmButtonText || "add")}
+                </Button>
+              </div>
+              <div className="py-2 px-2 border-b border-gray-200 flex justify-center items-center">
                 <h3 className="text-lg font-semibold">
                   {selectedEntity.display}
                 </h3>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8"
-                  onClick={onBack}
-                >
-                  <CareIcon icon="l-times" className="h-5 w-5" />
-                </Button>
               </div>
               <div className="p-3">
                 <CommandList className="max-h-[65vh] overflow-y-auto">
-                  <div className="px-1">
-                    {entityDetailsContent}
-                    <div className="py-3 bg-white border-t border-gray-200 flex justify-between pr-2">
-                      <Button
-                        variant="outline"
-                        onClick={onBack}
-                        className={buttonClassName}
-                      >
-                        <CareIcon icon="l-times" className="size-6" />
-                        {t("cancel")}
-                      </Button>
-                      <Button onClick={onConfirm} className={buttonClassName}>
-                        <CareIcon icon="l-check-circle" className="size-6" />
-                        {t(confirmButtonText || "add")}
-                      </Button>
-                    </div>
-                  </div>
+                  <div className="px-1 pb-6">{entityDetailsContent}</div>
                 </CommandList>
               </div>
             </>
