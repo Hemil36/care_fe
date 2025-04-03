@@ -158,10 +158,10 @@ export function EntitySelectionDrawer({
         onBack={onBack}
       />
       <CommandDrawer open={open} onOpenChange={onOpenChange}>
-        <Command className="px-0 relative">
+        <Command className="px-0">
           {selectedEntity ? (
-            <>
-              <div className="flex justify-between">
+            <div>
+              <div className="flex justify-between w-full">
                 <Button
                   variant="link"
                   onClick={onBack}
@@ -177,30 +177,32 @@ export function EntitySelectionDrawer({
                   {t(confirmButtonText || "add")}
                 </Button>
               </div>
-              <div className="py-2 px-2 border-b border-gray-200 flex justify-center items-center">
+              <div className="py-2 px-2 border-b border-gray-200 flex justify-center items-center w-full">
                 <h3 className="text-lg font-semibold">
                   {selectedEntity.display}
                 </h3>
               </div>
-              <div className="p-3">
-                <CommandList className="max-h-[65vh] overflow-y-auto">
-                  <div className="px-1 pb-6">{entityDetailsContent}</div>
+              <div className="p-3 w-full flex-1">
+                <CommandList className="max-h-[100vh] overflow-y-auto pb-6 min-h-[50vh]">
+                  {entityDetailsContent}
                 </CommandList>
               </div>
-            </>
+            </div>
           ) : (
             <>
-              <ValueSetSelect
-                system={system}
-                placeholder={addPlaceholder}
-                onSelect={onSelect}
-                disabled={disabled}
-                hideTrigger={true}
-                controlledOpen={true}
-                searchPostFix={searchPostFix}
-                title={t(`select_${entityType}`)}
-                onBack={onBack}
-              />
+              <CommandList className="max-h-[70vh] overflow-y-auto pb-8">
+                <ValueSetSelect
+                  system={system}
+                  placeholder={addPlaceholder}
+                  onSelect={onSelect}
+                  disabled={disabled}
+                  hideTrigger={true}
+                  controlledOpen={true}
+                  searchPostFix={searchPostFix}
+                  title={t(`select_${entityType}`)}
+                  onBack={onBack}
+                />
+              </CommandList>
             </>
           )}
         </Command>
