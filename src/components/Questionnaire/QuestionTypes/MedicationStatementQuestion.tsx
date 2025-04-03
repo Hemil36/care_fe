@@ -272,7 +272,7 @@ export function MedicationStatementQuestion({
 
   // New medication details content for mobile drawer
   const medicationDetailsContent = (
-    <div className="pb-20 mr-2 space-y-4">
+    <div className="mr-2 space-y-4">
       {newMedicationDetails && (
         <MedicationStatementGridRow
           medication={newMedicationDetails}

@@ -590,7 +590,7 @@ export function SymptomQuestion({
   };
 
   const symptomDetailsContent = (
-    <div className="space-y-4 pb-20 mr-2">
+    <div className="space-y-4 mr-2">
       <div className="grid grid-cols-1 gap-4">
         <div className="space-y-2">
           <div className="text-sm font-medium text-gray-700">

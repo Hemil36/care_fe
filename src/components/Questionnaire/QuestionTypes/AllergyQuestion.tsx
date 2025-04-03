@@ -262,7 +262,7 @@ export function AllergyQuestion({
 
   // New allergy details content for mobile drawer
   const allergyDetailsContent = (
-    <div className="space-y-4 pb-20 mr-2">
+    <div className="space-y-4 mr-2">
       {newAllergyDetails && (
         <AllergyTableRow
           allergy={newAllergyDetails}
