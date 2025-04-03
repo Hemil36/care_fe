@@ -400,7 +400,6 @@
   "allergen": "Allergen",
   "allergies": "Allergies",
   "allergies_empty_message": "No allergies recorded",
-  "allergy_already_added": "Allergy already added!",
   "allow_transfer": "Allow Transfer",
   "allowed_formats_are": "Allowed formats are {{formats}}.",
   "already_a_member": "Already a member?",
