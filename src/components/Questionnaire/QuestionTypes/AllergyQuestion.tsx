@@ -737,24 +737,24 @@ const AllergyTableRow = ({
   const formContent = (
     <div className="grid grid-cols-2 gap-2 space-y-4">
       <div>
-        <Label className="text-xs text-gray-500">{t("criticality")}</Label>
+        <Label className="text-sm text-gray-500">{t("criticality")}</Label>
         {criticalitySelect}
       </div>
 
       <div>
-        <Label className="text-xs text-gray-500">{t("status")}</Label>
+        <Label className="text-sm text-gray-500">{t("status")}</Label>
         {statusSelect}
       </div>
 
       <div className="col-span-2">
-        <Label className="text-xs text-gray-500">{t("occurrence")}</Label>
+        <Label className="text-sm text-gray-500">{t("occurrence")}</Label>
         {occurrencePicker}
       </div>
 
       {statusButtons}
 
       <div className="col-span-2">
-        <Label className="text-xs text-gray-500">{t("notes")}</Label>
+        <Label className="text-sm text-gray-500">{t("notes")}</Label>
         {notesInput}
       </div>
     </div>
