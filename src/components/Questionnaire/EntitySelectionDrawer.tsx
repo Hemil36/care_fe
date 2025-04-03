@@ -163,7 +163,7 @@ export function EntitySelectionDrawer({
         onBack={onBack}
       />
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[85vh] mx-2 rounded-t-md">
+        <DrawerContent className="mx-2 rounded-t-md">
           {selectedEntity ? (
             <div className="flex flex-col">
               <div className="flex justify-between w-full p-2">
@@ -188,8 +188,8 @@ export function EntitySelectionDrawer({
                 </DrawerTitle>
               </DrawerHeader>
               <div
-                className="pb-20 p-3 w-full overflow-auto"
-                style={{ maxHeight: "calc(85vh - 120px)" }}
+                className="p-3 pb-32 w-full overflow-auto"
+                style={{ minHeight: "400px" }}
               >
                 {entityDetailsContent}
               </div>
