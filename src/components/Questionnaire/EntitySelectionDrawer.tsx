@@ -187,7 +187,7 @@ export function EntitySelectionDrawer({
                   {selectedEntity.display}
                 </DrawerTitle>
               </DrawerHeader>
-              <div className="max-h-[100vh] overflow-y-auto pb-12">
+              <div className="max-h-[100dvh] overflow-y-auto pb-12">
                 {entityDetailsContent}
               </div>
             </div>
