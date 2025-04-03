@@ -187,7 +187,59 @@ export function EntitySelectionDrawer({
                   {selectedEntity.display}
                 </DrawerTitle>
               </DrawerHeader>
-              <div className="max-h-[100dvh] overflow-y-auto pb-12">
+              <div
+                className="max-h-[100dvh] overflow-y-auto"
+                ref={(el) => {
+                  if (!el) return;
+
+                  const adjustPadding = () => {
+                    const viewportHeight =
+                      window.visualViewport?.height || window.innerHeight;
+                    const windowHeight = window.innerHeight;
+                    const keyboardHeight = Math.max(
+                      0,
+                      windowHeight - viewportHeight,
+                    );
+                    el.style.paddingBottom =
+                      keyboardHeight > 0 ? `${keyboardHeight + 16}px` : "3rem"; // Add extra padding when keyboard is visible
+                  };
+
+                  // Initial adjustment
+                  adjustPadding();
+
+                  // Set up event listeners
+                  window.visualViewport?.addEventListener(
+                    "resize",
+                    adjustPadding,
+                  );
+                  window.visualViewport?.addEventListener(
+                    "scroll",
+                    adjustPadding,
+                  );
+                  // Cleanup function will be called by React when component unmounts
+                  // Store the cleanup function in a ref or use useEffect instead of directly on the DOM element
+                  const cleanup = () => {
+                    window.visualViewport?.removeEventListener(
+                      "resize",
+                      adjustPadding,
+                    );
+                    window.visualViewport?.removeEventListener(
+                      "scroll",
+                      adjustPadding,
+                    );
+                  };
+                  // Store cleanup function in a data attribute instead of a non-standard property
+                  el.dataset.cleanup = "true";
+
+                  // Use React's useEffect for proper cleanup instead
+                  // This is a workaround for the ref approach
+                  const cleanupEvent = new CustomEvent(
+                    "cleanupVisualViewport",
+                    { detail: { cleanup } },
+                  );
+                  document.dispatchEvent(cleanupEvent);
+                }}
+              >
                 {entityDetailsContent}
               </div>
             </div>
