@@ -423,7 +423,7 @@ export function MedicationStatementQuestion({
                                           e.stopPropagation();
                                           handleRemoveMedication(index);
                                         }}
-                                        className="h-10 w-10 p-4 border border-gray-400 bg-white shadow text-destructive"
+                                        className="size-10 p-4 border border-gray-400 bg-white shadow text-destructive"
                                       >
                                         <MinusCircledIcon className="size-5" />
                                       </Button>
@@ -431,7 +431,7 @@ export function MedicationStatementQuestion({
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-10 w-10 border border-gray-400 bg-white shadow p-4 pointer-events-none"
+                                      className="size-10 border border-gray-400 bg-white shadow p-4 pointer-events-none"
                                     >
                                       {expandedMedicationIndex === index ? (
                                         <ChevronsDownUp className="size-5" />

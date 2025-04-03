@@ -9,7 +9,6 @@ import { useQuery } from "@tanstack/react-query";
 import { t } from "i18next";
 import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
@@ -162,17 +161,6 @@ export function AllergyQuestion({
   }, [patientAllergies]);
 
   const handleAddAllergy = (code: Code) => {
-    const isDuplicate = allergies.some(
-      (allergy) =>
-        allergy.code.code === code.code &&
-        allergy.verification_status !== "entered_in_error",
-    );
-
-    if (isDuplicate) {
-      toast?.warning(t("allergy_already_added"));
-      return;
-    }
-
     if (isMobile) {
       setSelectedAllergy(code);
       setNewAllergyDetails({

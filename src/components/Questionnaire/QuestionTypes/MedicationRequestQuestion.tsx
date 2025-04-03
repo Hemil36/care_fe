@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { t } from "i18next";
 import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
@@ -227,17 +226,6 @@ export function MedicationRequestQuestion({
     useState<MedicationRequest | null>(null);
 
   const handleAddMedication = (medication: Code) => {
-    const isDuplicate = medications.some(
-      (req) =>
-        req.medication?.code === medication.code &&
-        req.status !== "entered_in_error",
-    );
-
-    if (isDuplicate) {
-      toast.warning(t("medication_already_exists"));
-      return;
-    }
-
     if (isMobile) {
       setSelectedMedication(medication);
       setNewMedicationDetails({
@@ -513,7 +501,7 @@ export function MedicationRequestQuestion({
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 border border-gray-400 bg-white shadow p-4 pointer-events-none"
+                                        className="size-10 border border-gray-400 bg-white shadow p-4 pointer-events-none"
                                       >
                                         {expandedMedicationIndex === index ? (
                                           <ChevronsDownUp className="size-5" />
