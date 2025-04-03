@@ -187,10 +187,7 @@ export function EntitySelectionDrawer({
                   {selectedEntity.display}
                 </DrawerTitle>
               </DrawerHeader>
-              <div
-                className="p-3 pb-32 w-full overflow-auto"
-                style={{ flex: 1 }}
-              >
+              <div className="max-h-[100vh] overflow-y-auto pb-1">
                 {entityDetailsContent}
               </div>
             </div>

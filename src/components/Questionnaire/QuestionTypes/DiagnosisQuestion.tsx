@@ -317,7 +317,7 @@ export function DiagnosisQuestion({
   };
 
   const diagnosisDetailsContent = (
-    <div className="space-y-4 mr-2">
+    <div className="space-y-4 p-4">
       <CategorySelector
         categories={DIAGNOSIS_CATEGORY}
         selectedCategory={selectedCategory}
