@@ -175,11 +175,11 @@ export function EntitySelectionDrawer({
                   {t("cancel")}
                 </Button>
                 <Button
-                  variant="link"
+                  variant="primary"
                   onClick={onConfirm}
-                  className="underline text-sm"
+                  className="text-sm"
                 >
-                  {t(confirmButtonText || "add")}
+                  {t(confirmButtonText || t("done"))}
                 </Button>
               </div>
               <DrawerHeader className="py-2 px-2 border-b border-gray-200">
