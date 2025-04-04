@@ -122,6 +122,7 @@ export default function LinkConsentDialog({
       });
       setOpenUploadDialog(false);
       setIsOpen(false);
+      form.reset();
     },
   });
 
@@ -131,7 +132,6 @@ export default function LinkConsentDialog({
     });
     setIsOpen(false);
     onSuccess?.();
-    form.reset();
     fileUpload.clearFiles();
   };
 
@@ -413,7 +413,7 @@ export default function LinkConsentDialog({
                 name="note"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("notes")}</FormLabel>
+                    <FormLabel>{t("note")}</FormLabel>
                     <FormControl>
                       <textarea
                         className="w-full field-sizing-content border border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 rounded-md"
