@@ -413,7 +413,7 @@ export default function LinkConsentDialog({
                 name="note"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("consent_notes")}</FormLabel>
+                    <FormLabel>{t("notes")}</FormLabel>
                     <FormControl>
                       <textarea
                         className="w-full field-sizing-content border border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 rounded-md"
