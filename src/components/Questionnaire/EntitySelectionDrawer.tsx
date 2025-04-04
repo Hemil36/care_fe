@@ -164,7 +164,7 @@ export function EntitySelectionDrawer({
           side="bottom"
         >
           {selectedEntity ? (
-            <div className="flex flex-col h-[80vh] sm:h-[70vh] md:h-[60vh]">
+            <div className="flex flex-col h-auto min-h-[50vh] max-h-[80vh] sm:max-h-[70vh] md:max-h-[60vh]">
               <div className="flex justify-between w-full p-2">
                 <Button
                   variant="link"
