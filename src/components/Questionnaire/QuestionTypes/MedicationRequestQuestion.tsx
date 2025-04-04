@@ -592,7 +592,6 @@ export function MedicationRequestQuestion({
             disabled={disabled}
             searchPostFix=" clinical drug"
             title={t("select_medication")}
-            onBack={() => {}}
           />
         </div>
       )}

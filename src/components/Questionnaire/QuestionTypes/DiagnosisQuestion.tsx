@@ -555,7 +555,7 @@ export function DiagnosisQuestion({
         </div>
       )}
 
-      {isMobile && showCategorySelection ? (
+      {isMobile ? (
         <EntitySelectionDrawer
           open={showCategorySelection}
           onOpenChange={setShowCategorySelection}

@@ -142,7 +142,6 @@ export function EntitySelectionDrawer({
   onSelect,
   onBack,
   onConfirm,
-  titleAddition = "",
   entityDetailsContent,
   addPlaceholder,
   confirmButtonText,
@@ -157,14 +156,11 @@ export function EntitySelectionDrawer({
         onSelect={onSelect}
         disabled={disabled}
         searchPostFix={searchPostFix}
-        title={t(
-          `select_${entityType}${titleAddition ? ` ${titleAddition}` : ""}`,
-        )}
-        onBack={onBack}
+        title={t(`select_${entityType}`)}
       />
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
-          className="px-0 pt-2 pb-0 rounded-t-3xl sm:max-w-md sm:mx-auto [&>button:first-child]:hidden"
+          className="px-0 pt-2 pb-0 rounded-t-lg sm:max-w-md sm:mx-auto [&>button:first-child]:hidden"
           side="bottom"
         >
           {selectedEntity ? (
@@ -195,19 +191,16 @@ export function EntitySelectionDrawer({
               </div>
             </div>
           ) : (
-            <div className="h-[80vh] sm:h-[70vh] md:h-[60vh]">
-              <ValueSetSelect
-                system={system}
-                placeholder={addPlaceholder}
-                onSelect={onSelect}
-                disabled={disabled}
-                hideTrigger={true}
-                controlledOpen={true}
-                searchPostFix={searchPostFix}
-                title={t(`select_${entityType}`)}
-                onBack={onBack}
-              />
-            </div>
+            <ValueSetSelect
+              system={system}
+              placeholder={addPlaceholder}
+              onSelect={onSelect}
+              disabled={disabled}
+              hideTrigger={true}
+              controlledOpen={true}
+              searchPostFix={searchPostFix}
+              title={t(`select_${entityType}`)}
+            />
           )}
         </SheetContent>
       </Sheet>
