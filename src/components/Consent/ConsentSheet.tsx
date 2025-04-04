@@ -290,13 +290,11 @@ function ConsentCard({ consent }: ConsentCardProps) {
               </p>
             </div>
             {consent.note && (
-              <div>
-                <p className="font-medium text-xs text-muted-foreground mb-1">
+              <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-md w-full">
+                <p className="font-semibold text-sm text-gray-700 mb-1">
                   {t("note")}:
                 </p>
-                <div className="mt-1 bg-muted/50 text-sm bg-gray-50 px-2">
-                  <p className="text-sm font-normal">{consent.note}</p>
-                </div>
+                <p className="text-sm text-gray-800">{consent.note}</p>
               </div>
             )}
 
