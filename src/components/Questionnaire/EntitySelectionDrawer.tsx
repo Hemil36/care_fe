@@ -19,11 +19,11 @@ import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 import { Code } from "@/types/questionnaire/code";
 
@@ -162,17 +162,20 @@ export function EntitySelectionDrawer({
         )}
         onBack={onBack}
       />
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="mx-2 rounded-t-md pb-2">
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          className="px-0 pt-2 pb-0 rounded-t-3xl sm:max-w-md sm:mx-auto [&>button:first-child]:hidden"
+          side="bottom"
+        >
           {selectedEntity ? (
-            <div className="flex flex-col" style={{ minHeight: "400px" }}>
+            <div className="flex flex-col h-[80vh] sm:h-[70vh] md:h-[60vh]">
               <div className="flex justify-between w-full p-2">
                 <Button
                   variant="link"
                   onClick={onBack}
                   className="underline text-sm"
                 >
-                  {t("cancel")}
+                  {t("back")}
                 </Button>
                 <Button
                   variant="primary"
@@ -182,17 +185,17 @@ export function EntitySelectionDrawer({
                   {t(confirmButtonText || t("done"))}
                 </Button>
               </div>
-              <DrawerHeader className="py-2 px-2 border-b border-gray-200">
-                <DrawerTitle className="text-center text-base font-semibold">
+              <SheetHeader className="py-2 px-2 border-b border-gray-200">
+                <SheetTitle className="text-center text-base font-semibold">
                   {selectedEntity.display}
-                </DrawerTitle>
-              </DrawerHeader>
-              <div className="max-h-[100dvh] overflow-y-auto pb-20">
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto pb-safe">
                 {entityDetailsContent}
               </div>
             </div>
           ) : (
-            <div style={{ minHeight: "400px" }}>
+            <div className="h-[80vh] sm:h-[70vh] md:h-[60vh]">
               <ValueSetSelect
                 system={system}
                 placeholder={addPlaceholder}
@@ -206,8 +209,8 @@ export function EntitySelectionDrawer({
               />
             </div>
           )}
-        </DrawerContent>
-      </Drawer>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
