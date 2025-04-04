@@ -117,7 +117,7 @@ export function ConsentSheet({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
                 <Input
                   placeholder={t("search_existing_consent")}
-                  className="pl-10"
+                  className="pl-10 focus-visible:ring-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -223,15 +223,19 @@ function ConsentCard({ consent }: ConsentCardProps) {
         </CardContent>
         <CardFooter className="flex-1 flex flex-col justify-evenly p-4 pt-5 gap-3">
           <div className="flex flex-col justify-between items-start w-full gap-2">
-            <div className="flex justify-between items-start w-full">
+            <div className="flex justify-start items-start w-full space-x-2">
               <div>
-                <h3 className="text-base font-medium">{attachment?.name}</h3>
+                <div className="flex flex-wrap gap-1.5 items-center mb-2">
+                  <Badge variant="outline">
+                    {t(`consent_category__${consent.category}`)}
+                  </Badge>
+                </div>
               </div>
               <div className="flex items-center">
                 {consent.decision === "permit" ? (
                   <Badge className="bg-green-100 text-green-800 hover:bg-green-100 flex gap-1 items-center">
                     <CheckCircle className="h-3.5 w-3.5" />
-                    {t("approved")}
+                    {t("permitted")}
                   </Badge>
                 ) : (
                   <Badge
@@ -257,9 +261,9 @@ function ConsentCard({ consent }: ConsentCardProps) {
 
           <div className="flex justify-between items-start w-full flex-col gap-2">
             <div className="flex flex-wrap gap-1.5 items-center">
-              <Badge variant="outline">
-                {t(`consent_category__${consent.category}`)}
-              </Badge>
+              <h3 className="text-sm sm:text-base font-medium break-all">
+                {attachment?.name}
+              </h3>
               <Badge
                 variant={consent.status === "active" ? "primary" : "secondary"}
                 className="font-normal"
@@ -286,6 +290,15 @@ function ConsentCard({ consent }: ConsentCardProps) {
                 </span>
               </p>
             </div>
+
+            {consent.note && (
+              <div className="mt-1 bg-muted/50 rounded-md text-sm">
+                <p className="font-medium text-xs text-muted-foreground mb-1">
+                  {t("note")}:
+                </p>
+                <p className="text-xs">{consent.note}</p>
+              </div>
+            )}
 
             <Button
               className="w-full sm:hidden"

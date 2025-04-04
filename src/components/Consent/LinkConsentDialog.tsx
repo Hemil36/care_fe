@@ -54,37 +54,37 @@ import {
 import consentApi from "@/types/consent/consentApi";
 import { UserBase } from "@/types/user/user";
 
-const consentFormSchema = () =>
-  z
-    .object({
-      decision: z.enum(CONSENT_DECISIONS).default("permit"),
-      category: z.enum(CONSENT_CATEGORIES).default("treatment"),
-      status: z.enum(CONSENT_STATUSES).default("active"),
-      date: z.date(),
-      period: z.object({
-        start: z.date().optional(),
-        end: z.date().optional(),
-      }),
-      verification_type: z.enum(VERIFICATION_TYPES).default("validation"),
-      source_attachments: z.array(z.instanceof(File)).default([]),
-    })
-    .superRefine((data, ctx) => {
-      if (data.source_attachments.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: t("please_upload_a_file"),
-          path: ["source_attachments"],
-        });
-      }
+const consentFormSchema = z
+  .object({
+    decision: z.enum(CONSENT_DECISIONS).default("permit"),
+    category: z.enum(CONSENT_CATEGORIES).default("treatment"),
+    status: z.enum(CONSENT_STATUSES).default("active"),
+    date: z.date(),
+    period: z.object({
+      start: z.date().optional(),
+      end: z.date().optional(),
+    }),
+    verification_type: z.enum(VERIFICATION_TYPES).default("validation"),
+    source_attachments: z.array(z.instanceof(File)).default([]),
+    note: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.source_attachments.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("please_upload_a_file"),
+        path: ["source_attachments"],
+      });
+    }
 
-      if (data.period.end && data.date > data.period.end) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: t("consent_after_end"),
-          path: ["date"],
-        });
-      }
-    });
+    if (data.period.end && data.date > data.period.end) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("consent_after_end"),
+        path: ["date"],
+      });
+    }
+  });
 
 type ConsentFormValues = z.infer<ReturnType<typeof consentFormSchema>>;
 
@@ -168,6 +168,7 @@ export default function LinkConsentDialog({
       },
       verification_type: "validation",
       source_attachments: [],
+      note: "",
     },
   });
 
@@ -212,6 +213,7 @@ export default function LinkConsentDialog({
           verification_type: values.verification_type,
         },
       ],
+      note: values.note,
     });
   };
 
@@ -401,6 +403,24 @@ export default function LinkConsentDialog({
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="note"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("consent_notes")}</FormLabel>
+                    <FormControl>
+                      <textarea
+                        className="w-full field-sizing-content border border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 rounded-md"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
