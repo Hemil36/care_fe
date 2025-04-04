@@ -10,7 +10,6 @@ import CareIcon from "@/CAREUI/icons/CareIcon";
 import { Button } from "@/components/ui/button";
 import {
   Command,
-  CommandDrawer,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -22,6 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import useBreakpoints from "@/hooks/useBreakpoints";
 
@@ -137,10 +137,17 @@ export default function ValueSetSelect({
   // Mobile render with drawer
   const renderMobileDrawer = (triggerButton: React.ReactNode) => (
     <>
-      {triggerButton}
-      <CommandDrawer open={internalOpen} onOpenChange={setInternalOpen}>
-        {content}
-      </CommandDrawer>
+      <Sheet open={internalOpen} onOpenChange={setInternalOpen}>
+        {triggerButton}
+        <SheetContent
+          side="bottom"
+          className="h-[50vh] px-0 pt-2 pb-0 rounded-t-lg"
+        >
+          <div className="absolute inset-x-0 top-0 h-1.5 w-12 mx-auto rounded-full bg-gray-300 mt-2">
+            <div className="mt-6 h-full">{content}</div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 
@@ -153,50 +160,56 @@ export default function ValueSetSelect({
       system === "system-administration-method")
   ) {
     return renderMobileDrawer(
-      <Button
-        variant="outline"
-        role="combobox"
-        onClick={() => setInternalOpen(true)}
-        className={cn(
-          "w-full justify-between",
-          wrapTextForSmallScreen
-            ? "h-auto md:h-9 whitespace-normal text-left md:truncate"
-            : "truncate",
-          !value?.display && "text-gray-400",
-        )}
-        disabled={disabled}
-      >
-        <span>{value?.display || placeholder}</span>
-        <CaretSortIcon className="ml-2 size-4 shrink-0 opacity-50" />
-      </Button>,
+      <SheetTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          onClick={() => setInternalOpen(true)}
+          className={cn(
+            "w-full justify-between",
+            wrapTextForSmallScreen
+              ? "h-auto md:h-9 whitespace-normal text-left md:truncate"
+              : "truncate",
+            !value?.display && "text-gray-400",
+          )}
+          disabled={disabled}
+        >
+          <span>{value?.display || placeholder}</span>
+          <CaretSortIcon className="ml-2 size-4 shrink-0 opacity-50" />
+        </Button>
+        ,
+      </SheetTrigger>,
     );
   }
 
   if (isMobile && !hideTrigger) {
     return renderMobileDrawer(
-      <Button
-        variant="outline"
-        role="combobox"
-        onClick={() => setInternalOpen(true)}
-        className={cn(
-          "w-full justify-between border border-primary rounded-md p-5",
-          wrapTextForSmallScreen
-            ? "h-auto md:h-9 whitespace-normal text-left md:truncate"
-            : "truncate",
-          !value?.display && "text-gray-400",
-        )}
-        disabled={disabled}
-      >
-        <div className="flex items-center">
-          <CareIcon
-            icon="l-plus"
-            className="mr-2 text-5xl text-primary-700 font-normal"
-          />
-          <span className="text-primary-700 flex items-center font-semibold text-base text-wrap">
-            {value?.display || placeholder}
-          </span>
-        </div>
-      </Button>,
+      <SheetTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          onClick={() => setInternalOpen(true)}
+          className={cn(
+            "w-full justify-between border border-primary rounded-md p-5",
+            wrapTextForSmallScreen
+              ? "h-auto md:h-9 whitespace-normal text-left md:truncate"
+              : "truncate",
+            !value?.display && "text-gray-400",
+          )}
+          disabled={disabled}
+        >
+          <div className="flex items-center">
+            <CareIcon
+              icon="l-plus"
+              className="mr-2 text-5xl text-primary-700 font-normal"
+            />
+            <span className="text-primary-700 flex items-center font-semibold text-base text-wrap">
+              {value?.display || placeholder}
+            </span>
+          </div>
+        </Button>
+        ,
+      </SheetTrigger>,
     );
   }
 
