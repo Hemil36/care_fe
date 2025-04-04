@@ -223,9 +223,9 @@ function ConsentCard({ consent }: ConsentCardProps) {
         </CardContent>
         <CardFooter className="flex-1 flex flex-col justify-evenly p-4 pt-5 gap-3">
           <div className="flex flex-col justify-between items-start w-full gap-2">
-            <div className="flex justify-start items-start w-full space-x-2">
+            <div className="flex justify-start items-center flex-wrap w-full gap-1.5">
               <div>
-                <div className="flex flex-wrap gap-1.5 items-center mb-2">
+                <div className="flex flex-wrap gap-1.5 items-center">
                   <Badge variant="outline">
                     {t(`consent_category__${consent.category}`)}
                   </Badge>
@@ -247,13 +247,12 @@ function ConsentCard({ consent }: ConsentCardProps) {
                   </Badge>
                 )}
               </div>
-            </div>
-
-            <div className="flex items-center gap-1.5 text-xs">
-              <Calendar className="size-3.5 text-muted-foreground" />
-              <p className="font-medium">
-                {formatDateTime(consent.date, "MMMM D, YYYY")}
-              </p>
+              <div className="flex justify-between items-center gap-1.5 text-xs">
+                <Calendar className="size-3.5 text-muted-foreground" />
+                <p className="font-medium">
+                  {formatDateTime(consent.date, "MMMM D, YYYY")}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -290,13 +289,14 @@ function ConsentCard({ consent }: ConsentCardProps) {
                 </span>
               </p>
             </div>
-
             {consent.note && (
-              <div className="mt-1 bg-muted/50 rounded-md text-sm">
+              <div>
                 <p className="font-medium text-xs text-muted-foreground mb-1">
                   {t("note")}:
                 </p>
-                <p className="text-xs">{consent.note}</p>
+                <div className="mt-1 bg-muted/50 text-sm bg-gray-50 px-2">
+                  <p className="text-sm font-normal">{consent.note}</p>
+                </div>
               </div>
             )}
 
