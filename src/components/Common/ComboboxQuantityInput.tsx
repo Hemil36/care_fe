@@ -133,6 +133,7 @@ export function ComboboxQuantityInput({
             e.preventDefault();
             inputRef.current?.focus();
           }}
+          avoidCollisions={true}
         >
           <Command>
             <CommandList>
