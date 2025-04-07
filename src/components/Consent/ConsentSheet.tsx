@@ -226,8 +226,10 @@ function ConsentCard({ consent }: ConsentCardProps) {
             <div className="flex justify-start items-center flex-wrap w-full gap-1.5">
               <div>
                 <div className="flex flex-wrap gap-1.5 items-center">
-                  <Badge variant="outline">
-                    {t(`consent_category__${consent.category}`)}
+                  <Badge variant="outline" className="border border-gray-700">
+                    <h3 className="font-semibold text-sm text-gray-600">
+                      {t(`consent_category__${consent.category}`)}
+                    </h3>
                   </Badge>
                 </div>
               </div>
@@ -260,7 +262,7 @@ function ConsentCard({ consent }: ConsentCardProps) {
 
           <div className="flex justify-between items-start w-full flex-col gap-2">
             <div className="flex flex-wrap gap-1.5 items-center">
-              <h3 className="text-sm sm:text-base font-medium break-all">
+              <h3 className="text-sm font-light break-all">
                 {attachment?.name}
               </h3>
               <Badge
