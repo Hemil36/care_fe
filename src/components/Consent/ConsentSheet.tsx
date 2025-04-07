@@ -235,14 +235,14 @@ function ConsentCard({ consent }: ConsentCardProps) {
               </div>
               <div className="flex items-center">
                 {consent.decision === "permit" ? (
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 flex gap-1 items-center">
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 flex gap-1 items-center py-1">
                     <CheckCircle className="h-3.5 w-3.5" />
                     {t("permitted")}
                   </Badge>
                 ) : (
                   <Badge
                     variant="destructive"
-                    className="flex gap-1 items-center"
+                    className="flex gap-1 items-center py-1"
                   >
                     <XCircle className="h-3.5 w-3.5" />
                     {t("denied")}
