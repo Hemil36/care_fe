@@ -111,7 +111,7 @@ export function ConsentSheet({
           </p>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-8rem)] mt-6">
-          <div className="container">
+          <div className="container px-4">
             <div className="flex justify-between items-center gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
@@ -135,7 +135,7 @@ export function ConsentSheet({
             </div>
 
             {consents && consents.length > 0 ? (
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-6 items-stretch">
+              <div className="mt-4 grid grid-cols-1 gap-6 items-stretch">
                 {consents.map((consent) => (
                   <ConsentCard key={consent.id} consent={consent} />
                 ))}
@@ -235,7 +235,10 @@ function ConsentCard({ consent }: ConsentCardProps) {
               </div>
               <div className="flex items-center">
                 {consent.decision === "permit" ? (
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 flex gap-1 items-center py-1">
+                  <Badge
+                    className="flex gap-1 items-center py-1"
+                    variant={"primary"}
+                  >
                     <CheckCircle className="h-3.5 w-3.5" />
                     {t("permitted")}
                   </Badge>
