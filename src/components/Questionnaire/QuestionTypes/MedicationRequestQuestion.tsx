@@ -520,6 +520,9 @@ export function MedicationRequestQuestion({
                                       {dosageInstruction?.dose_and_rate
                                         ?.dose_quantity &&
                                         `${dosageInstruction.dose_and_rate.dose_quantity.value} ${dosageInstruction.dose_and_rate.dose_quantity.unit?.display || ""}`}
+                                      {dosageInstruction?.dose_and_rate
+                                        ?.dose_range &&
+                                        `(${dosageInstruction.dose_and_rate.dose_range.low?.value || ""} → ${dosageInstruction.dose_and_rate.dose_range.high?.value || ""}) ${dosageInstruction.dose_and_rate.dose_range.high?.unit?.display || ""}`}
                                       {dosageInstruction?.as_needed_boolean
                                         ? ` · ${t("as_needed_prn")}`
                                         : dosageInstruction?.timing?.code
