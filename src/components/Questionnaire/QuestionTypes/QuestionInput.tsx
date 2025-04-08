@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { QuestionLabel } from "@/components/Questionnaire/QuestionLabel";
 import { AppointmentQuestion } from "@/components/Questionnaire/QuestionTypes/AppointmentQuestion";
 
+import useBreakpoints from "@/hooks/useBreakpoints";
+
 import { QuestionValidationError } from "@/types/questionnaire/batch";
 import type {
   QuestionnaireResponse,
@@ -67,6 +69,7 @@ export function QuestionInput({
 }: QuestionInputProps) {
   const { t } = useTranslation();
   const [showNotes, setShowNotes] = useState<Record<string, boolean>>({});
+  const isMobile = useBreakpoints({ default: true, lg: false });
 
   const questionnaireResponse = questionnaireResponses.find(
     (v) => v.question_id === question.id,
@@ -292,8 +295,13 @@ export function QuestionInput({
                 )}
                 <div
                   className={cn("w-full", {
-                    "flex flex-row": !question.structured_type,
-                    "flex-col": question.repeats || question.type === "text",
+                    "flex flex-row":
+                      (question.type === "choice" && !isMobile) ||
+                      !question.structured_type,
+                    "flex-col space-y-1.5":
+                      question.repeats ||
+                      question.type === "text" ||
+                      (question.type === "choice" && isMobile),
                   })}
                 >
                   <div className="flex-1 min-w-0">
@@ -304,7 +312,8 @@ export function QuestionInput({
                     <NoteToggle
                       className={cn("w-min", {
                         "border border-gray-300 rounded-none -ml-2 bg-white": !(
-                          question.type === "text"
+                          question.type === "text" ||
+                          (question.type === "choice" && isMobile)
                         ),
 
                         "mt-2": question.type === "text",
