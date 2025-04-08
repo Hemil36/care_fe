@@ -1,6 +1,6 @@
 import { CaretSortIcon } from "@radix-ui/react-icons";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
@@ -60,6 +60,7 @@ export default function ValueSetSelect({
   const [internalOpen, setInternalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const isMobile = useBreakpoints({ default: true, sm: false });
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const searchQuery = useQuery({
     queryKey: ["valueset", system, "expand", count, search],
@@ -75,14 +76,24 @@ export default function ValueSetSelect({
     }
   }, [controlledOpen, internalOpen]);
 
+  useEffect(() => {
+    if (internalOpen && isMobile) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [internalOpen, isMobile]);
+
   const content = (
-    <Command filter={() => 1}>
+    <Command filter={() => 1} className="rounded-t-3xl">
       {title && (
-        <div className="py-3 px-3 border-b border-gray-200 flex justify-between items-center rounded-t-lg">
+        <div className="py-3 px-3 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-base font-semibold">{title}</h3>
         </div>
       )}
       <CommandInput
+        ref={inputRef}
         placeholder={t("value_set_search_placeholder")}
         className="outline-hidden border-none ring-0 shadow-none"
         onValueChange={setSearch}
@@ -155,7 +166,7 @@ export default function ValueSetSelect({
           side="bottom"
           className="h-[50vh] px-0 pt-2 pb-0 rounded-t-3xl"
         >
-          <div className="absolute inset-x-0 top-0 h-1.5 w-12 mx-auto rounded-t-lg bg-gray-300 mt-2" />
+          <div className="absolute inset-x-0 top-0 h-1.5 w-12 mx-auto bg-gray-300 mt-2" />
           <div className="mt-6 h-full">{content}</div>
         </SheetContent>
       </Sheet>
@@ -191,9 +202,9 @@ export default function ValueSetSelect({
         </SheetTrigger>
         <SheetContent
           side="bottom"
-          className="h-[50vh] px-0 pt-2 pb-0 rounded-t-lg"
+          className="h-[50vh] px-0 pt-2 pb-0 rounded-t-3xl"
         >
-          <div className="absolute inset-x-0 top-0 h-1.5 w-12 mx-auto rounded-t-lg bg-gray-300 mt-2" />
+          <div className="absolute inset-x-0 top-0 h-1.5 w-12 mx-auto bg-gray-300 mt-2" />
           <div className="mt-6 h-full">{content}</div>
         </SheetContent>
       </Sheet>

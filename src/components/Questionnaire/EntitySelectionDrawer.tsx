@@ -160,7 +160,7 @@ export function EntitySelectionDrawer({
       />
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
-          className="px-0 pt-2 pb-0 rounded-t-lg sm:max-w-md sm:mx-auto [&>button:first-child]:hidden"
+          className="px-0 pt-2 pb-0 rounded-t-3xl sm:max-w-md sm:mx-auto [&>button:first-child]:hidden"
           side="bottom"
         >
           {selectedEntity ? (
