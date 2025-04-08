@@ -6,9 +6,9 @@ import {
 } from "@radix-ui/react-icons";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { useQuery } from "@tanstack/react-query";
-import { t } from "i18next";
 import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
@@ -120,6 +120,8 @@ export function AllergyQuestion({
   disabled,
   patientId,
 }: AllergyQuestionProps) {
+  const { t } = useTranslation();
+
   const isPreview = patientId === "preview";
   const allergies =
     (questionnaireResponse.values?.[0]?.value as AllergyIntoleranceRequest[]) ||
@@ -510,6 +512,8 @@ const AllergyTableRow = ({
   onUpdate,
   onRemove,
 }: AllergyItemProps) => {
+  const { t } = useTranslation();
+
   const [showNotes, setShowNotes] = useState(allergy.note !== undefined);
   const desktopLayout = useBreakpoints({ md: true, default: false });
 

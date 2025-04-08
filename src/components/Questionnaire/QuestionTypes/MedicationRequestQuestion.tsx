@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { t } from "i18next";
 import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
@@ -182,6 +183,8 @@ export function MedicationRequestQuestion({
   encounterId,
   errors,
 }: MedicationRequestQuestionProps) {
+  const { t } = useTranslation();
+
   const isPreview = patientId === "preview";
   const medications =
     (questionnaireResponse.values?.[0]?.value as MedicationRequest[]) || [];
@@ -625,6 +628,7 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
   questionId,
   errors,
 }) => {
+  const { t } = useTranslation();
   const [showDosageDialog, setShowDosageDialog] = useState(false);
   const desktopLayout = useBreakpoints({ lg: true, default: false });
   const dosageInstruction = medication.dosage_instruction[0] || {};
