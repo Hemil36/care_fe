@@ -922,6 +922,8 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
             "flex gap-2",
             hasError(MEDICATION_REQUEST_FIELDS.DURATION.key) &&
               "border border-red-500 rounded-md p-1",
+            dosageInstruction?.as_needed_boolean &&
+              "opacity-50 bg-gray-100 rounded-md",
           )}
         >
           {dosageInstruction?.timing && (
@@ -956,7 +958,10 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
                 dosageInstruction?.as_needed_boolean ||
                 isReadOnly
               }
-              className="h-9 text-sm"
+              className={cn(
+                "h-9 text-sm",
+                dosageInstruction?.as_needed_boolean && "cursor-not-allowed",
+              )}
             />
           )}
           <Select
@@ -990,7 +995,13 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
               isReadOnly
             }
           >
-            <SelectTrigger className="h-9 text-sm w-24">
+            <SelectTrigger
+              className={cn(
+                "h-9 text-sm w-full",
+                dosageInstruction?.as_needed_boolean &&
+                  "cursor-not-allowed bg-gray-50",
+              )}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
