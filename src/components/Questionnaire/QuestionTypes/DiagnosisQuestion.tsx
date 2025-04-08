@@ -528,6 +528,10 @@ export function DiagnosisQuestion({
     </div>
   );
 
+  const addDiagnosisPlaceholder = t(
+    sortedDiagnoses.length === 0 ? "add_diagnosis" : "add_another_diagnosis",
+  );
+
   return (
     <div className="space-y-4">
       {sortedDiagnoses.length > 0 && (
@@ -567,14 +571,14 @@ export function DiagnosisQuestion({
           onBack={handleBack}
           onConfirm={handleCategoryConfirm}
           entityDetailsContent={diagnosisDetailsContent}
-          addPlaceholder={t("add_another_diagnosis")}
+          addPlaceholder={addDiagnosisPlaceholder}
         />
       ) : showCategorySelection ? (
         desktopDiagnosisContent
       ) : (
         <ValueSetSelect
           system="system-condition-code"
-          placeholder={t("add_another_diagnosis")}
+          placeholder={addDiagnosisPlaceholder}
           onSelect={handleCodeSelect}
           disabled={disabled}
         />

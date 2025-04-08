@@ -679,6 +679,10 @@ export function SymptomQuestion({
     </div>
   );
 
+  const addSymptomPlaceholder = t(
+    symptoms.length === 0 ? "add_symptom" : "add_another_symptom",
+  );
+
   return (
     <div className="space-y-2">
       {symptoms.length > 0 && (
@@ -717,12 +721,12 @@ export function SymptomQuestion({
           onBack={handleBack}
           onConfirm={handleConfirmSymptom}
           entityDetailsContent={symptomDetailsContent}
-          addPlaceholder={t("add_another_symptom")}
+          addPlaceholder={addSymptomPlaceholder}
         />
       ) : (
         <ValueSetSelect
           system="system-condition-code"
-          placeholder={t("add_another_symptom")}
+          placeholder={addSymptomPlaceholder}
           onSelect={handleCodeSelect}
           disabled={disabled}
         />

@@ -269,6 +269,10 @@ export function AllergyQuestion({
     </div>
   );
 
+  const addAllergyPlaceholder = t(
+    allergies.length === 0 ? "add_allergy" : "add_another_allergy",
+  );
+
   return (
     <>
       {allergies.length > 0 && (
@@ -479,12 +483,12 @@ export function AllergyQuestion({
           onBack={handleBack}
           onConfirm={handleConfirmAllergy}
           entityDetailsContent={allergyDetailsContent}
-          addPlaceholder={t("add_another_allergy")}
+          addPlaceholder={addAllergyPlaceholder}
         />
       ) : (
         <ValueSetSelect
           system="system-allergy-code"
-          placeholder={t("add_another_allergy")}
+          placeholder={addAllergyPlaceholder}
           onSelect={handleAddAllergy}
           disabled={disabled}
         />

@@ -294,6 +294,10 @@ export function MedicationStatementQuestion({
     </div>
   );
 
+  const addMedicationPlaceholder = t(
+    medications.length === 0 ? "add_medication" : "add_another_medication",
+  );
+
   return (
     <div className="space-y-4">
       <AlertDialog
@@ -518,13 +522,13 @@ export function MedicationStatementQuestion({
           onBack={handleBack}
           onConfirm={handleConfirmMedication}
           entityDetailsContent={medicationDetailsContent}
-          addPlaceholder={t("add_another_medication")}
+          addPlaceholder={addMedicationPlaceholder}
         />
       ) : (
         <div className="max-w-4xl">
           <ValueSetSelect
             system="system-medication"
-            placeholder={t("add_another_medication")}
+            placeholder={addMedicationPlaceholder}
             onSelect={handleAddMedication}
             disabled={disabled}
             searchPostFix=" clinical drug"

@@ -295,6 +295,7 @@
   "active_location_cannot_be_in_future": "Active location cannot be in the future",
   "active_prescriptions": "Active Prescriptions",
   "add": "Add",
+  "add_allergy": "Add Allergy",
   "add_another": "Add Another",
   "add_another_allergy": "Add another Allergy",
   "add_another_diagnosis": "Add another Diagnosis",
