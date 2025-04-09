@@ -1,5 +1,5 @@
-import { t } from "i18next";
 import { Building, Tags, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
@@ -50,6 +50,8 @@ interface QuestionnairePropertiesProps {
     setSearchQuery: (query: string) => void;
     available?: OrganizationResponse;
     isLoading?: boolean;
+    error: string | undefined;
+    setError: (error?: string) => void;
   };
   tags?: QuestionnaireTagModel[];
   tagSelection: {
@@ -70,6 +72,8 @@ function StatusSelector({
   value: QuestionStatus;
   onChange: (value: QuestionStatus) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-2 w-fit">
       <Label htmlFor="status">{t("status")}</Label>
@@ -108,6 +112,8 @@ function SubjectTypeSelector({
   value: SubjectType;
   onChange: (value: SubjectType) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-2">
       <Label htmlFor="subject_type">{t("subject_type")}</Label>
@@ -154,6 +160,8 @@ function OrganizationSelector({
   organizations?: OrganizationResponse;
   selection: QuestionnairePropertiesProps["organizationSelection"];
 }) {
+  const { t } = useTranslation();
+
   if (id) {
     return (
       <>
@@ -169,9 +177,7 @@ function OrganizationSelector({
             </Badge>
           ))}
           {(!organizations?.results || organizations.results.length === 0) && (
-            <p className="text-sm text-gray-500">
-              {t("no_organizations_selected")}
-            </p>
+            <p className="text-sm text-red-500">{selection.error}</p>
           )}
         </div>
         <ManageQuestionnaireOrganizationsSheet
@@ -214,7 +220,9 @@ function OrganizationSelector({
           </p>
         )}
       </div>
-
+      {selection.error && (
+        <p className="text-sm text-red-500">{selection.error}</p>
+      )}
       <Autocomplete
         options={(selection.available?.results ?? []).map((org) => ({
           label: org.name,
@@ -222,7 +230,10 @@ function OrganizationSelector({
           description: org.description,
         }))}
         value=""
-        onChange={selection.onToggle}
+        onChange={(value) => {
+          selection.onToggle(value);
+          if (selection.error) selection.setError(undefined);
+        }}
         onSearch={selection.setSearchQuery}
         placeholder={t("select_organizations")}
         isLoading={selection.isLoading}
@@ -241,6 +252,8 @@ function TagSelector({
   selection: QuestionnairePropertiesProps["tagSelection"];
   questionnaire: QuestionnaireDetail;
 }) {
+  const { t } = useTranslation();
+
   if (id) {
     return (
       <>
@@ -336,6 +349,8 @@ export function QuestionnaireProperties({
   organizationSelection,
   tagSelection,
 }: QuestionnairePropertiesProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="border-none bg-transparent shadow-none space-y-4 mt-2 ml-2">
       <CardHeader className="p-0">

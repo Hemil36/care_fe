@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { t } from "i18next";
 import { useNavigationPrompt } from "raviger";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -86,6 +86,8 @@ function ValidationErrorDisplay({
   questionnaireForms,
   serverErrors,
 }: ValidationErrorDisplayProps) {
+  const { t } = useTranslation();
+
   const hasErrors =
     questionnaireForms.some((form) => form.errors.length > 0) ||
     (serverErrors?.length ?? 0) > 0;
@@ -321,6 +323,8 @@ export function QuestionnaireForm({
   onCancel,
   facilityId,
 }: QuestionnaireFormProps) {
+  const { t } = useTranslation();
+
   const [isDirty, setIsDirty] = useState(false);
   const [questionnaireForms, setQuestionnaireForms] = useState<
     QuestionnaireFormState[]
@@ -666,11 +670,13 @@ export function QuestionnaireForm({
 
     // Then, add questionnaire submission requests
     formsWithValidation.forEach((form) => {
-      const nonStructuredResponses = form.responses.filter(
-        (response) => !response.structured_type,
+      const validResponses = form.responses.filter(
+        (response) =>
+          !response.structured_type &&
+          response.values.length > 0 &&
+          response.values?.[0]?.value !== "",
       );
-
-      if (nonStructuredResponses.length > 0) {
+      if (validResponses.length > 0) {
         requests.push({
           url: `/api/v1/questionnaire/${form.questionnaire.slug}/submit/`,
           method: "POST",
@@ -679,41 +685,35 @@ export function QuestionnaireForm({
             resource_id: encounterId ? encounterId : patientId,
             encounter: encounterId,
             patient: patientId,
-            results: nonStructuredResponses
-              .filter(
-                (response) =>
-                  response.values.length > 0 && !response.structured_type,
-              )
-              .map((response) => ({
-                question_id: response.question_id,
-                values: response.values.map((value) => {
-                  if (value.type === "dateTime" && value.value) {
-                    return {
-                      ...value,
-                      value: value.value.toISOString(),
-                    };
-                  }
-                  if (value.unit) {
-                    return {
-                      value: value.value?.toString(),
-                      unit: value.unit,
-                      coding: value.coding,
-                    };
-                  }
-                  if (value.coding) {
-                    return { coding: value.coding };
-                  }
-                  return { value: String(value.value) };
-                }),
-                note: response.note,
-                body_site: response.body_site,
-                method: response.method,
-              })),
+            results: validResponses.map((response) => ({
+              question_id: response.question_id,
+              values: response.values.map((value) => {
+                if (value.type === "dateTime" && value.value) {
+                  return {
+                    ...value,
+                    value: value.value.toISOString(),
+                  };
+                }
+                if (value.unit) {
+                  return {
+                    value: value.value?.toString(),
+                    unit: value.unit,
+                    coding: value.coding,
+                  };
+                }
+                if (value.coding) {
+                  return { coding: value.coding };
+                }
+                return { value: String(value.value) };
+              }),
+              note: response.note,
+              body_site: response.body_site,
+              method: response.method,
+            })),
           },
         });
       }
     });
-
     submitBatch({ requests });
   };
 
@@ -783,10 +783,10 @@ export function QuestionnaireForm({
         {questionnaireForms.map((form, index) => (
           <div
             key={`${form.questionnaire.id}-${index}`}
-            className="rounded-lg py-6 px-4 space-y-6"
+            className="rounded-lg py-6 space-y-6"
             data-questionnaire-id={form.questionnaire.id}
           >
-            <div className="flex justify-between items-center max-w-4xl">
+            <div className="flex justify-between items-center max-w-4xl p-2">
               <div className="space-y-1">
                 <h2 className="text-xl font-semibold">
                   {form.questionnaire.title}
