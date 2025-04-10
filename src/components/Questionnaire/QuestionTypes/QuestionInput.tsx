@@ -263,7 +263,7 @@ export function QuestionInput({
       showNotes[questionnaireResponse.question_id] || false;
 
     return (
-      <div className="bg-gray-100 md:bg-transparent px-2 py-3">
+      <div className="bg-gray-100 md:bg-transparent px-2 py-1.5">
         {values.map((value, index) => {
           const removeButton = question.repeats &&
             questionnaireResponse.values.length > 1 && (
