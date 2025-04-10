@@ -132,9 +132,6 @@ const AllergyTableRow = ({
   const [showNotes, setShowNotes] = useState(allergy.note !== undefined);
   const desktopLayout = useBreakpoints({ md: true, default: false });
 
-  const isInactive =
-    allergy.verification_status === "entered_in_error" || disabled;
-
   const isResolved = allergy.clinical_status === "resolved";
 
   const rowClassName = cn("group", {
@@ -160,7 +157,7 @@ const AllergyTableRow = ({
       onValueChange={(value: AllergyCategory) =>
         onUpdate?.({ category: value })
       }
-      disabled={isInactive || !!allergy.id}
+      disabled={disabled || !!allergy.id}
     >
       <SelectTrigger
         className={
@@ -200,7 +197,7 @@ const AllergyTableRow = ({
     <Select
       value={allergy.criticality}
       onValueChange={(value) => onUpdate?.({ criticality: value })}
-      disabled={isInactive}
+      disabled={disabled}
     >
       <SelectTrigger
         className={
@@ -233,7 +230,7 @@ const AllergyTableRow = ({
           });
         }
       }}
-      disabled={isInactive}
+      disabled={disabled}
     >
       <SelectTrigger
         className={
@@ -266,7 +263,7 @@ const AllergyTableRow = ({
           last_occurrence: dateQueryString(date),
         })
       }
-      disabled={isInactive}
+      disabled={disabled}
       buttonClassName={
         desktopLayout
           ? "h-7 text-sm px-2 justify-start font-normal w-full"
@@ -288,7 +285,7 @@ const AllergyTableRow = ({
               clinical_status: "active",
             })
           }
-          disabled={isInactive}
+          disabled={disabled}
         >
           <CheckCircledIcon className="size-4 mr-2" />
           {t("mark_active")}
@@ -303,7 +300,7 @@ const AllergyTableRow = ({
               clinical_status: "inactive",
             })
           }
-          disabled={isInactive}
+          disabled={disabled}
         >
           <CircleBackslashIcon className="size-4 mr-2" />
           {t("mark_inactive")}
@@ -318,7 +315,7 @@ const AllergyTableRow = ({
               clinical_status: "resolved",
             })
           }
-          disabled={isInactive}
+          disabled={disabled}
         >
           <CheckCircledIcon className="size-4 mr-2 text-green-600" />
           {t("mark_resolved")}
@@ -384,7 +381,7 @@ const AllergyTableRow = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  disabled={isInactive}
+                  disabled={disabled}
                   className="size-8"
                 >
                   <DotsVerticalIcon className="size-4" />
@@ -403,7 +400,7 @@ const AllergyTableRow = ({
                         clinical_status: "active",
                       })
                     }
-                    disabled={isInactive}
+                    disabled={disabled}
                   >
                     <CheckCircledIcon className="size-4 mr-2" />
                     {t("mark_active")}
@@ -416,7 +413,7 @@ const AllergyTableRow = ({
                         clinical_status: "inactive",
                       })
                     }
-                    disabled={isInactive}
+                    disabled={disabled}
                   >
                     <CircleBackslashIcon className="size-4 mr-2" />
                     {t("mark_inactive")}
@@ -429,7 +426,7 @@ const AllergyTableRow = ({
                         clinical_status: "resolved",
                       })
                     }
-                    disabled={isInactive}
+                    disabled={disabled}
                   >
                     <CheckCircledIcon className="size-4 mr-2 text-green-600" />
                     {t("mark_resolved")}
@@ -629,7 +626,7 @@ export function AllergyQuestion({
   return (
     <>
       {allergies.length > 0 && (
-        <div className="rounded-lg lg:border lg:border-gray-200">
+        <div className="rounded-lg lg:border lg:border-gray-200 mb-2">
           <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
@@ -681,6 +678,10 @@ export function AllergyQuestion({
                     "border border-primary-500 bg-gray-50":
                       expandedAllergyIndex === index,
                     "border-0 shadow-none": expandedAllergyIndex !== index,
+                    "opacity-40":
+                      allergy.verification_status === "entered_in_error",
+                    "opacity-60": allergy.clinical_status === "inactive",
+                    "line-through": allergy.clinical_status === "resolved",
                   })}
                 >
                   <CollapsibleTrigger asChild>
@@ -690,10 +691,6 @@ export function AllergyQuestion({
                         {
                           "bg-gray-200 border border-gray-300":
                             expandedAllergyIndex !== index,
-                          "opacity-60":
-                            allergy.verification_status ===
-                              "entered_in_error" ||
-                            allergy.clinical_status === "inactive",
                         },
                       )}
                     >
@@ -808,7 +805,13 @@ export function AllergyQuestion({
                     </CardHeader>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <CardContent className="p-3 pt-2 space-y-3 rounded-lg bg-gray-50">
+                    <CardContent
+                      className={cn(
+                        "p-3 pt-2 space-y-3 rounded-lg bg-gray-50",
+                        allergy.verification_status === "entered_in_error" &&
+                          "pointer-events-none",
+                      )}
+                    >
                       <AllergyTableRow
                         allergy={allergy}
                         disabled={disabled}
