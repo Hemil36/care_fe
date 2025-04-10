@@ -135,20 +135,14 @@ const AllergyTableRow = ({
   const isInactive =
     allergy.verification_status === "entered_in_error" || disabled;
 
-  const notesDisabled = disabled;
-
   const isResolved = allergy.clinical_status === "resolved";
-  const isInactiveStatus = allergy.clinical_status === "inactive";
 
-  const rowClassName = `group ${
-    allergy.verification_status === "entered_in_error"
-      ? "opacity-40 pointer-events-none"
-      : isInactiveStatus
-        ? "opacity-60"
-        : isResolved
-          ? "[&_*]:line-through"
-          : ""
-  }`;
+  const rowClassName = cn("group", {
+    "opacity-40 pointer-events-none":
+      allergy.verification_status === "entered_in_error",
+    "opacity-60": allergy.clinical_status === "inactive",
+    "[&_*]:line-through": isResolved,
+  });
 
   const handleNotesToggle = () => {
     if (showNotes) {
@@ -217,7 +211,7 @@ const AllergyTableRow = ({
               })
         }
       >
-        <SelectValue placeholder={desktopLayout ? t("critical") : "Critical"} />
+        <SelectValue placeholder={t("critical")} />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="low">{t("low")}</SelectItem>
@@ -250,7 +244,7 @@ const AllergyTableRow = ({
               })
         }
       >
-        <SelectValue placeholder={desktopLayout ? t("verify") : "Verify"} />
+        <SelectValue placeholder={t("verify")} />
       </SelectTrigger>
       <SelectContent>
         {Object.entries(ALLERGY_VERIFICATION_STATUS).map(([value, label]) => (
@@ -339,7 +333,7 @@ const AllergyTableRow = ({
       placeholder={t("add_notes_about_the_allergy")}
       value={allergy.note ?? ""}
       onChange={(e) => onUpdate?.({ note: e.target.value })}
-      disabled={notesDisabled}
+      disabled={disabled}
       className={cn(desktopLayout ? "mt-0.5" : "mt-1", {
         "line-through": isResolved,
       })}
