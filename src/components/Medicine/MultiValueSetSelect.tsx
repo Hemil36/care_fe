@@ -149,12 +149,9 @@ export function MultiValueSetSelect({
     return (
       <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger asChild>{triggerButton}</SheetTrigger>
-        <SheetContent
-          side="bottom"
-          className="h-[50vh] px-0 pt-2 pb-0 rounded-t-3xl"
-        >
+        <SheetContent side="bottom" className="px-0 pt-2 pb-0 rounded-t-3xl">
           <div className="absolute inset-x-0 top-0 h-1.5 w-12 mx-auto bg-gray-300 mt-2" />
-          <div className="mt-6 h-full p-4">{content}</div>
+          <div className="mt-6 h-full">{content}</div>
         </SheetContent>
       </Sheet>
     );
