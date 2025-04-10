@@ -210,19 +210,8 @@ export default function ValueSetSelect({
 
   const content = (
     <Command filter={() => 1} className="rounded-t-3xl">
-      {title && (
-        <div className="py-3 px-3 border-b border-gray-200 flex justify-between items-center">
-          <h3 className="text-base font-semibold">{title}</h3>
-        </div>
-      )}
-      <CommandInput
-        ref={inputRef}
-        placeholder={t("value_set_search_placeholder")}
-        className="outline-hidden border-none ring-0 shadow-none"
-        onValueChange={setSearch}
-        autoFocus
-      />
-      <CommandList className="h-75 overflow-hidden">
+      <div className="py-3 px-3 border-b border-gray-200 flex justify-between items-center">
+        {title && <h3 className="text-base font-semibold">{title}</h3>}
         <Tabs
           value={activeTab.toString()}
           onValueChange={(value) => {
@@ -235,6 +224,15 @@ export default function ValueSetSelect({
             <TabsTrigger value={"1"}>{t("starred")}</TabsTrigger>
           </TabsList>
         </Tabs>
+      </div>
+      <CommandInput
+        ref={inputRef}
+        placeholder={t("value_set_search_placeholder")}
+        className="outline-hidden border-none ring-0 shadow-none"
+        onValueChange={setSearch}
+        autoFocus
+      />
+      <CommandList className="h-75 overflow-hidden">
         <CommandEmpty>
           {search.length < 3 ? (
             <p className="p-4 text-sm text-gray-500">
