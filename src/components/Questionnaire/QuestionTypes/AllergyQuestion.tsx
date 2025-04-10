@@ -1,10 +1,10 @@
 import {
   CheckCircledIcon,
   CircleBackslashIcon,
+  DotsVerticalIcon,
   MinusCircledIcon,
   Pencil2Icon,
 } from "@radix-ui/react-icons";
-import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -132,8 +132,6 @@ const AllergyTableRow = ({
   const [showNotes, setShowNotes] = useState(allergy.note !== undefined);
   const desktopLayout = useBreakpoints({ md: true, default: false });
 
-  const isResolved = allergy.clinical_status === "resolved";
-
   const categorySelect = (
     <Select
       value={allergy.category}
@@ -145,8 +143,8 @@ const AllergyTableRow = ({
       <SelectTrigger
         className={
           desktopLayout
-            ? "h-7 w-[2rem] px-0 [&>svg]:hidden flex items-center justify-center"
-            : "h-8 w-full"
+            ? "h-8 w-[2rem] px-0 [&>svg]:hidden flex items-center justify-center"
+            : "h-9 w-full"
         }
       >
         <SelectValue
@@ -182,13 +180,7 @@ const AllergyTableRow = ({
       disabled={disabled}
     >
       <SelectTrigger
-        className={
-          desktopLayout
-            ? "h-7 w-full px-1 text-sm"
-            : cn("h-8 mt-1", {
-                "line-through": isResolved,
-              })
-        }
+        className={desktopLayout ? "h-8 w-full px-1 text-sm" : "h-9 mt-1"}
       >
         <SelectValue placeholder={t("critical")} />
       </SelectTrigger>
@@ -213,13 +205,7 @@ const AllergyTableRow = ({
       disabled={disabled}
     >
       <SelectTrigger
-        className={
-          desktopLayout
-            ? "h-7 w-full px-1 text-sm"
-            : cn("h-8 mt-1", {
-                "line-through": isResolved,
-              })
-        }
+        className={desktopLayout ? "h-8 w-full px-1 text-sm" : "h-9 mt-1"}
       >
         <SelectValue placeholder={t("verify")} />
       </SelectTrigger>
@@ -246,10 +232,8 @@ const AllergyTableRow = ({
       disabled={disabled}
       buttonClassName={
         desktopLayout
-          ? "h-7 text-sm px-2 justify-start font-normal w-full"
-          : cn("h-7 text-sm px-2 justify-start font-normal w-full", {
-              "line-through": isResolved,
-            })
+          ? "h-8 text-sm px-2 justify-start font-normal w-full"
+          : "h-9 mt-1"
       }
     />
   );
@@ -311,9 +295,7 @@ const AllergyTableRow = ({
       value={allergy.note ?? ""}
       onChange={(e) => onUpdate?.({ note: e.target.value })}
       disabled={disabled}
-      className={cn(desktopLayout ? "mt-0.5" : "mt-1", {
-        "line-through": isResolved,
-      })}
+      className={cn(desktopLayout ? "mt-0.5" : "mt-1")}
     />
   );
 
@@ -352,7 +334,7 @@ const AllergyTableRow = ({
             "opacity-40 pointer-events-none":
               allergy.verification_status === "entered_in_error",
             "opacity-60": allergy.clinical_status === "inactive",
-            "[&_*]:line-through": isResolved,
+            "[&_*]:line-through": allergy.clinical_status === "resolved",
           })}
         >
           <TableCell className="py-1 pr-0">{categorySelect}</TableCell>
