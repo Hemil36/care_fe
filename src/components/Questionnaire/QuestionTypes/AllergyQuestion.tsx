@@ -134,21 +134,6 @@ const AllergyTableRow = ({
 
   const isResolved = allergy.clinical_status === "resolved";
 
-  const rowClassName = cn("group", {
-    "opacity-40 pointer-events-none":
-      allergy.verification_status === "entered_in_error",
-    "opacity-60": allergy.clinical_status === "inactive",
-    "[&_*]:line-through": isResolved,
-  });
-
-  const handleNotesToggle = () => {
-    if (showNotes) {
-      setShowNotes(false);
-    } else {
-      setShowNotes(true);
-    }
-  };
-
   const categorySelect = (
     <Select
       value={allergy.category}
@@ -365,7 +350,14 @@ const AllergyTableRow = ({
   if (desktopLayout) {
     return (
       <>
-        <TableRow className={rowClassName}>
+        <TableRow
+          className={cn({
+            "opacity-40 pointer-events-none":
+              allergy.verification_status === "entered_in_error",
+            "opacity-60": allergy.clinical_status === "inactive",
+            "[&_*]:line-through": isResolved,
+          })}
+        >
           <TableCell className="py-1 pr-0">{categorySelect}</TableCell>
           <TableCell className="font-medium py-1 pl-1">
             {allergy.code.display}
@@ -386,7 +378,7 @@ const AllergyTableRow = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleNotesToggle}>
+                <DropdownMenuItem onClick={() => setShowNotes((n) => !n)}>
                   <Pencil2Icon className="size-4 mr-2" />
                   {showNotes
                     ? t("hide_notes")
