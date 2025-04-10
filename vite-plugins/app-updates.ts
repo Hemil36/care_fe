@@ -3,7 +3,9 @@ import { writeFile } from "fs/promises";
 import path from "path";
 import { Plugin } from "vite";
 
-async function generateBuildMeta(extraProperties?: Record<string, unknown>) {
+type Extras = Record<string, unknown>;
+
+async function generateBuildMeta(extraProperties?: Extras) {
   const meta: Record<string, unknown> = {
     version: process.env.npm_package_version,
     builtOn: new Date().getTime(),
@@ -22,18 +24,10 @@ async function generateBuildMeta(extraProperties?: Record<string, unknown>) {
   console.info(`v${meta.version} build: ${meta.build}`);
 }
 
-export function appUpdates({
-  extraProperties,
-}: {
-  extraProperties?: Record<string, unknown>;
-} = {}): Plugin {
+export function appUpdates({ extras }: { extras?: Extras } = {}): Plugin {
   return {
     name: "app-updates",
-    configureServer: async () => {
-      await generateBuildMeta(extraProperties);
-    },
-    buildEnd: async () => {
-      await generateBuildMeta(extraProperties);
-    },
+    configureServer: () => generateBuildMeta(extras),
+    buildEnd: () => generateBuildMeta(extras),
   };
 }
