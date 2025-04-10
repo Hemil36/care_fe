@@ -274,7 +274,11 @@ export default defineConfig(({ mode }) => {
           ],
         },
       }),
-      appUpdates(),
+      appUpdates({
+        extras: {
+          enabledApps: env.REACT_ENABLED_APPS,
+        },
+      }),
     ],
     resolve: {
       alias: {
