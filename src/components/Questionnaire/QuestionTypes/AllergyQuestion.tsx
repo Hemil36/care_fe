@@ -157,8 +157,7 @@ const AllergyTableRow = ({
               : ""
           }
         >
-          {allergy.category &&
-            CATEGORY_ICONS[allergy.category as AllergyCategory]}
+          {allergy.category && CATEGORY_ICONS[allergy.category]}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -207,11 +206,9 @@ const AllergyTableRow = ({
     <Select
       value={allergy.verification_status}
       onValueChange={(value) => {
-        if (value in ALLERGY_VERIFICATION_STATUS) {
-          onUpdate?.({
-            verification_status: value as AllergyVerificationStatus,
-          });
-        }
+        onUpdate?.({
+          verification_status: value as AllergyVerificationStatus,
+        });
       }}
       disabled={disabled}
     >
@@ -718,30 +715,27 @@ export function AllergyQuestion({
                               >
                                 <SelectValue>
                                   {allergy.category &&
-                                    CATEGORY_ICONS[
-                                      allergy.category as AllergyCategory
-                                    ]}
+                                    CATEGORY_ICONS[allergy.category]}
                                 </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
-                                {Object.entries(ALLERGY_CATEGORIES).map(
-                                  ([value, label]) => (
-                                    <SelectItem
-                                      key={value}
-                                      value={value}
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        {
-                                          CATEGORY_ICONS[
-                                            value as AllergyCategory
-                                          ]
-                                        }
-                                        <span>{label}</span>
-                                      </div>
-                                    </SelectItem>
-                                  ),
-                                )}
+                                {(
+                                  Object.entries(ALLERGY_CATEGORIES) as [
+                                    AllergyCategory,
+                                    string,
+                                  ][]
+                                ).map(([value, label]) => (
+                                  <SelectItem
+                                    key={value}
+                                    value={value}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      {CATEGORY_ICONS[value]}
+                                      <span>{label}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             {expandedAllergyIndex === index && (
