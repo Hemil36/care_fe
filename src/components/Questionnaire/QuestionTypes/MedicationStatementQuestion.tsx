@@ -327,7 +327,7 @@ export function MedicationStatementQuestion({
       </AlertDialog>
 
       {medications.length > 0 && (
-        <div className="md:overflow-x-auto w-auto pb-2">
+        <div className="md:overflow-x-auto w-auto">
           <div className="min-w-fit">
             <div
               className={cn(

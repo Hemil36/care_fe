@@ -708,7 +708,7 @@ export function SymptomQuestion({
   );
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       {symptoms.length > 0 && (
         <>
           {/* Desktop View - Table */}
