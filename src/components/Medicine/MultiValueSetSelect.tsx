@@ -121,7 +121,7 @@ export function MultiValueSetSelect({
           </TabsTrigger>
         ))}
       </TabsList>
-      <div className="w-full flex-1">
+      <div className="w-full">
         <ValueSetSelect
           system={options[activeTab].system}
           value={options[activeTab].value}
@@ -151,10 +151,10 @@ export function MultiValueSetSelect({
         <SheetTrigger asChild>{triggerButton}</SheetTrigger>
         <SheetContent
           side="bottom"
-          className="h-[80vh] px-0 pt-2 pb-0 rounded-t-3xl"
+          className="h-[50vh] px-0 pt-2 pb-0 rounded-t-3xl"
         >
           <div className="absolute inset-x-0 top-0 h-1.5 w-12 mx-auto bg-gray-300 mt-2" />
-          <div className="mt-6 h-full p-4 flex flex-col">{content}</div>
+          <div className="mt-6 h-full p-4">{content}</div>
         </SheetContent>
       </Sheet>
     );
