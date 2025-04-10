@@ -907,7 +907,7 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
           >
             <SelectValue placeholder={t("select_frequency")} />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-[40vh] sm:max-h-[350px] overflow-y-auto">
             <SelectItem value="PRN">{t("as_needed_prn")}</SelectItem>
             {Object.entries(MEDICATION_REQUEST_TIMING_OPTIONS).map(
               ([key, option]) => (
