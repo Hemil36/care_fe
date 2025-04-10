@@ -662,6 +662,7 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
           <Label className="mb-1.5">{t("start_dose")}</Label>
           <ComboboxQuantityInput
             quantity={localDoseRange.low}
+            key={`range-low-${medication.id || index}`}
             onChange={(value) => {
               setLocalDoseRange((prev) => ({
                 ...prev,
@@ -673,12 +674,14 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
               }));
             }}
             disabled={disabled || isReadOnly}
+            isMobile={!desktopLayout}
           />
         </div>
         <div>
           <Label className="mb-1.5">{t("end_dose")}</Label>
           <ComboboxQuantityInput
             quantity={localDoseRange.high}
+            key={`range-high-${medication.id || index}`}
             onChange={(value) => {
               setLocalDoseRange((prev) => ({
                 ...prev,
@@ -690,6 +693,7 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
               }));
             }}
             disabled={disabled || !localDoseRange.low.value || isReadOnly}
+            isMobile={!desktopLayout}
           />
         </div>
         <div className="flex justify-end gap-2">
@@ -799,6 +803,7 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
               >
                 <ComboboxQuantityInput
                   data-cy="dosage-input"
+                  key={`dosage-${medication.id || index}`}
                   quantity={dosageInstruction?.dose_and_rate?.dose_quantity}
                   onChange={(value) => {
                     if (!value.value || !value.unit) return;
@@ -814,6 +819,7 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
                     });
                   }}
                   disabled={disabled || isReadOnly}
+                  isMobile={!desktopLayout}
                 />
               </div>
               <div className="flex justify-end">
