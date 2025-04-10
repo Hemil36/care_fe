@@ -15,7 +15,8 @@ import { VitePWA } from "vite-plugin-pwa";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import { z } from "zod";
 
-import { treeShakeCareIcons } from "./plugins/treeShakeCareIcons";
+import { appUpdates } from "./vite-plugins/app-updates";
+import { treeShakeCareIcons } from "./vite-plugins/tree-shake-care-icons";
 
 const pdfWorkerPath = path.join(
   path.dirname(
@@ -273,6 +274,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
       }),
+      appUpdates(),
     ],
     resolve: {
       alias: {

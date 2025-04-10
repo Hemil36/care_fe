@@ -31,6 +31,6 @@
     "care.config.ts",
     "scripts/**/*.ts",
     "cypress.config.ts",
-    "plugins/**/*.ts"
+    "vite-plugins/**/*.ts"
   ]
 }
