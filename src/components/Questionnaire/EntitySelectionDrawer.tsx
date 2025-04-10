@@ -160,11 +160,11 @@ export function EntitySelectionDrawer({
       />
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
-          className="px-0 pt-2 pb-0 rounded-t-3xl sm:max-w-md sm:mx-auto [&>button:first-child]:hidden"
+          className="px-0 pt-2 pb-0 rounded-t-3xl sm:max-w-md sm:mx-auto [&>button:first-child]:hidden h-auto min-h-[50vh] max-h-[80vh] sm:max-h-[70vh]"
           side="bottom"
         >
           {selectedEntity ? (
-            <div className="flex flex-col h-auto min-h-[50vh] max-h-[80vh] sm:max-h-[70vh] md:max-h-[60vh]">
+            <div className="flex flex-col h-full">
               <div className="flex justify-between w-full p-2">
                 <Button
                   variant="link"
@@ -191,16 +191,18 @@ export function EntitySelectionDrawer({
               </div>
             </div>
           ) : (
-            <ValueSetSelect
-              system={system}
-              placeholder={addPlaceholder}
-              onSelect={onSelect}
-              disabled={disabled}
-              hideTrigger={true}
-              controlledOpen={true}
-              searchPostFix={searchPostFix}
-              title={t(`select_${entityType}`)}
-            />
+            <div className="h-full overflow-hidden">
+              <ValueSetSelect
+                system={system}
+                placeholder={addPlaceholder}
+                onSelect={onSelect}
+                disabled={disabled}
+                hideTrigger={true}
+                controlledOpen={true}
+                searchPostFix={searchPostFix}
+                title={t(`select_${entityType}`)}
+              />
+            </div>
           )}
         </SheetContent>
       </Sheet>
