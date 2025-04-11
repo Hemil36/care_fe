@@ -44,7 +44,7 @@ export function NoteToggle({
         className="h-full w-28 text-sm font-normal text-gray-700 hover:text-gray-900 gap-1 bg-gray-50 rounded-none"
       >
         {hasNotes ? (
-          <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+          <div className="size-1.5 rounded-full bg-orange-400" />
         ) : (
           <CareIcon icon="l-plus" className="size-4 text-gray-700" />
         )}
