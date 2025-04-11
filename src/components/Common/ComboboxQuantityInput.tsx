@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,7 @@ export function ComboboxQuantityInput({
   autoFocus,
   isMobile = false,
 }: Props) {
+  const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState(
     quantity?.value?.toString() || "",
@@ -145,7 +147,6 @@ export function ComboboxQuantityInput({
             disabled={disabled}
             autoFocus={autoFocus}
             onFocus={() => {
-              // Show units when input is focused, regardless of whether a unit is selected
               if (!disabled) {
                 setShowMobileUnits(true);
               }
@@ -158,7 +159,13 @@ export function ComboboxQuantityInput({
               className="absolute right-1.5 top-1/2 -translate-y-1/2 text-sm text-gray-500 focus:outline-none flex items-center gap-0.5"
               disabled={disabled}
             >
-              <span>{selectedUnit.display}</span>
+              <span>
+                {selectedUnit.display
+                  ? t(selectedUnit.display, {
+                      count: parseInt(inputValue, 10) || 1,
+                    })
+                  : ""}
+              </span>
               <CareIcon icon="l-angle-down" className="ml-0.5" />
             </button>
           )}
@@ -179,7 +186,13 @@ export function ComboboxQuantityInput({
                     )}
                     onClick={() => selectUnit(unit)}
                   >
-                    <span className="flex-1 text-left">{unit.display}</span>
+                    <span className="flex-1 text-left">
+                      {unit.display
+                        ? t(unit.display, {
+                            count: parseInt(inputValue, 10) || 1,
+                          })
+                        : ""}
+                    </span>
                     {selectedUnit?.code === unit.code && (
                       <Check className="size-4" />
                     )}
@@ -214,7 +227,11 @@ export function ComboboxQuantityInput({
             />
             {selectedUnit && (
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                {selectedUnit.display}
+                {selectedUnit.display
+                  ? t(selectedUnit.display, {
+                      count: parseInt(inputValue, 10) || 1,
+                    })
+                  : ""}
               </div>
             )}
           </div>
@@ -248,7 +265,11 @@ export function ComboboxQuantityInput({
                     )}
                   >
                     <div>
-                      {inputValue} {unit.display}
+                      {unit.display
+                        ? t(unit.display, {
+                            count: parseInt(inputValue, 10) || 1,
+                          })
+                        : ""}
                     </div>
                     <Check
                       className={cn(

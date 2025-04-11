@@ -522,10 +522,10 @@ export function MedicationRequestQuestion({
                                     <div className="text-sm mt-1 text-gray-600">
                                       {dosageInstruction?.dose_and_rate
                                         ?.dose_quantity &&
-                                        `${dosageInstruction.dose_and_rate.dose_quantity.value} ${dosageInstruction.dose_and_rate.dose_quantity.unit?.display || ""}`}
+                                        `${dosageInstruction.dose_and_rate.dose_quantity.value} ${t(dosageInstruction.dose_and_rate.dose_quantity.unit?.display || "", { count: dosageInstruction.dose_and_rate.dose_quantity.value })}`}
                                       {dosageInstruction?.dose_and_rate
                                         ?.dose_range &&
-                                        `(${dosageInstruction.dose_and_rate.dose_range.low?.value || ""} → ${dosageInstruction.dose_and_rate.dose_range.high?.value || ""}) ${dosageInstruction.dose_and_rate.dose_range.high?.unit?.display || ""}`}
+                                        `(${dosageInstruction.dose_and_rate.dose_range.low?.value || ""} → ${dosageInstruction.dose_and_rate.dose_range.high?.value || ""}) ${t(dosageInstruction.dose_and_rate.dose_range.high?.unit?.display || "", { count: dosageInstruction.dose_and_rate.dose_range.high?.value || 0 })}`}
                                       {dosageInstruction?.as_needed_boolean
                                         ? ` · ${t("as_needed_prn")}`
                                         : dosageInstruction?.timing?.code
@@ -645,7 +645,7 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
 
   const formatDoseRange = (range?: DoseRange) => {
     if (!range?.high?.value) return "";
-    return `${range.low?.value} ${range.low?.unit?.display} → ${range.high?.value} ${range.high?.unit?.display}`;
+    return `${range.low?.value} ${t(range.low?.unit?.display || "", { count: range.low?.value || 0 })} → ${range.high?.value} ${t(range.high?.unit?.display || "", { count: range.high?.value })}`;
   };
   interface DosageDialogProps {
     dosageRange: DoseRange;
