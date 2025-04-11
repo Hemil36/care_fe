@@ -703,9 +703,9 @@ export function SymptomQuestion({
     </div>
   );
 
-  const addSymptomPlaceholder = t(
-    symptoms.length === 0 ? "add_symptom" : "add_another_symptom",
-  );
+  const addSymptomPlaceholder = t("add_symptom", {
+    count: symptoms.length + 1,
+  });
 
   return (
     <div className="space-y-4">

@@ -538,9 +538,9 @@ export function DiagnosisQuestion({
     </div>
   );
 
-  const addDiagnosisPlaceholder = t(
-    sortedDiagnoses.length === 0 ? "add_diagnosis" : "add_another_diagnosis",
-  );
+  const addDiagnosisPlaceholder = t("add_diagnosis", {
+    count: sortedDiagnoses.length + 1,
+  });
 
   return (
     <div className="space-y-4">

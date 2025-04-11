@@ -592,9 +592,9 @@ export function AllergyQuestion({
     </div>
   );
 
-  const addAllergyPlaceholder = t(
-    allergies.length === 0 ? "add_allergy" : "add_another_allergy",
-  );
+  const addAllergyPlaceholder = t("add_allergy", {
+    count: allergies.length + 1,
+  });
 
   return (
     <div className="space-y-4">

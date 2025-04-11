@@ -345,9 +345,9 @@ export function MedicationRequestQuestion({
     </div>
   );
 
-  const addMedicationPlaceholder = t(
-    medications.length === 0 ? "add_medication" : "add_another_medication",
-  );
+  const addMedicationPlaceholder = t("add_medication", {
+    count: medications.length + 1,
+  });
 
   return (
     <div className="space-y-4">
