@@ -37,27 +37,27 @@ export const UCUM_TIME_UNITS = [
   // "min",
   {
     code: "h",
-    display: "Hour",
+    display: "time_unit_h",
     system: "http://unitsofmeasure.org",
   },
   {
     code: "d",
-    display: "Day",
+    display: "time_unit_d",
     system: "http://unitsofmeasure.org",
   },
   {
     code: "wk",
-    display: "Week",
+    display: "time_unit_wk",
     system: "http://unitsofmeasure.org",
   },
   {
     code: "mo",
-    display: "Month",
+    display: "time_unit_mo",
     system: "http://unitsofmeasure.org",
   },
   {
     code: "a",
-    display: "Year",
+    display: "time_unit_a",
     system: "http://unitsofmeasure.org",
   },
 ] as const;

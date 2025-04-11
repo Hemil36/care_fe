@@ -239,10 +239,17 @@ export const MedicineAdminForm: React.FC<MedicineAdminFormProps> = ({
               ?.value || "-"}{" "}
             {medication.dosage_instruction[0]?.timing?.repeat?.bounds_duration
               ?.unit
-              ? getTimeUnit(
-                  medication.dosage_instruction[0]?.timing?.repeat
-                    ?.bounds_duration.unit,
-                ).display
+              ? t(
+                  getTimeUnit(
+                    medication.dosage_instruction[0]?.timing?.repeat
+                      ?.bounds_duration.unit,
+                  ).display,
+                  {
+                    count:
+                      medication.dosage_instruction[0]?.timing?.repeat
+                        ?.bounds_duration?.value || 0,
+                  },
+                )
               : ""}
           </p>
         </div>

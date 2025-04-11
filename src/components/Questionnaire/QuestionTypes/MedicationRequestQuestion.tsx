@@ -533,7 +533,7 @@ export function MedicationRequestQuestion({
                                           ` · ${MEDICATION_REQUEST_TIMING_OPTIONS[dosageInstruction.timing.code.code]?.display || ""}`}
                                       {dosageInstruction?.timing?.repeat
                                         ?.bounds_duration?.value &&
-                                        ` · ${dosageInstruction.timing.repeat.bounds_duration.value} ${getTimeUnit(dosageInstruction.timing.repeat.bounds_duration.unit).display}`}
+                                        ` · ${dosageInstruction.timing.repeat.bounds_duration.value} ${t(getTimeUnit(dosageInstruction.timing.repeat.bounds_duration.unit).display, { count: dosageInstruction.timing.repeat.bounds_duration.value })}`}
                                     </div>
                                   )}
                                 </div>
@@ -1020,7 +1020,11 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
             <SelectContent>
               {UCUM_TIME_UNITS.map((unit) => (
                 <SelectItem key={unit.code} value={unit.code}>
-                  {unit.display}
+                  {t(unit.display, {
+                    count:
+                      dosageInstruction?.timing?.repeat?.bounds_duration
+                        ?.value || 1,
+                  })}
                 </SelectItem>
               ))}
             </SelectContent>
