@@ -1047,7 +1047,7 @@ function CategorySelector({
               </div>
             </div>
             {selectedCategory === category && (
-              <div className="h-4 w-4 rounded-full bg-primary" />
+              <div className="size-4 rounded-full bg-primary" />
             )}
           </div>
         </div>
