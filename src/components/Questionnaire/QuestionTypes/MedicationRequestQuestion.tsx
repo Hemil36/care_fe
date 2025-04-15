@@ -975,9 +975,8 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
           </div>
           <div
             className={cn(
-              (dosageInstruction?.as_needed_boolean ||
-                !dosageInstruction?.timing?.repeat?.bounds_duration?.value) &&
-                "col-span-2",
+              dosageInstruction?.as_needed_boolean && "col-span-2",
+              !dosageInstruction?.timing && "col-span-2",
             )}
           >
             <Select
