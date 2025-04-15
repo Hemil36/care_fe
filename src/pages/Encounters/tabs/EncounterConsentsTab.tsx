@@ -269,7 +269,7 @@ export const EncounterConsentsTab = ({ encounter }: EncounterTabProps) => {
   }
 
   return (
-    <div className="container mx-auto py-4">
+    <div className="py-4">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
@@ -296,7 +296,7 @@ export const EncounterConsentsTab = ({ encounter }: EncounterTabProps) => {
       </div>
 
       {consents && consents.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {consents.map((consent) => (
             <ConsentCard
               key={consent.id}
