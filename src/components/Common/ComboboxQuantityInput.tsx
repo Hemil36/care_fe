@@ -159,6 +159,7 @@ export function ComboboxQuantityInput({
                     )}
                   >
                     <div>
+                      {inputValue}{" "}
                       {unit.display
                         ? t(unit.display, {
                             count: parseInt(inputValue, 10) || 1,
