@@ -926,38 +926,83 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
         </Label>
         <div
           className={cn(
-            "flex gap-2",
+            "grid grid-cols-2 w-full gap-0.5",
             hasError(MEDICATION_REQUEST_FIELDS.DURATION.key) &&
               "border border-red-500 rounded-md p-1",
             dosageInstruction?.as_needed_boolean &&
               "opacity-50 bg-gray-100 rounded-md",
           )}
         >
-          {dosageInstruction?.timing && (
-            <Input
-              type="number"
-              min={0}
-              value={
-                dosageInstruction.timing.repeat.bounds_duration?.value == 0
-                  ? ""
-                  : dosageInstruction.timing.repeat.bounds_duration?.value
-              }
-              onChange={(e) => {
-                const value = e.target.value;
-                if (!dosageInstruction.timing) return;
-                handleUpdateDosageInstruction({
-                  timing: {
-                    ...dosageInstruction.timing,
-                    repeat: {
-                      ...dosageInstruction.timing.repeat,
-                      bounds_duration: {
-                        value: Number(value),
-                        unit: dosageInstruction.timing.repeat.bounds_duration
-                          .unit,
+          <div>
+            {dosageInstruction?.timing && (
+              <Input
+                type="number"
+                min={0}
+                value={
+                  dosageInstruction.timing.repeat.bounds_duration?.value == 0
+                    ? ""
+                    : dosageInstruction.timing.repeat.bounds_duration?.value
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!dosageInstruction.timing) return;
+                  handleUpdateDosageInstruction({
+                    timing: {
+                      ...dosageInstruction.timing,
+                      repeat: {
+                        ...dosageInstruction.timing.repeat,
+                        bounds_duration: {
+                          value: Number(value),
+                          unit: dosageInstruction.timing.repeat.bounds_duration
+                            .unit,
+                        },
                       },
                     },
-                  },
-                });
+                  });
+                }}
+                disabled={
+                  disabled ||
+                  !dosageInstruction?.timing?.repeat ||
+                  dosageInstruction?.as_needed_boolean ||
+                  isReadOnly
+                }
+                className={cn(
+                  "h-9 text-sm",
+                  dosageInstruction?.as_needed_boolean && "cursor-not-allowed",
+                )}
+              />
+            )}
+          </div>
+          <div
+            className={cn(
+              (dosageInstruction?.as_needed_boolean ||
+                !dosageInstruction?.timing?.repeat?.bounds_duration?.value) &&
+                "col-span-2",
+            )}
+          >
+            <Select
+              value={
+                dosageInstruction?.timing?.repeat?.bounds_duration?.unit ||
+                UCUM_TIME_UNITS[0].code
+              }
+              onValueChange={(code: string) => {
+                if (dosageInstruction?.timing?.repeat) {
+                  const value =
+                    dosageInstruction?.timing?.repeat?.bounds_duration?.value ??
+                    0;
+                  handleUpdateDosageInstruction({
+                    timing: {
+                      ...dosageInstruction.timing,
+                      repeat: {
+                        ...dosageInstruction.timing.repeat,
+                        bounds_duration: {
+                          value,
+                          unit: code as UcumTimeUnitCode,
+                        },
+                      },
+                    },
+                  });
+                }
               }}
               disabled={
                 disabled ||
@@ -965,64 +1010,29 @@ const MedicationRequestGridRow: React.FC<MedicationRequestGridRowProps> = ({
                 dosageInstruction?.as_needed_boolean ||
                 isReadOnly
               }
-              className={cn(
-                "h-9 text-sm",
-                dosageInstruction?.as_needed_boolean && "cursor-not-allowed",
-              )}
-            />
-          )}
-          <Select
-            value={
-              dosageInstruction?.timing?.repeat?.bounds_duration?.unit ||
-              UCUM_TIME_UNITS[0].code
-            }
-            onValueChange={(code: string) => {
-              if (dosageInstruction?.timing?.repeat) {
-                const value =
-                  dosageInstruction?.timing?.repeat?.bounds_duration?.value ??
-                  0;
-                handleUpdateDosageInstruction({
-                  timing: {
-                    ...dosageInstruction.timing,
-                    repeat: {
-                      ...dosageInstruction.timing.repeat,
-                      bounds_duration: {
-                        value,
-                        unit: code as UcumTimeUnitCode,
-                      },
-                    },
-                  },
-                });
-              }
-            }}
-            disabled={
-              disabled ||
-              !dosageInstruction?.timing?.repeat ||
-              dosageInstruction?.as_needed_boolean ||
-              isReadOnly
-            }
-          >
-            <SelectTrigger
-              className={cn(
-                "h-9 text-sm w-full",
-                dosageInstruction?.as_needed_boolean &&
-                  "cursor-not-allowed bg-gray-50",
-              )}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {UCUM_TIME_UNITS.map((unit) => (
-                <SelectItem key={unit.code} value={unit.code}>
-                  {t(unit.display, {
-                    count:
-                      dosageInstruction?.timing?.repeat?.bounds_duration
-                        ?.value || 1,
-                  })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger
+                className={cn(
+                  "h-9 text-sm pl-1 pr-0 w-full",
+                  dosageInstruction?.as_needed_boolean &&
+                    "cursor-not-allowed bg-gray-50",
+                )}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {UCUM_TIME_UNITS.map((unit) => (
+                  <SelectItem key={unit.code} value={unit.code}>
+                    {t(unit.display, {
+                      count:
+                        dosageInstruction?.timing?.repeat?.bounds_duration
+                          ?.value || 1,
+                    })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <FieldError
           fieldKey={MEDICATION_REQUEST_FIELDS.DURATION.key}
