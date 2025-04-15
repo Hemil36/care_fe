@@ -181,12 +181,6 @@ function ConsentCard({
                   {t(`consent_status__${consent.status}`)}
                 </Badge>
               </div>
-              <div className="flex justify-between items-center gap-1.5 text-xs">
-                <Calendar className="size-3.5 text-muted-foreground" />
-                <p className="font-medium">
-                  {formatDateTime(consent.date, "MMMM D, YYYY")}
-                </p>
-              </div>
             </div>
           </div>
 
@@ -199,16 +193,24 @@ function ConsentCard({
                   icon="l-file-alt"
                   className="size-3.5 text-muted-foreground"
                 />
-                <p className="text-sm font-medium truncate">
-                  {primaryAttachment?.name || t("unnamed_file")}
+                <div className="flex flex-wrap text-sm font-medium space-x-1">
+                  <span className="break-words">
+                    {primaryAttachment?.name || t("unnamed_file")}
+                    {totalAttachments > 1 && ", "}
+                  </span>
                   {totalAttachments > 1 && (
-                    <span className="text-muted-foreground">
-                      {", "} +
-                      {t("more_files_count", { count: totalAttachments - 1 })}
+                    <span className="text-muted-foreground break-words">
+                      +{t("more_files_count", { count: totalAttachments - 1 })}
                     </span>
                   )}
-                </p>
+                </div>
               </div>
+            </div>
+            <div className="flex justify-between items-center gap-1.5 text-xs text-secondary-700">
+              <Calendar className="size-3.5 text-muted-foreground" />
+              <p className="font-medium">
+                {formatDateTime(consent.date, "MMMM D, YYYY")}
+              </p>
             </div>
 
             <div className="flex items-center gap-1.5 text-secondary-700">
@@ -290,7 +292,7 @@ export const EncounterConsentsTab = ({ encounter }: EncounterTabProps) => {
       </div>
 
       {consents && consents.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {consents.map((consent) => (
             <ConsentCard
               key={consent.id}
