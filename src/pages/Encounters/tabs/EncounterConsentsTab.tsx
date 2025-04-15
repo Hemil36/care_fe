@@ -33,12 +33,12 @@ import consentApi from "@/types/consent/consentApi";
 import { Encounter } from "@/types/emr/encounter";
 
 // Empty state component for when no consents are found
-export const EmptyState = ({ onNewConsent }: { onNewConsent?: () => void }) => {
+export const EmptyState = () => {
   const { t } = useTranslation();
 
   return (
     <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 p-8 text-center">
-      <div className="rounded-full bg-secondary/10 p-3">
+      <div className="rounded-full bg-secondary/10 ">
         <CareIcon
           icon="l-file-exclamation-alt"
           className="text-3xl text-gray-500"
@@ -46,14 +46,10 @@ export const EmptyState = ({ onNewConsent }: { onNewConsent?: () => void }) => {
       </div>
       <div className="max-w-[300px] space-y-1">
         <h3 className="font-medium">{t("no_consent_found")}</h3>
-        <p className="text-sm text-gray-500">{t("no_consent_description")}</p>
+        <p className="text-sm text-gray-500 whitespace-nowrap break-words">
+          {t("no_consent_description")}
+        </p>
       </div>
-      {onNewConsent && (
-        <Button onClick={onNewConsent} className="mt-2">
-          <Plus className="size-4 mr-2" />
-          {t("link_consent")}
-        </Button>
-      )}
     </div>
   );
 };
@@ -265,7 +261,7 @@ export const EncounterConsentsTab = ({ encounter }: EncounterTabProps) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
           <Input
             placeholder={t("search_existing_consent")}
-            className="pl-10 focus-visible:ring-0"
+            className="pl-10 focus-visible:ring-1"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -296,20 +292,7 @@ export const EncounterConsentsTab = ({ encounter }: EncounterTabProps) => {
           ))}
         </div>
       ) : (
-        <EmptyState
-          onNewConsent={() => (
-            <LinkConsentDialog
-              patientId={encounter.patient.id}
-              encounterId={encounter.id}
-              trigger={
-                <Button className="flex items-center gap-1">
-                  <Plus className="size-4" />
-                  {t("link_consent")}
-                </Button>
-              }
-            />
-          )}
-        />
+        <EmptyState />
       )}
     </div>
   );
