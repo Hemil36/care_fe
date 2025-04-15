@@ -183,6 +183,16 @@ function ConsentCard({
                   </Badge>
                 )}
               </div>
+              <div className="flex items-center">
+                <Badge
+                  variant={
+                    consent.status === "active" ? "primary" : "secondary"
+                  }
+                  className="flex gap-1 items-center py-1"
+                >
+                  {t(`consent_status__${consent.status}`)}
+                </Badge>
+              </div>
               <div className="flex justify-between items-center gap-1.5 text-xs">
                 <Calendar className="size-3.5 text-muted-foreground" />
                 <p className="font-medium">
@@ -195,17 +205,7 @@ function ConsentCard({
           <Separator />
 
           <div className="flex justify-between items-start w-full flex-col gap-2">
-            <div className="flex flex-wrap gap-1.5 items-center">
-              <h3 className="text-sm font-light break-all">
-                {primaryAttachment?.name}
-              </h3>
-              <Badge
-                variant={consent.status === "active" ? "primary" : "secondary"}
-                className="font-normal"
-              >
-                {t(`consent_status__${consent.status}`)}
-              </Badge>
-            </div>
+            <div className="flex flex-wrap gap-1.5 items-center"></div>
 
             <div className="flex items-center gap-1.5 text-secondary-700">
               <p>
@@ -225,16 +225,6 @@ function ConsentCard({
                 </span>
               </p>
             </div>
-            {consent.note && (
-              <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-md w-full">
-                <p className="font-semibold text-sm text-gray-700 mb-1">
-                  {t("note")}:
-                </p>
-                <p className="text-sm text-gray-800 line-clamp-2">
-                  {consent.note}
-                </p>
-              </div>
-            )}
           </div>
         </CardFooter>
       </Card>
