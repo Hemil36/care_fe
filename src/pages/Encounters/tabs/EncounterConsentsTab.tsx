@@ -113,13 +113,19 @@ function ConsentCard({
       href={`/facility/${facilityId}/patient/${encounter.patient.id}/encounter/${encounterId}/consents/${consentId}`}
       className="block h-full"
     >
-      <Card className="overflow-hidden transition-all h-full flex flex-col hover:shadow-md cursor-pointer hover:border-primary">
+      <Card className="overflow-hidden transition-all h-full flex flex-col hover:shadow-md cursor-pointer group">
         <CardContent className="p-0 group">
           <div className="relative aspect-video">
             {consentFile ? (
               <div className="h-full w-full object-cover">
                 <div className="h-full w-full transition-opacity">
                   <PreviewFile file={consentFile} />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center p-2">
+                    <span className="text-white font-medium flex items-center gap-1">
+                      <CareIcon icon="l-eye" />
+                      {t("view")}
+                    </span>
+                  </div>
                 </div>
                 {totalAttachments > 1 && (
                   <Badge
