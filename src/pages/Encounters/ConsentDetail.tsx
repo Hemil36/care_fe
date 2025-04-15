@@ -139,188 +139,189 @@ export function ConsentDetailPage() {
   };
 
   return (
-    <Page title={t("consent_details")}>
-      <div className="mb-4 flex justify-between items-center">
-        <Link
-          href={`/facility/${facilityId}/patient/${patientId}/encounter/${encounterId}/consents`}
-          className="flex items-center text-primary hover:underline"
-        >
-          <ArrowLeft className="mr-1 size-4" />
-          {t("back")}
-        </Link>
-      </div>
-      <div className="container mx-auto py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            {consent.source_attachments.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-4">
-                  {t("supporting_documents")}
-                </h3>
-                <Card className="p-5">
-                  <div>
-                    <div className="divide-y">
-                      {consent.source_attachments.map((attachment, index) => {
-                        const isActive =
-                          fileData && fileData.id === attachment.id;
-                        return (
-                          <div
-                            key={attachment.id}
-                            className={cn(
-                              "py-2 flex items-center justify-between",
-                              isActive && "bg-primary-50",
-                            )}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={cn(
-                                  "flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium",
-                                )}
-                              >
-                                {index + 1}
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium break-all">
-                                  {attachment.name}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {formatDateTime(attachment.created_date)}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {fileData && (
-                                <div className="mt-4 flex justify-end">
-                                  {fileData && (
-                                    <DetailButtons file={fileData} />
-                                  )}
-                                  {fileManager.Dialogues}
-                                </div>
+    <div>
+      <Link
+        href={`/facility/${facilityId}/patient/${patientId}/encounter/${encounterId}/consents`}
+        className="flex items-center text-primary hover:underline md:px-6"
+      >
+        <ArrowLeft className="size-4" />
+        {t("back")}
+      </Link>
+      <Page title={t("consent")}>
+        <div className="mb-4 flex justify-between items-center"></div>
+        <div className="container mx-auto py-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              {consent.source_attachments.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">
+                    {t("supporting_documents")}
+                  </h3>
+                  <Card className="p-5">
+                    <div>
+                      <div className="divide-y">
+                        {consent.source_attachments.map((attachment, index) => {
+                          const isActive =
+                            fileData && fileData.id === attachment.id;
+                          return (
+                            <div
+                              key={attachment.id}
+                              className={cn(
+                                "py-2 flex items-center justify-between",
+                                isActive && "bg-primary-50",
                               )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            )}
-            {consent?.note && (
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2">{t("note")}</h3>
-                <Alert className="bg-blue-50 border-blue-200 text-blue-500">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="whitespace-pre-wrap font-medium text-base">
-                    {consent.note}
-                  </AlertDescription>
-                </Alert>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-4">
-              {t("consent_details")}
-            </h2>
-            <Card className="p-5">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    {t("category")}
-                  </h3>
-                  <p className="text-base font-semibold text-gray-700">
-                    {t(`consent_category__${consent.category}`)}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    {t("consent_date")}
-                  </h3>
-                  <p className="text-base font-semibold text-gray-700">
-                    {formatDateTime(consent.date, "MMMM D, YYYY")}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    {t("consent_period")}
-                  </h3>
-                  <p className="text-base font-semibold text-gray-700">
-                    {consent.period.start
-                      ? formatDateTime(consent.period.start, "MMMM D, YYYY")
-                      : t("NA")}
-                    {" - "}
-                    {consent.period.end
-                      ? formatDateTime(consent.period.end, "MMMM D, YYYY")
-                      : t("NA")}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    {t("decision")}
-                  </h3>
-                  <p className="text-base font-semibold text-gray-700">
-                    {consent.decision === "permit"
-                      ? t("permitted")
-                      : t("denied")}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    {t("status")}
-                  </h3>
-                  <p className="text-base font-semibold text-gray-700">
-                    {t(`consent_status__${consent.status}`)}
-                  </p>
-                </div>
-
-                {consent.verification_details &&
-                  consent.verification_details.length > 0 && (
-                    <>
-                      <Separator />
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">
-                          {t("verification_details")}
-                        </h3>
-                        <div className="mt-2 space-y-2">
-                          {consent.verification_details.map(
-                            (verification, index) => (
-                              <div
-                                key={index}
-                                className="p-3 bg-gray-50 border border-gray-200 rounded-md"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-500">
-                                    {formatDateTime(
-                                      verification.verification_date,
-                                    )}
-                                  </span>
-                                  <p className="text-base font-semibold text-gray-700">
-                                    {t(
-                                      `consent_verification_type__${verification.verification_type}`,
-                                    )}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={cn(
+                                    "flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium",
+                                  )}
+                                >
+                                  {index + 1}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium break-all">
+                                    {attachment.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {formatDateTime(attachment.created_date)}
                                   </p>
                                 </div>
-                                <p className="text-base font-semibold text-gray-700">
-                                  {t("verified_by")}:{" "}
-                                  {verification.verified_by.username}
-                                </p>
                               </div>
-                            ),
-                          )}
-                        </div>
+                              <div className="flex items-center gap-2">
+                                {fileData && (
+                                  <div className="mt-4 flex justify-end">
+                                    {fileData && (
+                                      <DetailButtons file={fileData} />
+                                    )}
+                                    {fileManager.Dialogues}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    </>
-                  )}
-              </div>
-            </Card>
+                    </div>
+                  </Card>
+                </div>
+              )}
+              {consent?.note && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold mb-2">{t("note")}</h3>
+                  <Alert className="bg-blue-50 border-blue-200 text-blue-500">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="whitespace-pre-wrap font-medium text-base">
+                      {consent.note}
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-4">
+                {t("consent_details")}
+              </h2>
+              <Card className="p-5">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      {t("category")}
+                    </h3>
+                    <p className="text-base font-semibold text-gray-700">
+                      {t(`consent_category__${consent.category}`)}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      {t("consent_date")}
+                    </h3>
+                    <p className="text-base font-semibold text-gray-700">
+                      {formatDateTime(consent.date, "MMMM D, YYYY")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      {t("consent_period")}
+                    </h3>
+                    <p className="text-base font-semibold text-gray-700">
+                      {consent.period.start
+                        ? formatDateTime(consent.period.start, "MMMM D, YYYY")
+                        : t("NA")}
+                      {" - "}
+                      {consent.period.end
+                        ? formatDateTime(consent.period.end, "MMMM D, YYYY")
+                        : t("NA")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      {t("decision")}
+                    </h3>
+                    <p className="text-base font-semibold text-gray-700">
+                      {consent.decision === "permit"
+                        ? t("permitted")
+                        : t("denied")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      {t("status")}
+                    </h3>
+                    <p className="text-base font-semibold text-gray-700">
+                      {t(`consent_status__${consent.status}`)}
+                    </p>
+                  </div>
+
+                  {consent.verification_details &&
+                    consent.verification_details.length > 0 && (
+                      <>
+                        <Separator />
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">
+                            {t("verification_details")}
+                          </h3>
+                          <div className="mt-2 space-y-2">
+                            {consent.verification_details.map(
+                              (verification, index) => (
+                                <div
+                                  key={index}
+                                  className="p-3 bg-gray-50 border border-gray-200 rounded-md"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">
+                                      {formatDateTime(
+                                        verification.verification_date,
+                                      )}
+                                    </span>
+                                    <p className="text-base font-semibold text-gray-700">
+                                      {t(
+                                        `consent_verification_type__${verification.verification_type}`,
+                                      )}
+                                    </p>
+                                  </div>
+                                  <p className="text-base font-semibold text-gray-700">
+                                    {t("verified_by")}:{" "}
+                                    {verification.verified_by.username}
+                                  </p>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                </div>
+              </Card>
+            </div>
           </div>
         </div>
-      </div>
-    </Page>
+      </Page>
+    </div>
   );
 }

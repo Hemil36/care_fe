@@ -920,6 +920,7 @@
   "deceased": "Deceased",
   "deceased_disclaimer": "Please provide the date and time of death for record-keeping purposes. This information is handled with utmost sensitivity and respect.",
   "deceased_status": "Deceased Status",
+  "decision": "Decision",
   "delete": "Delete",
   "delete_account": "Delete account",
   "delete_account_btn": "Yes, delete this account",
