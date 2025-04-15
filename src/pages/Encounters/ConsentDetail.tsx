@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+  AlertCircle,
   ArrowLeft,
   Calendar,
   CalendarRange,
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 import CareIcon from "@/CAREUI/icons/CareIcon";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,7 +25,6 @@ import { Separator } from "@/components/ui/separator";
 
 import Loading from "@/components/Common/Loading";
 import Page from "@/components/Common/Page";
-import PageHeadTitle from "@/components/Common/PageHeadTitle";
 import { FileUploadModel } from "@/components/Patient/models";
 
 import useFileManager from "@/hooks/useFileManager";
@@ -111,7 +112,6 @@ export function ConsentDetailPage() {
     );
   }
 
-  const attachment = consent.source_attachments[0];
   const associatingId = consent.id;
 
   const DetailButtons = ({ file }: { file: FileUploadModel }) => {
@@ -120,6 +120,7 @@ export function ConsentDetailPage() {
         {fileManager.isPreviewable(file) && (
           <Button
             variant="secondary"
+            className="cursor-pointer"
             onClick={() => fileManager.viewFile(file, associatingId)}
           >
             <span className="flex flex-row items-center gap-1">
@@ -130,6 +131,7 @@ export function ConsentDetailPage() {
         )}
         <Button
           variant="secondary"
+          className="cursor-pointer"
           onClick={() => fileManager.downloadFile(file, associatingId)}
         >
           <span className="flex flex-row items-center gap-1">
@@ -152,17 +154,16 @@ export function ConsentDetailPage() {
           {t("back")}
         </Link>
       </div>
-      <PageHeadTitle title={t("consent_details")} />
       <div className="container mx-auto py-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             {consent.source_attachments.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-3">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">
                   {t("supporting_documents")}
                 </h3>
-                <Card>
-                  <div className="p-4">
+                <Card className="p-6">
+                  <div>
                     <div className="divide-y">
                       {consent.source_attachments.map((attachment, index) => {
                         const isActive =
@@ -171,7 +172,7 @@ export function ConsentDetailPage() {
                           <div
                             key={attachment.id}
                             className={cn(
-                              "py-3 flex items-center justify-between",
+                              "py-2 flex items-center justify-between",
                               isActive && "bg-primary-50",
                             )}
                           >
@@ -210,15 +211,25 @@ export function ConsentDetailPage() {
                 </Card>
               </div>
             )}
+            {consent?.note && (
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold mb-2">{t("note")}</h3>
+                <Alert className="bg-blue-50 border-blue-200 text-blue-500">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="whitespace-pre-wrap font-medium text-base">
+                    {consent.note}
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
           </div>
 
           {/* Right column - Consent details */}
           <div>
+            <h2 className="text-xl font-semibold mb-4">
+              {t("consent_details")}
+            </h2>
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">
-                {t("consent_details")}
-              </h2>
-
               <div className="space-y-4">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">
@@ -300,31 +311,6 @@ export function ConsentDetailPage() {
                     {t(`consent_status__${consent.status}`)}
                   </Badge>
                 </div>
-
-                {attachment && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">
-                      {t("file")}
-                    </h3>
-                    <p className="text-sm mt-1 break-all">{attachment.name}</p>
-                  </div>
-                )}
-
-                {consent.note && (
-                  <>
-                    <Separator />
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">
-                        {t("note")}
-                      </h3>
-                      <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                        <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                          {consent.note}
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                )}
 
                 {consent.verification_details &&
                   consent.verification_details.length > 0 && (
