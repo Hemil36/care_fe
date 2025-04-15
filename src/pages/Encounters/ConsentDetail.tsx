@@ -2,13 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   ArrowLeft,
-  Calendar,
-  CalendarRange,
-  CheckCircle,
   ChevronLeft,
   Download,
   FileText,
-  XCircle,
 } from "lucide-react";
 import { Link, usePathParams } from "raviger";
 import { useTranslation } from "react-i18next";
@@ -18,7 +14,6 @@ import { cn } from "@/lib/utils";
 import CareIcon from "@/CAREUI/icons/CareIcon";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -162,7 +157,7 @@ export function ConsentDetailPage() {
                 <h3 className="text-lg font-semibold mb-4">
                   {t("supporting_documents")}
                 </h3>
-                <Card className="p-6">
+                <Card className="p-5">
                   <div>
                     <div className="divide-y">
                       {consent.source_attachments.map((attachment, index) => {
@@ -224,34 +219,27 @@ export function ConsentDetailPage() {
             )}
           </div>
 
-          {/* Right column - Consent details */}
           <div>
             <h2 className="text-xl font-semibold mb-4">
               {t("consent_details")}
             </h2>
-            <Card className="p-6">
+            <Card className="p-5">
               <div className="space-y-4">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">
                     {t("category")}
                   </h3>
-                  <Badge
-                    variant="outline"
-                    className="mt-1 border border-gray-700"
-                  >
-                    <span className="font-semibold text-sm text-gray-700">
-                      {t(`consent_category__${consent.category}`)}
-                    </span>
-                  </Badge>
+                  <p className="text-base font-semibold text-gray-700">
+                    {t(`consent_category__${consent.category}`)}
+                  </p>
                 </div>
 
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">
                     {t("consent_date")}
                   </h3>
-                  <p className="flex items-center gap-2 mt-1">
-                    <Calendar className="size-4 text-gray-500" />
-                    <span>{formatDateTime(consent.date, "MMMM D, YYYY")}</span>
+                  <p className="text-base font-semibold text-gray-700">
+                    {formatDateTime(consent.date, "MMMM D, YYYY")}
                   </p>
                 </div>
 
@@ -259,17 +247,14 @@ export function ConsentDetailPage() {
                   <h3 className="text-sm font-medium text-gray-500">
                     {t("consent_period")}
                   </h3>
-                  <p className="flex items-center gap-2 mt-1">
-                    <CalendarRange className="size-4 text-gray-500" />
-                    <span>
-                      {consent.period.start
-                        ? formatDateTime(consent.period.start, "MMMM D, YYYY")
-                        : t("NA")}
-                      {" - "}
-                      {consent.period.end
-                        ? formatDateTime(consent.period.end, "MMMM D, YYYY")
-                        : t("NA")}
-                    </span>
+                  <p className="text-base font-semibold text-gray-700">
+                    {consent.period.start
+                      ? formatDateTime(consent.period.start, "MMMM D, YYYY")
+                      : t("NA")}
+                    {" - "}
+                    {consent.period.end
+                      ? formatDateTime(consent.period.end, "MMMM D, YYYY")
+                      : t("NA")}
                   </p>
                 </div>
 
@@ -277,39 +262,20 @@ export function ConsentDetailPage() {
                   <h3 className="text-sm font-medium text-gray-500">
                     {t("decision")}
                   </h3>
-                  <div className="mt-1">
-                    {consent.decision === "permit" ? (
-                      <Badge
-                        className="flex gap-1 items-center py-1"
-                        variant="primary"
-                      >
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        {t("permitted")}
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="destructive"
-                        className="flex gap-1 items-center py-1"
-                      >
-                        <XCircle className="h-3.5 w-3.5" />
-                        {t("denied")}
-                      </Badge>
-                    )}
-                  </div>
+                  <p className="text-base font-semibold text-gray-700">
+                    {consent.decision === "permit"
+                      ? t("permitted")
+                      : t("denied")}
+                  </p>
                 </div>
 
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">
                     {t("status")}
                   </h3>
-                  <Badge
-                    variant={
-                      consent.status === "active" ? "primary" : "secondary"
-                    }
-                    className="mt-1"
-                  >
+                  <p className="text-base font-semibold text-gray-700">
                     {t(`consent_status__${consent.status}`)}
-                  </Badge>
+                  </p>
                 </div>
 
                 {consent.verification_details &&
@@ -333,13 +299,13 @@ export function ConsentDetailPage() {
                                       verification.verification_date,
                                     )}
                                   </span>
-                                  <Badge variant="outline" className="text-xs">
+                                  <p className="text-base font-semibold text-gray-700">
                                     {t(
                                       `consent_verification_type__${verification.verification_type}`,
                                     )}
-                                  </Badge>
+                                  </p>
                                 </div>
-                                <p className="text-sm mt-1">
+                                <p className="text-base font-semibold text-gray-700">
                                   {t("verified_by")}:{" "}
                                   {verification.verified_by.username}
                                 </p>
