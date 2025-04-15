@@ -1,6 +1,5 @@
 import { Check } from "lucide-react";
 import * as React from "react";
-import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
@@ -38,7 +37,6 @@ export function ComboboxQuantityInput({
   placeholder = "Enter a number...",
   autoFocus,
 }: Props) {
-  const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState(
     quantity?.value.toString() || "",
@@ -121,11 +119,7 @@ export function ComboboxQuantityInput({
             />
             {selectedUnit && (
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                {selectedUnit.display
-                  ? t(selectedUnit.display, {
-                      count: parseInt(inputValue, 10) || 1,
-                    })
-                  : ""}
+                {selectedUnit.display}
               </div>
             )}
           </div>
@@ -159,12 +153,7 @@ export function ComboboxQuantityInput({
                     )}
                   >
                     <div>
-                      {inputValue}{" "}
-                      {unit.display
-                        ? t(unit.display, {
-                            count: parseInt(inputValue, 10) || 1,
-                          })
-                        : ""}
+                      {inputValue} {unit.display}
                     </div>
                     <Check
                       className={cn(
