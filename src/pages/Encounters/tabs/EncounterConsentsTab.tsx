@@ -127,14 +127,6 @@ function ConsentCard({
                     </span>
                   </div>
                 </div>
-                {totalAttachments > 1 && (
-                  <Badge
-                    className="absolute bottom-2 right-2 text-xs font-medium px-2 py-1"
-                    variant="secondary"
-                  >
-                    +{t("more_files_count", { count: totalAttachments - 1 })}
-                  </Badge>
-                )}
               </div>
             ) : (
               <div className="flex items-center justify-center h-full w-full bg-gray-100">
@@ -152,8 +144,11 @@ function ConsentCard({
             <div className="flex justify-start items-center flex-wrap w-full gap-1.5">
               <div>
                 <div className="flex flex-wrap gap-1.5 items-center">
-                  <Badge variant="outline" className="border border-gray-700">
-                    <h3 className="font-semibold text-sm text-gray-600">
+                  <Badge
+                    variant="secondary"
+                    className="border border-gray-300 rounded-full"
+                  >
+                    <h3 className="font-semibold text-xs text-gray-900">
                       {t(`consent_category__${consent.category}`)}
                     </h3>
                   </Badge>
@@ -162,15 +157,15 @@ function ConsentCard({
               <div className="flex items-center">
                 {consent.decision === "permit" ? (
                   <Badge
-                    className="flex gap-1 items-center py-1"
+                    className="flex gap-1 items-center py-1 rounded-full"
                     variant={"primary"}
                   >
                     {t("permitted")}
                   </Badge>
                 ) : (
                   <Badge
-                    variant="destructive"
-                    className="flex gap-1 items-center py-1"
+                    variant="primary"
+                    className="flex gap-1 items-center py-1 rounded-full bg-red-100 border-red-300 text-red-900"
                   >
                     {t("denied")}
                   </Badge>
@@ -181,7 +176,7 @@ function ConsentCard({
                   variant={
                     consent.status === "active" ? "primary" : "secondary"
                   }
-                  className="flex gap-1 items-center py-1"
+                  className="flex gap-1 items-center py-1 rounded-full"
                 >
                   {t(`consent_status__${consent.status}`)}
                 </Badge>
@@ -198,7 +193,23 @@ function ConsentCard({
           <Separator />
 
           <div className="flex justify-between items-start w-full flex-col gap-2">
-            <div className="flex flex-wrap gap-1.5 items-center"></div>
+            <div className="flex flex-wrap gap-1.5 items-center w-full">
+              <div className="flex items-center gap-1.5 w-full">
+                <CareIcon
+                  icon="l-file-alt"
+                  className="size-3.5 text-muted-foreground"
+                />
+                <p className="text-sm font-medium truncate">
+                  {primaryAttachment?.name || t("unnamed_file")}
+                  {totalAttachments > 1 && (
+                    <span className="text-muted-foreground">
+                      {", "} +
+                      {t("more_files_count", { count: totalAttachments - 1 })}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
 
             <div className="flex items-center gap-1.5 text-secondary-700">
               <p>
