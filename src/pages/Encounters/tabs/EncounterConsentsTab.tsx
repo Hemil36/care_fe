@@ -96,7 +96,6 @@ function PreviewFile({ file }: { file: FileUploadModel }) {
   );
 }
 
-// Card component for displaying a single consent
 function ConsentCard({
   consent,
   encounter,
@@ -109,15 +108,16 @@ function ConsentCard({
   const encounterId = consent.encounter;
   const consentId = consent.id;
 
-  const { data: consentFile } = useQuery({
-    queryKey: ["file_upload", consent.source_attachments[0]?.id],
-    queryFn: query(routes.retrieveUpload, {
-      pathParams: { id: consent.source_attachments[0]?.id ?? "" },
-    }),
-    enabled: !!consent.source_attachments[0]?.id,
-  });
+  const primaryAttachment = consent.source_attachments[0];
+  const totalAttachments = consent.source_attachments.length;
 
-  const attachment = consent.source_attachments[0];
+  const { data: consentFile } = useQuery({
+    queryKey: ["file_upload", primaryAttachment?.id],
+    queryFn: query(routes.retrieveUpload, {
+      pathParams: { id: primaryAttachment?.id ?? "" },
+    }),
+    enabled: !!primaryAttachment?.id,
+  });
 
   return (
     <Link
@@ -132,6 +132,14 @@ function ConsentCard({
                 <div className="h-full w-full transition-opacity">
                   <PreviewFile file={consentFile} />
                 </div>
+                {totalAttachments > 1 && (
+                  <Badge
+                    className="absolute bottom-2 right-2 text-xs font-medium px-2 py-1"
+                    variant="secondary"
+                  >
+                    +{t("more_files_count", { count: totalAttachments - 1 })}
+                  </Badge>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center h-full w-full bg-gray-100">
@@ -189,7 +197,7 @@ function ConsentCard({
           <div className="flex justify-between items-start w-full flex-col gap-2">
             <div className="flex flex-wrap gap-1.5 items-center">
               <h3 className="text-sm font-light break-all">
-                {attachment?.name}
+                {primaryAttachment?.name}
               </h3>
               <Badge
                 variant={consent.status === "active" ? "primary" : "secondary"}
@@ -247,11 +255,14 @@ export const EncounterConsentsTab = ({ encounter }: EncounterTabProps) => {
     }),
   });
 
-  const consents = existingConsents?.results?.filter((consent) =>
-    consent.source_attachments[0]?.name
-      ?.toLowerCase()
-      .includes(searchQuery.toLowerCase()),
-  );
+  const consents = existingConsents?.results?.filter((consent) => {
+    if (!searchQuery) return true;
+
+    // Check if any attachment name matches the search query
+    return consent.source_attachments.some((attachment) =>
+      attachment?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  });
 
   if (isLoading) {
     return <Loading />;
