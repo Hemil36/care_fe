@@ -12,13 +12,16 @@ import {
 import { Link, usePathParams } from "raviger";
 import { useTranslation } from "react-i18next";
 
+import { cn } from "@/lib/utils";
+
+import CareIcon from "@/CAREUI/icons/CareIcon";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 import Loading from "@/components/Common/Loading";
-import PDFViewer from "@/components/Common/PDFViewer";
 import Page from "@/components/Common/Page";
 import PageHeadTitle from "@/components/Common/PageHeadTitle";
 import { FileUploadModel } from "@/components/Patient/models";
@@ -29,56 +32,6 @@ import routes from "@/Utils/request/api";
 import query from "@/Utils/request/query";
 import { formatDateTime } from "@/Utils/utils";
 import consentApi from "@/types/consent/consentApi";
-
-function FilePreview({ file }: { file: FileUploadModel }) {
-  const isPdf = file.mime_type === "application/pdf";
-  const isImage = file.mime_type?.startsWith("image");
-
-  if (!file.read_signed_url) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p>No preview available</p>
-      </div>
-    );
-  }
-
-  if (isPdf) {
-    return (
-      <div className="h-[70vh] w-full overflow-auto">
-        <PDFViewer
-          url={file.read_signed_url}
-          pageNumber={1}
-          onDocumentLoadSuccess={() => {}}
-          scale={1}
-          className="object-cover w-full h-full overflow-hidden!"
-        />
-      </div>
-    );
-  }
-
-  if (isImage) {
-    return (
-      <div className="flex items-center justify-center p-4">
-        <img
-          src={file.read_signed_url}
-          alt={file.name}
-          className="max-h-[70vh] object-contain"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-[70vh] w-full">
-      <iframe
-        src={file.read_signed_url}
-        title={file.name}
-        className="object-cover w-full h-full"
-        sandbox="allow-same-origin"
-      />
-    </div>
-  );
-}
 
 export function ConsentDetailPage() {
   const { t } = useTranslation();
@@ -106,7 +59,7 @@ export function ConsentDetailPage() {
     enabled: !!encounterId && !!patientId,
   });
 
-  // Load file data
+  // Load file data for the primary attachment
   const attachmentId = consent?.source_attachments[0]?.id;
   const { data: fileData, isLoading: isLoadingFile } = useQuery({
     queryKey: ["file_upload", attachmentId],
@@ -118,7 +71,15 @@ export function ConsentDetailPage() {
 
   const fileManager = useFileManager({
     type: "consent",
-    uploadedFiles: fileData ? [fileData] : [],
+    uploadedFiles:
+      consent?.source_attachments.map((attachment) => {
+        if (fileData && fileData.id === attachment.id) {
+          return fileData;
+        }
+        return attachment;
+      }) || [],
+    onArchive: () => {},
+    onEdit: () => {},
   });
 
   const isLoading = isLoadingConsent || isLoadingFile || isLoadingEncounter;
@@ -151,6 +112,34 @@ export function ConsentDetailPage() {
   }
 
   const attachment = consent.source_attachments[0];
+  const associatingId = consent.id;
+
+  const DetailButtons = ({ file }: { file: FileUploadModel }) => {
+    return (
+      <div className="flex flex-row gap-2 justify-end">
+        {fileManager.isPreviewable(file) && (
+          <Button
+            variant="secondary"
+            onClick={() => fileManager.viewFile(file, associatingId)}
+          >
+            <span className="flex flex-row items-center gap-1">
+              <CareIcon icon="l-eye" />
+              {t("view")}
+            </span>
+          </Button>
+        )}
+        <Button
+          variant="secondary"
+          onClick={() => fileManager.downloadFile(file, associatingId)}
+        >
+          <span className="flex flex-row items-center gap-1">
+            <Download className="size-4 mr-1" />
+            {t("download")}
+          </span>
+        </Button>
+      </div>
+    );
+  };
 
   return (
     <Page title={t("consent_details")}>
@@ -166,39 +155,59 @@ export function ConsentDetailPage() {
       <PageHeadTitle title={t("consent_details")} />
       <div className="container mx-auto py-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left column - File preview */}
           <div className="lg:col-span-2">
-            <Card className="overflow-hidden">
-              {fileData ? (
-                <FilePreview file={fileData} />
-              ) : (
-                <div className="h-[50vh] flex items-center justify-center bg-gray-100">
-                  <div className="text-center">
-                    <FileText className="size-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">{t("no_file_available")}</p>
+            {consent.source_attachments.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-3">
+                  {t("supporting_documents")}
+                </h3>
+                <Card>
+                  <div className="p-4">
+                    <div className="divide-y">
+                      {consent.source_attachments.map((attachment, index) => {
+                        const isActive =
+                          fileData && fileData.id === attachment.id;
+                        return (
+                          <div
+                            key={attachment.id}
+                            className={cn(
+                              "py-3 flex items-center justify-between",
+                              isActive && "bg-primary-50",
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={cn(
+                                  "flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium",
+                                )}
+                              >
+                                {index + 1}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium break-all">
+                                  {attachment.name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {formatDateTime(attachment.created_date)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {fileData && (
+                                <div className="mt-4 flex justify-end">
+                                  {fileData && (
+                                    <DetailButtons file={fileData} />
+                                  )}
+                                  {fileManager.Dialogues}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
-            </Card>
-
-            {fileData && (
-              <div className="mt-4 flex justify-end">
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    if (fileData) {
-                      fileManager.downloadFile(
-                        fileData,
-                        fileData.associating_id!,
-                      );
-                    }
-                  }}
-                >
-                  <Download className="size-4" />
-                  {t("download")}
-                </Button>
-                {fileManager.Dialogues}
+                </Card>
               </div>
             )}
           </div>
