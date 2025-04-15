@@ -1,12 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  Calendar,
-  CalendarRange,
-  CheckCircle,
-  Plus,
-  Search,
-  XCircle,
-} from "lucide-react";
+import { Calendar, CalendarRange, Plus, Search } from "lucide-react";
 import { Link, usePathParams } from "raviger";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -166,7 +159,6 @@ function ConsentCard({
                     className="flex gap-1 items-center py-1"
                     variant={"primary"}
                   >
-                    <CheckCircle className="h-3.5 w-3.5" />
                     {t("permitted")}
                   </Badge>
                 ) : (
@@ -174,7 +166,6 @@ function ConsentCard({
                     variant="destructive"
                     className="flex gap-1 items-center py-1"
                   >
-                    <XCircle className="h-3.5 w-3.5" />
                     {t("denied")}
                   </Badge>
                 )}
