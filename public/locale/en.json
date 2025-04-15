@@ -1797,6 +1797,8 @@
   "monitor": "Monitor",
   "month": "Month",
   "more_details": "More details",
+  "more_files_count_one": "{{count}} more file",
+  "more_files_count_other": "{{count}} more files",
   "more_info": "More Info",
   "morning_slots": "Morning Slots",
   "move_down": "Move Down",
