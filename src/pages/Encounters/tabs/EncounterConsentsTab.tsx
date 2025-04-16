@@ -284,7 +284,7 @@ export const EncounterConsentsTab = ({ encounter }: EncounterTabProps) => {
             trigger={
               <Button className="flex items-center gap-1">
                 <Plus className="size-4" />
-                {t("link_consent")}
+                {t("add_consent")}
               </Button>
             }
           />

@@ -231,14 +231,14 @@ export default function LinkConsentDialog({
         {trigger || (
           <Button variant="outline" className="gap-2">
             <Plus className="size-4" />
-            {t("link_consent")}
+            {t("add_consent")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t("link_consent")}</DialogTitle>
-          <DialogDescription>{t("link_consent_description")}</DialogDescription>
+          <DialogTitle>{t("add_consent")}</DialogTitle>
+          <DialogDescription>{t("add_consent_description")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
