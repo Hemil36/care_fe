@@ -151,74 +151,6 @@ export function ConsentDetailPage() {
         <div className="mb-4 flex justify-between items-center"></div>
         <div className="container mx-auto py-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              {consent.source_attachments.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">
-                    {t("supporting_documents")}
-                  </h3>
-                  <Card className="p-5">
-                    <div>
-                      <div className="divide-y">
-                        {consent.source_attachments.map((attachment, index) => {
-                          const isActive =
-                            fileData && fileData.id === attachment.id;
-                          return (
-                            <div
-                              key={attachment.id}
-                              className={cn(
-                                "py-2 flex items-center justify-between",
-                                isActive && "bg-primary-50",
-                              )}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={cn(
-                                    "flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium",
-                                  )}
-                                >
-                                  {index + 1}
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium break-all">
-                                    {attachment.name}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {formatDateTime(attachment.created_date)}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {fileData && (
-                                  <div className="mt-4 flex justify-end">
-                                    {fileData && (
-                                      <DetailButtons file={fileData} />
-                                    )}
-                                    {fileManager.Dialogues}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              )}
-              {consent?.note && (
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold mb-2">{t("note")}</h3>
-                  <Alert className="bg-blue-50 border-blue-200 text-blue-500">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="whitespace-pre-wrap font-medium text-base">
-                      {consent.note}
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              )}
-            </div>
-
             <div>
               <h2 className="text-xl font-semibold mb-4">
                 {t("consent_details")}
@@ -318,6 +250,74 @@ export function ConsentDetailPage() {
                     )}
                 </div>
               </Card>
+            </div>
+
+            <div className="lg:col-span-2">
+              {consent.source_attachments.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">
+                    {t("supporting_documents")}
+                  </h3>
+                  <Card className="p-5">
+                    <div>
+                      <div className="divide-y">
+                        {consent.source_attachments.map((attachment, index) => {
+                          const isActive =
+                            fileData && fileData.id === attachment.id;
+                          return (
+                            <div
+                              key={attachment.id}
+                              className={cn(
+                                "py-2 flex items-center justify-between",
+                                isActive && "bg-primary-50",
+                              )}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={cn(
+                                    "flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium",
+                                  )}
+                                >
+                                  {index + 1}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium break-all">
+                                    {attachment.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {formatDateTime(attachment.created_date)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {fileData && (
+                                  <div className="mt-4 flex justify-end">
+                                    {fileData && (
+                                      <DetailButtons file={fileData} />
+                                    )}
+                                    {fileManager.Dialogues}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              )}
+              {consent?.note && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold mb-2">{t("note")}</h3>
+                  <Alert className="bg-blue-50 border-blue-200 text-blue-500">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="whitespace-pre-wrap font-medium text-base">
+                      {consent.note}
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
             </div>
           </div>
         </div>
