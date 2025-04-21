@@ -3040,6 +3040,7 @@
   "ventilator_oxygen_modality_oxygen_rate": "Oxygen Flow Rate",
   "ventilator_spo2": "SpO₂",
   "verification": "Verification",
+  "verification_details": "Verification Details",
   "verification_failed": "Verification Failed",
   "verified_by": "Verified by",
   "verify": "Verify",

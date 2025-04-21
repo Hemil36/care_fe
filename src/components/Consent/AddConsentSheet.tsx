@@ -40,7 +40,6 @@ import {
 
 import FileUploadDialog from "@/components/Files/FileUploadDialog";
 
-import useAuthUser from "@/hooks/useAuthUser";
 import useFileUpload from "@/hooks/useFileUpload";
 
 import mutate from "@/Utils/request/mutate";
@@ -50,9 +49,9 @@ import {
   CONSENT_STATUSES,
   CreateConsentRequest,
   VERIFICATION_TYPES,
+  VerificationType,
 } from "@/types/consent/consent";
 import consentApi from "@/types/consent/consentApi";
-import { UserBase } from "@/types/user/user";
 
 const consentFormSchema = z
   .object({
@@ -107,7 +106,6 @@ export default function AddConsentSheet({
   const [associatingId, setAssociatingId] = useState<string | null>(null);
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
   const queryClient = useQueryClient();
-  const authUser = useAuthUser();
 
   const fileUpload = useFileUpload({
     type: "consent",
@@ -135,20 +133,46 @@ export default function AddConsentSheet({
     fileUpload.clearFiles();
   };
 
-  const { mutate: createConsent, isPending } = useMutation({
-    mutationFn: (data: CreateConsentRequest) =>
-      mutate(consentApi.create, {
-        pathParams: { patientId },
-      })(data),
-    onSuccess: async (response) => {
+  const { mutate: addVerification } = useMutation({
+    mutationFn: (params: {
+      id: string;
+      verificationType: VerificationType;
+      note?: string;
+    }) =>
+      mutate(consentApi.addVerification, {
+        pathParams: { patientId, id: params.id },
+      })({
+        verification_type: params.verificationType,
+        verified: true,
+        note: params.note,
+      }),
+    onSuccess: () => {
       if (form.getValues("source_attachments")?.length === 0) {
         handleSuccess();
         toast.success(t("consent_created_successfully"));
         return;
       }
 
-      setAssociatingId(response.id);
       setOpenUploadDialog(true);
+    },
+    onError: () => {
+      toast.error(t("error_adding_verification"));
+    },
+  });
+
+  const { mutate: createConsent, isPending } = useMutation({
+    mutationFn: (data: CreateConsentRequest) =>
+      mutate(consentApi.create, {
+        pathParams: { patientId },
+      })(data),
+    onSuccess: async (response) => {
+      setAssociatingId(response.id);
+      // After consent is created, add verification as a separate call
+      addVerification({
+        id: response.id,
+        verificationType: form.getValues("verification_type"),
+        note: form.getValues("note"),
+      });
     },
     onError: () => {
       toast.error(t("error_creating_consent"));
@@ -177,23 +201,6 @@ export default function AddConsentSheet({
   }, [fileUpload.files, form]);
 
   const onSubmit = (values: ConsentFormValues) => {
-    const verifier: UserBase = {
-      id: authUser.external_id,
-      first_name: authUser.first_name,
-      last_name: authUser.last_name,
-      phone_number: authUser.phone_number || "",
-      user_type: authUser.user_type,
-      gender: authUser.gender || "non_binary",
-      username: authUser.username,
-      email: authUser.email || "",
-      prefix: authUser.prefix || "",
-      suffix: authUser.suffix || "",
-      mfa_enabled: authUser.mfa_enabled || false,
-      last_login: authUser.last_login || new Date().toISOString(),
-      profile_picture_url: authUser.read_profile_picture_url || "",
-      deleted: authUser.deleted || false,
-    };
-
     createConsent({
       status: values.status,
       category: values.category,
@@ -205,14 +212,7 @@ export default function AddConsentSheet({
       },
       encounter: encounterId,
       source_attachments: [],
-      verification_details: [
-        {
-          verified: true,
-          verified_by: verifier,
-          verification_date: new Date().toISOString(),
-          verification_type: values.verification_type,
-        },
-      ],
+      verification_details: [],
       note: values.note,
     });
   };
