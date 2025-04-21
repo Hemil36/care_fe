@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 
 import Loading from "@/components/Common/Loading";
 import PDFViewer from "@/components/Common/PDFViewer";
-import AddConsentDialog from "@/components/Consent/AddConsentDialog";
+import AddConsentSheet from "@/components/Consent/AddConsentSheet";
 import { FileUploadModel } from "@/components/Patient/models";
 
 import routes from "@/Utils/request/api";
@@ -278,7 +278,7 @@ export const EncounterConsentsTab = ({ encounter }: EncounterTabProps) => {
         </div>
 
         {
-          <AddConsentDialog
+          <AddConsentSheet
             patientId={encounter.patient.id}
             encounterId={encounter.id}
             trigger={

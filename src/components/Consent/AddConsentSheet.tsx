@@ -13,14 +13,6 @@ import CareIcon from "@/CAREUI/icons/CareIcon";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Form,
   FormControl,
   FormDescription,
@@ -37,6 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 import FileUploadDialog from "@/components/Files/FileUploadDialog";
 
@@ -88,19 +88,19 @@ const consentFormSchema = z
 
 type ConsentFormValues = z.infer<ReturnType<typeof consentFormSchema>>;
 
-interface AddConsentDialogProps {
+interface AddConsentSheetProps {
   patientId: string;
   encounterId: string;
   trigger?: React.ReactNode;
   onSuccess?: () => void;
 }
 
-export default function AddConsentDialog({
+export default function AddConsentSheet({
   patientId,
   encounterId,
   trigger,
   onSuccess,
-}: AddConsentDialogProps) {
+}: AddConsentSheetProps) {
   const { t } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -226,24 +226,24 @@ export default function AddConsentDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
         {trigger || (
           <Button variant="outline" className="gap-2">
             <Plus className="size-4" />
             {t("add_consent")}
           </Button>
         )}
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t("add_consent")}</DialogTitle>
-          <DialogDescription>{t("add_consent_description")}</DialogDescription>
-        </DialogHeader>
+      </SheetTrigger>
+      <SheetContent className="overflow-y-auto sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>{t("add_consent")}</SheetTitle>
+          <SheetDescription>{t("add_consent_description")}</SheetDescription>
+        </SheetHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="mt-2 space-y-4"
+            className="mt-8 space-y-4 pr-6"
           >
             <>
               <FormField
@@ -471,12 +471,12 @@ export default function AddConsentDialog({
               />
             </>
 
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button type="submit" className="w-full mt-6" disabled={isPending}>
               {isPending ? t("saving") : t("save")}
             </Button>
           </form>
         </Form>
-      </DialogContent>
+      </SheetContent>
       {fileUpload.Dialogues}
       <FileUploadDialog
         open={openUploadDialog}
@@ -485,6 +485,6 @@ export default function AddConsentDialog({
         associatingId={associatingId!}
         type="consent"
       />
-    </Dialog>
+    </Sheet>
   );
 }
