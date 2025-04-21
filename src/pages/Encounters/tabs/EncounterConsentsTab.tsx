@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 
 import Loading from "@/components/Common/Loading";
 import PDFViewer from "@/components/Common/PDFViewer";
-import LinkConsentDialog from "@/components/Consent/LinkConsentDialog";
+import AddConsentDialog from "@/components/Consent/AddConsentDialog";
 import { FileUploadModel } from "@/components/Patient/models";
 
 import routes from "@/Utils/request/api";
@@ -195,7 +195,7 @@ function ConsentCard({
                 />
                 <div className="flex flex-wrap text-sm font-medium space-x-1">
                   <span className="break-words">
-                    {primaryAttachment?.name || t("unnamed_file")}
+                    {primaryAttachment?.name || t("no_files_attached")}
                     {totalAttachments > 1 && ", "}
                   </span>
                   {totalAttachments > 1 && (
@@ -278,7 +278,7 @@ export const EncounterConsentsTab = ({ encounter }: EncounterTabProps) => {
         </div>
 
         {
-          <LinkConsentDialog
+          <AddConsentDialog
             patientId={encounter.patient.id}
             encounterId={encounter.id}
             trigger={
