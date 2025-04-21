@@ -429,12 +429,13 @@ export function MedicationRequestQuestion({
                     <React.Fragment key={medication.id || index}>
                       {!desktopLayout ? (
                         <Card
-                          className={cn("mb-2 rounded-lg", {
-                            "border border-primary-500":
-                              expandedMedicationIndex === index,
-                            "border-0 shadow-none":
-                              expandedMedicationIndex !== index,
-                          })}
+                          className={cn(
+                            "mb-2 rounded-lg border-0 shadow-none",
+                            {
+                              "border border-primary-500":
+                                expandedMedicationIndex === index,
+                            },
+                          )}
                         >
                           <Collapsible
                             open={expandedMedicationIndex === index}
