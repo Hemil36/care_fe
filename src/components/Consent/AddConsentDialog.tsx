@@ -88,19 +88,19 @@ const consentFormSchema = z
 
 type ConsentFormValues = z.infer<ReturnType<typeof consentFormSchema>>;
 
-interface LinkConsentDialogProps {
+interface AddConsentDialogProps {
   patientId: string;
   encounterId: string;
   trigger?: React.ReactNode;
   onSuccess?: () => void;
 }
 
-export default function LinkConsentDialog({
+export default function AddConsentDialog({
   patientId,
   encounterId,
   trigger,
   onSuccess,
-}: LinkConsentDialogProps) {
+}: AddConsentDialogProps) {
   const { t } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
