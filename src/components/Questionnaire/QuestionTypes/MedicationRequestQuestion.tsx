@@ -235,10 +235,10 @@ export function MedicationRequestQuestion({
       authored_on: new Date().toISOString(),
     };
 
-    if (!desktopLayout) {
-      setNewMedicationInSheet(initialDetails);
-    } else {
+    if (desktopLayout) {
       addNewMedication(initialDetails);
+    } else {
+      setNewMedicationInSheet(initialDetails);
     }
   };
 
