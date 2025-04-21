@@ -431,10 +431,8 @@ export function MedicationRequestQuestion({
                         <Card
                           className={cn(
                             "mb-2 rounded-lg border-0 shadow-none",
-                            {
-                              "border border-primary-500":
-                                expandedMedicationIndex === index,
-                            },
+                            expandedMedicationIndex === index &&
+                              "border border-primary-500",
                           )}
                         >
                           <Collapsible
