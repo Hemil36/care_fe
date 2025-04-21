@@ -85,7 +85,7 @@ const consentFormSchema = z
     }
   });
 
-type ConsentFormValues = z.infer<ReturnType<typeof consentFormSchema>>;
+type ConsentFormValues = z.infer<typeof consentFormSchema>;
 
 interface AddConsentSheetProps {
   patientId: string;
@@ -178,9 +178,8 @@ export default function AddConsentSheet({
       toast.error(t("error_creating_consent"));
     },
   });
-
   const form = useForm<ConsentFormValues>({
-    resolver: zodResolver(consentFormSchema()),
+    resolver: zodResolver(consentFormSchema),
     defaultValues: {
       decision: "permit",
       category: "treatment",
