@@ -72,9 +72,9 @@ interface EntitySelectionSheetProps {
    */
   children: ReactNode;
   /**
-   * Optional add placeholder text override
+   * Optional placeholder text for the ValueSetSelect
    */
-  addPlaceholder?: string;
+  placeholder?: string;
   /**
    * Function to handle confirming the current entity selection
    * This is called when the user clicks the "Add" button
@@ -92,7 +92,7 @@ export function EntitySelectionSheet({
   onEntitySelected,
   onConfirm,
   children,
-  addPlaceholder,
+  placeholder,
 }: EntitySelectionSheetProps) {
   const { t } = useTranslation();
   const [selectedEntity, setSelectedEntity] = useState<Code | null>(null);
@@ -117,7 +117,7 @@ export function EntitySelectionSheet({
     <>
       <ValueSetSelect
         system={system}
-        placeholder={addPlaceholder}
+        placeholder={placeholder}
         onSelect={handleSelect}
         disabled={disabled}
         searchPostFix={searchPostFix}
@@ -156,7 +156,7 @@ export function EntitySelectionSheet({
           ) : (
             <ValueSetSelect
               system={system}
-              placeholder={addPlaceholder}
+              placeholder={placeholder}
               onSelect={handleSelect}
               disabled={disabled}
               hideTrigger={true}

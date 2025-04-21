@@ -581,7 +581,7 @@ export function MedicationRequestQuestion({
           disabled={disabled}
           onEntitySelected={handleAddMedication}
           onConfirm={handleConfirmMedicationInSheet}
-          addPlaceholder={addMedicationPlaceholder}
+          placeholder={addMedicationPlaceholder}
         >
           {newMedicationSheetContent}
         </EntitySelectionSheet>
