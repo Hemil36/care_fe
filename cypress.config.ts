@@ -32,12 +32,19 @@ export default defineConfig({
     },
     baseUrl: "http://localhost:4000",
     retries: {
-      runMode: 1,
+      runMode: 2,
       openMode: 0,
     },
-    requestTimeout: 15000,
+    requestTimeout: 20000,
     numTestsKeptInMemory: 15,
-    experimentalMemoryManagement: true,
+    video: true,
+    screenshotOnRunFailure: true,
+    // Chromium-specific settings
+    viewportWidth: 1280,
+    viewportHeight: 720,
+    testIsolation: true,
+    chromeWebSecurity: true,
+    modifyObstructiveCode: false,
   },
   env: {
     API_URL: process.env.REACT_CARE_API_URL,
