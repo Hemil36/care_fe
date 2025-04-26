@@ -301,10 +301,10 @@ export default function LocationMultiSelect({
               ))}
             </div>
           </ScrollArea>
-          <div className="h-px bg-border mx-3" />
+          <div className="lex flex-col border-b py-1" />
         </>
       )}
-      <div className="relative w-full px-3">
+      <div className="relative w-full px-3 pt-1">
         <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 size-4 text-muted-foreground" />
         <input
           type="text"
