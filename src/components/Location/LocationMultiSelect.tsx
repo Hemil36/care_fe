@@ -54,25 +54,6 @@ function LocationTreeNode({
     staleTime: 5 * 60 * 1000,
   });
 
-  // Check if location has children by making a separate query
-  const { data: hasChildrenData } = useQuery({
-    queryKey: ["locations", facilityId, "has-children", location.id],
-    queryFn: query(locationApi.list, {
-      pathParams: { facility_id: facilityId },
-      queryParams: {
-        parent: location.id,
-        mode: "kind",
-        limit: 1,
-      },
-    }),
-    enabled: !isExpanded && !children,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const hasChildren = isExpanded
-    ? children?.results && children.results.length > 0
-    : hasChildrenData?.results && hasChildrenData.results.length > 0;
-
   // Filter children based on search query
   const filteredChildren = children?.results.filter((child) =>
     child.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -98,7 +79,7 @@ function LocationTreeNode({
         style={{ paddingLeft: `${level}rem` }}
         onClick={(e) => {
           e.stopPropagation();
-          if (hasChildren) {
+          if (location.has_children) {
             onToggleExpand(location.id);
           }
         }}
@@ -107,7 +88,7 @@ function LocationTreeNode({
           <Button variant="ghost" size="icon" className="size-6">
             <div className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
           </Button>
-        ) : hasChildren ? (
+        ) : location.has_children ? (
           <Button
             variant="ghost"
             size="icon"
