@@ -127,6 +127,21 @@ export function EntitySelectionSheet({
         <SheetContent
           className="px-0 pt-2 pb-0 rounded-t-3xl sm:max-w-md sm:mx-auto [&>button:first-child]:hidden"
           side="bottom"
+          onInteractOutside={(event) => {
+            const target = event.target as Node;
+            const selectContent = document.querySelector(
+              '[data-slot="select-content"]',
+            );
+            const currentTarget = event.currentTarget as Node;
+
+            // Prevent Sheet from closing clicking within the sheet when select dropdown is open
+            if (
+              selectContent?.contains?.(target) ||
+              currentTarget?.contains?.(target)
+            ) {
+              event.preventDefault();
+            }
+          }}
         >
           {selectedEntity ? (
             <div className="flex flex-col h-auto min-h-[50vh] max-h-[80vh] sm:max-h-[70vh] md:max-h-[60vh]">
