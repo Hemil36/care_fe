@@ -129,19 +129,26 @@ export function EntitySelectionSheet({
           side="bottom"
           onInteractOutside={(event) => {
             const target = event.target as Node;
+            const currentTarget = event.currentTarget as Node;
             const selectContent = document.querySelector(
               '[data-slot="select-content"]',
             );
-            const currentTarget = event.currentTarget as Node;
+            const sheetOverlay = document.querySelector(
+              '[data-slot="sheet-overlay"]',
+            );
 
-            // Prevent closing when clicking inside the sheet or on dropdown elements
+            // Allow closing when clicking overlay
+            if (sheetOverlay?.contains?.(target)) {
+              return; // Let the default close behavior happen
+            }
+
+            // Prevent closing when clicking dropdown elements or inside the sheet
             if (
               selectContent?.contains?.(target) ||
               currentTarget?.contains?.(target)
             ) {
               event.preventDefault();
             }
-            // Allow closing when clicking the overlay (outside both sheet and dropdown)
           }}
         >
           {selectedEntity ? (
