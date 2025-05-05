@@ -133,21 +133,16 @@ export function EntitySelectionSheet({
             const selectContent = document.querySelector(
               '[data-slot="select-content"]',
             );
-            const sheetOverlay = document.querySelector(
-              '[data-slot="sheet-overlay"]',
-            );
 
-            // Allow closing when clicking overlay
-            if (sheetOverlay?.contains?.(target)) {
-              return; // Let the default close behavior happen
-            }
-
-            // Prevent closing when clicking dropdown elements or inside the sheet
-            if (
-              selectContent?.contains?.(target) ||
-              currentTarget?.contains?.(target)
-            ) {
-              event.preventDefault();
+            // If dropdown is open, prevent closing when clicking inside dropdown or sheet
+            if (selectContent) {
+              if (
+                selectContent.contains(target) ||
+                currentTarget.contains(target)
+              ) {
+                event.preventDefault();
+              }
+              // Allow closing when clicking overlay or elsewhere
             }
           }}
         >
