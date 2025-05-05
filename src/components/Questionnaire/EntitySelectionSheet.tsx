@@ -134,13 +134,14 @@ export function EntitySelectionSheet({
             );
             const currentTarget = event.currentTarget as Node;
 
-            // Prevent Sheet from closing clicking within the sheet when select dropdown is open
+            // Prevent closing when clicking inside the sheet or on dropdown elements
             if (
               selectContent?.contains?.(target) ||
               currentTarget?.contains?.(target)
             ) {
               event.preventDefault();
             }
+            // Allow closing when clicking the overlay (outside both sheet and dropdown)
           }}
         >
           {selectedEntity ? (
