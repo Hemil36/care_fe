@@ -6,6 +6,8 @@ import { NavMain } from "@/components/ui/sidebar/nav-main";
 
 import { UserFacilityModel } from "@/components/Users/models";
 
+import { useCareApps } from "@/hooks/useCareApps";
+
 import { getPermissions } from "@/common/Permissions";
 
 import routes from "@/Utils/request/api";
@@ -106,6 +108,12 @@ function generateFacilityLinks(
 export function FacilityNav({ selectedFacility }: FacilityNavProps) {
   const { t } = useTranslation();
   const { hasPermission } = usePermissions();
+  const careApps = useCareApps();
+  const navItems = careApps
+    .filter((c) => !!c.navItems)
+    .flatMap((c) =>
+      c.navItems?.({ facilityId: selectedFacility?.id }),
+    ) as NavigationLink[];
 
   const { data: facilityData } = useQuery({
     queryKey: ["facility", selectedFacility?.id],
@@ -130,6 +138,11 @@ export function FacilityNav({ selectedFacility }: FacilityNavProps) {
     canViewEncounter,
   };
   return (
-    <NavMain links={generateFacilityLinks(selectedFacility, t, permissions)} />
+    <NavMain
+      links={[
+        ...generateFacilityLinks(selectedFacility, t, permissions),
+        ...navItems,
+      ]}
+    />
   );
 }
