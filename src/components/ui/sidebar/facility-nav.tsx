@@ -109,7 +109,7 @@ export function FacilityNav({ selectedFacility }: FacilityNavProps) {
   const { t } = useTranslation();
   const { hasPermission } = usePermissions();
   const careApps = useCareApps();
-  const navItems = careApps
+  const pluginNavItems = careApps
     .filter((c) => !!c.navItems)
     .flatMap((c) =>
       c.navItems?.({ facilityId: selectedFacility?.id }),
@@ -141,7 +141,7 @@ export function FacilityNav({ selectedFacility }: FacilityNavProps) {
     <NavMain
       links={[
         ...generateFacilityLinks(selectedFacility, t, permissions),
-        ...navItems,
+        ...pluginNavItems,
       ]}
     />
   );
