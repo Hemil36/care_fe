@@ -106,7 +106,7 @@ export type PluginManifest = {
   components?: PluginComponentMap;
   encounterTabs?: Record<string, LazyComponent<React.FC<EncounterTabProps>>>;
   devices?: readonly PluginDeviceManifest[];
-  navItems?: ({ facilityId }: { facilityId?: string }) => NavigationLink[];
+  navItems?: NavigationLink[];
 };
 
 export { pluginMap };

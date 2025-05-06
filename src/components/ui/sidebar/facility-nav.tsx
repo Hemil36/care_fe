@@ -112,7 +112,10 @@ export function FacilityNav({ selectedFacility }: FacilityNavProps) {
   const pluginNavItems = careApps
     .filter((c) => !!c.navItems)
     .flatMap((c) =>
-      c.navItems?.({ facilityId: selectedFacility?.id }),
+      c.navItems?.map((item) => ({
+        ...item,
+        url: item.url.replace(":facilityId", selectedFacility?.id ?? ""),
+      })),
     ) as NavigationLink[];
 
   const { data: facilityData } = useQuery({
