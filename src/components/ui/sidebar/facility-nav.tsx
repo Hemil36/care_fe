@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
 import { NavMain } from "@/components/ui/sidebar/nav-main";
@@ -28,19 +27,50 @@ interface FacilityNavProps {
 
 function generateFacilityLinks(
   selectedFacility: UserFacilityModel | null,
-  t: TFunction,
-  permissions: {
-    canViewAppointments: boolean;
-    canListEncounters: boolean;
-    canCreateAppointment: boolean;
-    canCreateEncounter: boolean;
-    canViewEncounter: boolean;
-  },
+  links: NavigationLink[],
 ) {
   if (!selectedFacility) return [];
 
-  const baseUrl = `/facility/${selectedFacility.id}`;
-  const links: NavigationLink[] = [
+  return links.map((link) => ({
+    ...link,
+    url: link.url.replace(":facilityId", selectedFacility.id),
+  }));
+}
+
+export function FacilityNav({ selectedFacility }: FacilityNavProps) {
+  const { t } = useTranslation();
+  const { hasPermission } = usePermissions();
+  const careApps = useCareApps();
+  const pluginNavItems = careApps
+    .filter((c) => !!c.navItems)
+    .flatMap((c) => c.navItems) as NavigationLink[];
+
+  const { data: facilityData } = useQuery({
+    queryKey: ["facility", selectedFacility?.id],
+    queryFn: query(routes.getPermittedFacility, {
+      pathParams: { id: selectedFacility?.id ?? "" },
+    }),
+    enabled: !!selectedFacility?.id,
+  });
+
+  const {
+    canViewAppointments,
+    canListEncounters,
+    canCreateAppointment,
+    canCreateEncounter,
+    canViewEncounter,
+  } = getPermissions(hasPermission, facilityData?.permissions ?? []);
+  const permissions = {
+    canViewAppointments,
+    canListEncounters,
+    canCreateAppointment,
+    canCreateEncounter,
+    canViewEncounter,
+  };
+
+  const baseUrl = `/facility/:facilityId`;
+
+  const baseLinks: NavigationLink[] = [
     { name: t("overview"), url: `${baseUrl}/overview`, icon: "d-hospital" },
     {
       name: t("appointments"),
@@ -102,50 +132,12 @@ function generateFacilityLinks(
     },
   ];
 
-  return links;
-}
-
-export function FacilityNav({ selectedFacility }: FacilityNavProps) {
-  const { t } = useTranslation();
-  const { hasPermission } = usePermissions();
-  const careApps = useCareApps();
-  const pluginNavItems = careApps
-    .filter((c) => !!c.navItems)
-    .flatMap((c) =>
-      c.navItems?.map((item) => ({
-        ...item,
-        url: item.url.replace(":facilityId", selectedFacility?.id ?? ""),
-      })),
-    ) as NavigationLink[];
-
-  const { data: facilityData } = useQuery({
-    queryKey: ["facility", selectedFacility?.id],
-    queryFn: query(routes.getPermittedFacility, {
-      pathParams: { id: selectedFacility?.id ?? "" },
-    }),
-    enabled: !!selectedFacility?.id,
-  });
-
-  const {
-    canViewAppointments,
-    canListEncounters,
-    canCreateAppointment,
-    canCreateEncounter,
-    canViewEncounter,
-  } = getPermissions(hasPermission, facilityData?.permissions ?? []);
-  const permissions = {
-    canViewAppointments,
-    canListEncounters,
-    canCreateAppointment,
-    canCreateEncounter,
-    canViewEncounter,
-  };
   return (
     <NavMain
-      links={[
-        ...generateFacilityLinks(selectedFacility, t, permissions),
+      links={generateFacilityLinks(selectedFacility, [
+        ...baseLinks,
         ...pluginNavItems,
-      ]}
+      ])}
     />
   );
 }
