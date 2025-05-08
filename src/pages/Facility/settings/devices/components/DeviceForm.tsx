@@ -127,7 +127,7 @@ export default function DeviceForm({ facilityId, device, onSuccess }: Props) {
     contact: [],
   };
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
@@ -204,13 +204,13 @@ export default function DeviceForm({ facilityId, device, onSuccess }: Props) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 items-start">
           <FormField
             control={form.control}
             name="registered_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>{t("registered_name")}</FormLabel>
+                <FormLabel aria-required>{t("registered_name")}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -246,7 +246,7 @@ export default function DeviceForm({ facilityId, device, onSuccess }: Props) {
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>{t("status")}</FormLabel>
+                <FormLabel aria-required>{t("status")}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger data-cy="device-status-select">
@@ -271,7 +271,7 @@ export default function DeviceForm({ facilityId, device, onSuccess }: Props) {
             name="availability_status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>{t("availability_status")}</FormLabel>
+                <FormLabel aria-required>{t("availability_status")}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger data-cy="device-availability-status-select">
@@ -590,6 +590,7 @@ export default function DeviceForm({ facilityId, device, onSuccess }: Props) {
         <div className="flex items-center justify-end">
           <Button
             variant="outline"
+            type="button"
             className="m-4"
             onClick={() => {
               if (device) {

@@ -140,6 +140,7 @@ export const structuredHandlers: {
           priority: encounter.priority,
           external_identifier: encounter.external_identifier,
           facility: facilityId,
+          discharge_summary_advice: encounter.discharge_summary_advice,
         };
 
         return {

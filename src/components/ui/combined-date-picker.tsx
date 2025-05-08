@@ -20,13 +20,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface CombinedDatePickerProps {
   value?: Date;
   onChange: (date: Date | undefined) => void;
-  disabled?: boolean;
   placeholder?: string;
   buttonClassName?: string;
   popoverAlign?: "start" | "center" | "end";
   defaultTab?: "absolute" | "relative";
   classes?: string;
   dateFormat?: string;
+  disabled?: boolean;
+  blockDate?: (date: Date) => boolean;
 }
 
 export function CombinedDatePicker({
@@ -39,6 +40,7 @@ export function CombinedDatePicker({
   defaultTab = "absolute",
   classes,
   dateFormat = "PPP",
+  blockDate,
 }: CombinedDatePickerProps) {
   const { t } = useTranslation();
 
@@ -82,19 +84,21 @@ export function CombinedDatePicker({
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="absolute">{t("absolute_date")}</TabsTrigger>
-              <TabsTrigger value="relative">{t("relative_date")}</TabsTrigger>
+              <TabsTrigger value="relative">{t("quick_finder")}</TabsTrigger>
             </TabsList>
             <TabsContent value="absolute" className="p-0">
               <Calendar
                 mode="single"
                 selected={value}
                 onSelect={handleSelect}
+                disabled={blockDate}
               />
             </TabsContent>
             <TabsContent value="relative" className="p-0">
               <RelativeDatePicker
                 value={value}
                 onDateChange={handleRelativeDateChange}
+                disabled={blockDate}
               />
             </TabsContent>
           </Tabs>

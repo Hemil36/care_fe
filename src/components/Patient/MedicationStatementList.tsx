@@ -102,7 +102,7 @@ function MedicationRow({ statement, isEnteredInError }: MedicationRowProps) {
         <div className="flex items-center gap-2">
           <Avatar
             name={formatName(statement.created_by, true)}
-            className="w-4 h-4"
+            className="size-4"
             imageUrl={statement.created_by.read_profile_picture_url}
           />
           <span className="text-sm">{formatName(statement.created_by)}</span>
@@ -148,7 +148,7 @@ export function MedicationStatementList({
   if (!filteredMedications?.length) {
     return (
       <MedicationStatementListLayout className={className}>
-        <p className="text-gray-500">{t("no_ongoing_medications")}</p>
+        <p className="text-gray-500">{t("no_medication_statements")}</p>
       </MedicationStatementListLayout>
     );
   }
@@ -239,7 +239,7 @@ const MedicationStatementListLayout = ({
     <Card className={cn("rounded-sm ", className)}>
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle>
-          {t("ongoing_medications")}{" "}
+          {t("medication_statements")}{" "}
           {medicationsCount ? `(${medicationsCount})` : ""}
         </CardTitle>
       </CardHeader>
