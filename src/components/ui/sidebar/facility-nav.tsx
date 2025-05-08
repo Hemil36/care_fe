@@ -16,7 +16,7 @@ import { usePermissions } from "@/context/PermissionContext";
 export interface NavigationLink {
   name: string;
   url: string;
-  icon?: string;
+  icon?: string | React.ReactNode;
   visibility?: boolean;
   children?: NavigationLink[];
 }
