@@ -12,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -22,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import useAuthUser from "@/hooks/useAuthUser";
 import useFileUpload from "@/hooks/useFileUpload";
 
 import { BACKEND_ALLOWED_EXTENSIONS } from "@/common/constants";
@@ -31,17 +29,14 @@ import {
   CONSENT_CATEGORIES,
   CONSENT_DECISIONS,
   CONSENT_STATUSES,
-  CreateConsentRequest,
-  VERIFICATION_TYPES,
+  CreateConsentQuestion,
 } from "@/types/consent/consent";
-import { FileUploadQuestion } from "@/types/files/files";
 import { QuestionValidationError } from "@/types/questionnaire/batch";
 import {
   QuestionnaireResponse,
   ResponseValue,
 } from "@/types/questionnaire/form";
 import { Question } from "@/types/questionnaire/question";
-import { validateFields } from "@/types/questionnaire/validation";
 
 interface FilesQuestionProps {
   question: Question;
@@ -58,13 +53,11 @@ interface FilesQuestionProps {
 
 const ConsentBlock = ({
   value,
-  index,
   handleUpdate,
   handleRemove,
 }: {
-  value: Partial<CreateConsentRequest>;
-  index: number;
-  handleUpdate: (value: Partial<CreateConsentRequest>) => void;
+  value: Partial<CreateConsentQuestion>;
+  handleUpdate: (value: Partial<CreateConsentQuestion>) => void;
   handleRemove: () => void;
 }) => {
   const fileUpload = useFileUpload({
@@ -78,16 +71,12 @@ const ConsentBlock = ({
     if (fileUpload.files.length) {
       handleUpdate({
         ...value,
-        file_data: fileUpload.files[0],
-        original_name: fileUpload.files[0].name,
-        file_name: fileUpload.files[0].name,
+        file: fileUpload.files[0],
       });
     } else {
       handleUpdate({
         ...value,
-        file_data: undefined,
-        original_name: undefined,
-        file_name: undefined,
+        file: undefined,
       });
     }
   }, [fileUpload.files]);
@@ -96,14 +85,14 @@ const ConsentBlock = ({
     <div className="border p-4 rounded-md">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1 flex flex-col">
-          <Label>{t("consent_date")}</Label>
+          <Label>{t("consent_given_on")}</Label>
           <DatePicker
             date={value.date}
             onChange={(date) => handleUpdate({ date })}
           />
         </div>
         <div className="space-y-1  flex flex-col">
-          <Label>{t("consent_period_start_date")}</Label>
+          <Label>{t("consent_valid_from")}</Label>
           <DatePicker
             date={value.period?.start}
             onChange={(date) =>
@@ -112,7 +101,7 @@ const ConsentBlock = ({
           />
         </div>
         <div className="space-y-1  flex flex-col">
-          <Label>{t("consent_period_end_date")}</Label>
+          <Label>{t("consent_valid_until")}</Label>
           <DatePicker
             date={value.period?.end}
             onChange={(date) =>
@@ -128,7 +117,7 @@ const ConsentBlock = ({
           value={value.decision}
           onValueChange={(decision) =>
             handleUpdate({
-              decision: decision as CreateConsentRequest["decision"],
+              decision: decision as CreateConsentQuestion["decision"],
             })
           }
         >
@@ -151,7 +140,7 @@ const ConsentBlock = ({
           value={value.category}
           onValueChange={(category) =>
             handleUpdate({
-              category: category as CreateConsentRequest["category"],
+              category: category as CreateConsentQuestion["category"],
             })
           }
         >
@@ -159,19 +148,27 @@ const ConsentBlock = ({
             <SelectValue
               placeholder={t("select_category")}
               className="flex justify-start items-center w-full"
-            />
+            >
+              {value.category
+                ? t(`consent_category__${value.category}`)
+                : t("select_category")}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {CONSENT_CATEGORIES.map((category) => (
               <SelectItem key={category} value={category}>
-                <p>{t(`consent_category__${category}`)}</p>
+                <div className="flex flex-col gap-1">
+                  <p className="font-medium">
+                    {t(`consent_category__${category}`)}
+                  </p>
+                  <p className="text-xs text-gray-500 whitespace-normal">
+                    {t(`consent_category__${category}_description`)}
+                  </p>
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <div className="text-xs text-blue-600 bg-blue-100 rounded-md p-2 mt-1">
-          {t(`consent_category__${value.category}_description`)}
-        </div>
       </div>
 
       <div className="mt-2 space-y-1">
@@ -179,7 +176,7 @@ const ConsentBlock = ({
         <Select
           value={value.status}
           onValueChange={(status) =>
-            handleUpdate({ status: status as CreateConsentRequest["status"] })
+            handleUpdate({ status: status as CreateConsentQuestion["status"] })
           }
         >
           <SelectTrigger>
@@ -195,36 +192,8 @@ const ConsentBlock = ({
         </Select>
       </div>
 
-      <div className="mt-2 space-y-1">
-        <Label>{t("consent_verification_type")}</Label>
-        <Select
-          value={value.verification_details?.[0]?.verification_type}
-          onValueChange={(verification_type) =>
-            handleUpdate({
-              verification_details: [
-                {
-                  ...value.verification_details?.[0],
-                  verification_type:
-                    verification_type as CreateConsentRequest["verification_details"][0]["verification_type"],
-                },
-              ],
-            })
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={t("select_verification_type")} />
-          </SelectTrigger>
-          <SelectContent>
-            {VERIFICATION_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>
-                {t(`consent_verification_type__${type}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {value.file_data ? (
-        <div>{value.original_name}</div>
+      {value.file ? (
+        <div>{value.file.name}</div>
       ) : (
         <>
           <DropdownMenu>
@@ -300,10 +269,10 @@ export function ConsentQuestion(props: FilesQuestionProps) {
   const { t } = useTranslation();
 
   const values =
-    (questionnaireResponse.values?.[0]?.value as CreateConsentRequest[]) || [];
+    (questionnaireResponse.values?.[0]?.value as CreateConsentQuestion[]) || [];
 
   const handleUpdate = (
-    updates: Partial<CreateConsentRequest>,
+    updates: Partial<CreateConsentQuestion>,
     index: number,
   ) => {
     updateQuestionnaireResponseCB(
@@ -318,20 +287,18 @@ export function ConsentQuestion(props: FilesQuestionProps) {
     );
   };
 
-  const handleAdd = (value: Partial<CreateConsentRequest>) => {
+  const handleAdd = (value: Partial<CreateConsentQuestion>) => {
     updateQuestionnaireResponseCB(
       [
         {
           type: "consent",
-          value: [...values, value as CreateConsentRequest],
+          value: [...values, value as CreateConsentQuestion],
         },
       ],
       questionnaireResponse.question_id,
       questionnaireResponse.note,
     );
   };
-
-  const authUser = useAuthUser();
 
   return (
     <div>
@@ -341,7 +308,6 @@ export function ConsentQuestion(props: FilesQuestionProps) {
             value={value}
             key={index}
             handleUpdate={(v) => handleUpdate(v, index)}
-            index={index}
             handleRemove={() =>
               updateQuestionnaireResponseCB(
                 [
@@ -371,28 +337,7 @@ export function ConsentQuestion(props: FilesQuestionProps) {
               end: undefined,
             },
             encounter: encounterId,
-            verification_details: [
-              {
-                verified: true,
-                verified_by: {
-                  id: authUser.external_id,
-                  first_name: authUser.first_name,
-                  last_name: authUser.last_name,
-                  phone_number: authUser.phone_number || "",
-                  user_type: authUser.user_type,
-                  gender: authUser.gender || "non_binary",
-                  username: authUser.username,
-                  email: authUser.email || "",
-                  prefix: authUser.prefix || "",
-                  suffix: authUser.suffix || "",
-                  mfa_enabled: authUser.mfa_enabled || false,
-                  last_login: authUser.last_login || new Date().toISOString(),
-                  profile_picture_url: authUser.read_profile_picture_url || "",
-                },
-                verification_date: new Date().toISOString(),
-                verification_type: "validation",
-              },
-            ],
+            verification_details: [],
             source_attachments: [],
           });
         }}

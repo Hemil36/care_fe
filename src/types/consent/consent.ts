@@ -57,7 +57,12 @@ export interface ConsentModel {
   note?: string;
 }
 
-export type CreateConsentRequest = Omit<ConsentModel, "id" | "external_id">;
+export type CreateConsentRequest = Omit<
+  ConsentModel,
+  "id" | "external_id" | "verification_details"
+> & {
+  verification_details: [];
+};
 
 export type CreateConsentQuestion = CreateConsentRequest & {
   file: File;

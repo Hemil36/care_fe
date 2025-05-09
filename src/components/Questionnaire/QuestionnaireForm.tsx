@@ -306,6 +306,10 @@ const STRUCTURED_TYPE_VALIDATORS = {
     const files = (response?.value as FileUploadQuestion[]) || [];
     return validateFileUploadQuestion(files, quesitonId);
   },
+  // consent: (response : ResponseValue | undefined, questionId: string) => {
+  //   const consentData = (response?.value as CreateConsentQuestion[]) || [];
+  //   return validateConsentQuestion(consentData, questionId);
+  // }
 } as const;
 
 export function QuestionnaireForm({
@@ -329,6 +333,10 @@ export function QuestionnaireForm({
   const [activeGroupId, setActiveGroupId] = useState<string>();
   const [isInitialized, setIsInitialized] = useState(false);
 
+  const [followupResponses, setFollowupResponses] = useState<
+    { req: any; res?: any; type: any }[]
+  >([]);
+
   const {
     data: questionnaireData,
     isLoading: isQuestionnaireLoading,
@@ -345,7 +353,7 @@ export function QuestionnaireForm({
     mutationFn: mutate(routes.batchRequest, { silent: true }),
     onSuccess: (data: { results: BatchSubmissionResult[] }) => {
       setServerErrors(undefined);
-      handleAfterSubmit(data);
+      handleFollowupResponses(data.results);
       toast.success(t("questionnaire_submitted_successfully"));
       onSubmit?.();
     },
@@ -457,6 +465,26 @@ export function QuestionnaireForm({
     }
   }, [questionnaireData, isInitialized, questionnaireSlug]);
 
+  const handleFollowupResponses = async (
+    allResults: BatchSubmissionResult[],
+  ) => {
+    followupResponses.forEach((followup) => {
+      const results = allResults.filter(
+        (r) => r.reference_id === followup.type,
+      );
+      results.forEach((result, i) => {
+        if (result) {
+          const formData = followup.req[i];
+          processAfterRequest(followup.type, formData, result, {
+            facilityId,
+            patientId,
+            encounterId: encounterId || "",
+          });
+        }
+      });
+    });
+  };
+
   if (isQuestionnaireLoading) {
     return <Loading />;
   }
@@ -532,24 +560,6 @@ export function QuestionnaireForm({
   };
 
   const hasErrors = questionnaireForms.some((form) => form.errors.length > 0);
-
-  const handleAfterSubmit = ({
-    results,
-  }: {
-    results: BatchSubmissionResult[];
-  }) => {
-    const structuredResponses = results.filter(
-      (result) => result.reference_id in STRUCTURED_TYPE_VALIDATORS,
-    );
-
-    structuredResponses.forEach(async (response) => {
-      await processAfterRequest(
-        response.reference_id as keyof typeof STRUCTURED_TYPE_VALIDATORS,
-        response,
-        { patientId, encounterId: encounterId || "", facilityId },
-      );
-    });
-  };
 
   const handleSubmit = async () => {
     setIsDirty(false);
@@ -643,6 +653,10 @@ export function QuestionnaireForm({
           if (response.structured_type) {
             const structuredData = response.values?.[0]?.value;
             if (Array.isArray(structuredData) && structuredData.length > 0) {
+              setFollowupResponses((f) => [
+                ...f,
+                { req: structuredData, type: response.structured_type },
+              ]);
               structuredPromises.push(
                 getStructuredRequests(
                   response.structured_type,

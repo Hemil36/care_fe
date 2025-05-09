@@ -4,7 +4,10 @@ import {
   RequestTypeFor,
 } from "@/components/Questionnaire/structured/types";
 
+import query from "@/Utils/request/query";
 import { readFileAsDataURL } from "@/Utils/utils";
+import { ConsentModel } from "@/types/consent/consent";
+import { fileApi } from "@/types/files/files";
 import { BatchSubmissionResult } from "@/types/questionnaire/batch";
 
 interface StructuredHandlerContext {
@@ -26,7 +29,8 @@ type StructuredHandler<T extends StructuredQuestionType> = {
     }>
   >;
   afterRequest?: (
-    data: BatchSubmissionResult,
+    data: DataTypeFor<T>,
+    res: BatchSubmissionResult,
     context: StructuredHandlerContext,
   ) => Promise<void>;
 };
@@ -211,7 +215,20 @@ export const structuredHandlers: {
         },
         reference_id: "consent",
       })),
-    afterRequest: async (data, { patientId }) => {},
+    afterRequest: async (data, res) => {
+      const consentId = (res.data as ConsentModel).id;
+      const base64 = (await readFileAsDataURL(data.file)).split(",")[1];
+      await query(fileApi.upload, {
+        body: {
+          file_data: base64,
+          original_name: data.file.name,
+          name: data.file.name,
+          associating_id: consentId,
+          file_type: "consent",
+          file_category: "consent_attachment",
+        },
+      })({ signal: new AbortController().signal });
+    },
   },
 };
 
@@ -223,10 +240,11 @@ export const getStructuredRequests = async <T extends StructuredQuestionType>(
 
 export const processAfterRequest = async <T extends StructuredQuestionType>(
   type: T,
-  data: BatchSubmissionResult,
+  data: DataTypeFor<T>,
+  res: BatchSubmissionResult,
   context: StructuredHandlerContext,
 ) => {
   if (structuredHandlers[type].afterRequest) {
-    await structuredHandlers[type].afterRequest(data, context);
+    await structuredHandlers[type].afterRequest(data, res, context);
   }
 };

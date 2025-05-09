@@ -1,9 +1,6 @@
 import { StructuredQuestionType } from "@/components/Questionnaire/data/StructuredFormData";
 
-import {
-  CreateConsentQuestion,
-  CreateConsentRequest,
-} from "@/types/consent/consent";
+import { CreateConsentQuestion } from "@/types/consent/consent";
 import { AllergyIntoleranceRequest } from "@/types/emr/allergyIntolerance/allergyIntolerance";
 import { DiagnosisRequest } from "@/types/emr/diagnosis/diagnosis";
 import { EncounterEditRequest } from "@/types/emr/encounter";

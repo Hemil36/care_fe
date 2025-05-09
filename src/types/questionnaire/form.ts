@@ -1,6 +1,6 @@
 import { StructuredQuestionType } from "@/components/Questionnaire/data/StructuredFormData";
 
-import { CreateConsentRequest } from "@/types/consent/consent";
+import { CreateConsentQuestion } from "@/types/consent/consent";
 import { AllergyIntoleranceRequest } from "@/types/emr/allergyIntolerance/allergyIntolerance";
 import { DiagnosisRequest } from "@/types/emr/diagnosis/diagnosis";
 import { EncounterEditRequest } from "@/types/emr/encounter";
@@ -36,7 +36,7 @@ export type ResponseValue =
   | RV<"appointment", CreateAppointmentQuestion[]>
   | RV<"time_of_death", string[]>
   | RV<"files", FileUploadQuestion[]>
-  | RV<"consent", CreateConsentRequest[]>
+  | RV<"consent", CreateConsentQuestion[]>
   | RV<"time", string | undefined>;
 
 export interface QuestionnaireResponse {
