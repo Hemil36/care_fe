@@ -44,11 +44,15 @@ import { validateFileUploadQuestion } from "./QuestionTypes/FileQuestion";
 import { validateMedicationRequestQuestion } from "./QuestionTypes/MedicationRequestQuestion";
 import { validateMedicationStatementQuestion } from "./QuestionTypes/MedicationStatementQuestion";
 import { QuestionnaireSearch } from "./QuestionnaireSearch";
-import { FIXED_QUESTIONNAIRES } from "./data/StructuredFormData";
+import {
+  FIXED_QUESTIONNAIRES,
+  StructuredQuestionType,
+} from "./data/StructuredFormData";
 import {
   getStructuredRequests,
   processAfterRequest,
 } from "./structured/handlers";
+import { DataTypeFor } from "./structured/types";
 
 export interface QuestionnaireFormState {
   questionnaire: QuestionnaireDetail;
@@ -336,7 +340,10 @@ export function QuestionnaireForm({
   const [isInitialized, setIsInitialized] = useState(false);
 
   const [followupResponses, setFollowupResponses] = useState<
-    { req: any; res?: any; type: any }[]
+    {
+      req: DataTypeFor<StructuredQuestionType>[];
+      type: QuestionnaireResponse["structured_type"];
+    }[]
   >([]);
 
   const {
@@ -477,11 +484,12 @@ export function QuestionnaireForm({
       results.forEach((result, i) => {
         if (result) {
           const formData = followup.req[i];
-          processAfterRequest(followup.type, formData, result, {
-            facilityId,
-            patientId,
-            encounterId: encounterId || "",
-          });
+          if (followup.type)
+            processAfterRequest(followup.type, formData, result, {
+              facilityId,
+              patientId,
+              encounterId: encounterId || "",
+            });
         }
       });
     });
