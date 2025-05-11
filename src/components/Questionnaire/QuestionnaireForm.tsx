@@ -18,6 +18,7 @@ import { PLUGIN_Component } from "@/PluginEngine";
 import routes from "@/Utils/request/api";
 import mutate from "@/Utils/request/mutate";
 import query from "@/Utils/request/query";
+import { CreateConsentQuestion } from "@/types/consent/consent";
 import { MedicationRequest } from "@/types/emr/medicationRequest";
 import { MedicationStatementRequest } from "@/types/emr/medicationStatement";
 import { FileUploadQuestion } from "@/types/files/files";
@@ -38,6 +39,7 @@ import { CreateAppointmentQuestion } from "@/types/scheduling/schedule";
 
 import { QuestionRenderer } from "./QuestionRenderer";
 import { validateAppointmentQuestion } from "./QuestionTypes/AppointmentQuestion";
+import { validateConsentQuestion } from "./QuestionTypes/ConsentQuestion";
 import { validateFileUploadQuestion } from "./QuestionTypes/FileQuestion";
 import { validateMedicationRequestQuestion } from "./QuestionTypes/MedicationRequestQuestion";
 import { validateMedicationStatementQuestion } from "./QuestionTypes/MedicationStatementQuestion";
@@ -306,10 +308,10 @@ const STRUCTURED_TYPE_VALIDATORS = {
     const files = (response?.value as FileUploadQuestion[]) || [];
     return validateFileUploadQuestion(files, quesitonId);
   },
-  // consent: (response : ResponseValue | undefined, questionId: string) => {
-  //   const consentData = (response?.value as CreateConsentQuestion[]) || [];
-  //   return validateConsentQuestion(consentData, questionId);
-  // }
+  consent: (response: ResponseValue | undefined, questionId: string) => {
+    const consentData = (response?.value as CreateConsentQuestion[]) || [];
+    return validateConsentQuestion(consentData, questionId);
+  },
 } as const;
 
 export function QuestionnaireForm({

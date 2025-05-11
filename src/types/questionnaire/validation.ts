@@ -5,7 +5,7 @@ import { QuestionValidationError } from "@/types/questionnaire/batch";
 export interface FieldMetadata<T = unknown> {
   key: string;
   required: boolean;
-  validate?: (value: T) => boolean;
+  validate?: (value: T, fullValue?: unknown) => boolean;
 }
 
 export type FieldDefinitions = {
@@ -87,7 +87,11 @@ export function validateFields(
           field_key: field.key,
           index,
         });
-      } else if (hasField && field.validate && !field.validate(fieldValue)) {
+      } else if (
+        hasField &&
+        field.validate &&
+        !field.validate(fieldValue, value)
+      ) {
         errors.push({
           question_id: questionId,
           error: t("invalid_value"),

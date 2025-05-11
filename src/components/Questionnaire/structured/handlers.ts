@@ -217,17 +217,21 @@ export const structuredHandlers: {
       })),
     afterRequest: async (data, res) => {
       const consentId = (res.data as ConsentModel).id;
-      const base64 = (await readFileAsDataURL(data.file)).split(",")[1];
-      await query(fileApi.upload, {
-        body: {
-          file_data: base64,
-          original_name: data.file.name,
-          name: data.file.name,
-          associating_id: consentId,
-          file_type: "consent",
-          file_category: "consent_attachment",
-        },
-      })({ signal: new AbortController().signal });
+      console.log(data.files);
+      data.files.forEach(async (file) => {
+        console.log(file);
+        const base64 = (await readFileAsDataURL(file.file)).split(",")[1];
+        await query(fileApi.upload, {
+          body: {
+            file_data: base64,
+            original_name: file.file.name,
+            name: file.name,
+            associating_id: consentId,
+            file_type: "consent",
+            file_category: "consent_attachment",
+          },
+        })({ signal: new AbortController().signal });
+      });
     },
   },
 };

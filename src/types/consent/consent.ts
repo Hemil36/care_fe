@@ -65,7 +65,10 @@ export type CreateConsentRequest = Omit<
 };
 
 export type CreateConsentQuestion = CreateConsentRequest & {
-  file: File;
+  files: {
+    file: File;
+    name: string;
+  }[];
 };
 
 export type UpdateConsentRequest = Partial<CreateConsentRequest>;
