@@ -50,7 +50,7 @@ import {
 } from "./data/StructuredFormData";
 import {
   getStructuredRequests,
-  processAfterRequest,
+  processPostSubmit,
 } from "./structured/handlers";
 import { DataTypeFor } from "./structured/types";
 
@@ -485,7 +485,7 @@ export function QuestionnaireForm({
         if (result) {
           const formData = followup.req[i];
           if (followup.type)
-            processAfterRequest(followup.type, formData, result, {
+            processPostSubmit(followup.type, formData, result, {
               facilityId,
               patientId,
               encounterId: encounterId || "",

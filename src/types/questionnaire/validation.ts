@@ -5,7 +5,7 @@ import { QuestionValidationError } from "@/types/questionnaire/batch";
 export interface FieldMetadata<T = unknown> {
   key: string;
   required: boolean;
-  validate?: (value: T, fullValue?: unknown) => boolean;
+  validate?: (value: T, allValues?: unknown) => boolean;
 }
 
 export type FieldDefinitions = {

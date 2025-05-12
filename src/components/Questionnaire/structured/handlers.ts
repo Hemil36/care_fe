@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 import { StructuredQuestionType } from "@/components/Questionnaire/data/StructuredFormData";
 import {
   DataTypeFor,
@@ -7,7 +9,7 @@ import {
 import query from "@/Utils/request/query";
 import { readFileAsDataURL } from "@/Utils/utils";
 import { ConsentModel } from "@/types/consent/consent";
-import { fileApi } from "@/types/files/files";
+import { fileApi } from "@/types/files/filesApi";
 import { BatchSubmissionResult } from "@/types/questionnaire/batch";
 
 interface StructuredHandlerContext {
@@ -28,7 +30,7 @@ type StructuredHandler<T extends StructuredQuestionType> = {
       reference_id: T;
     }>
   >;
-  afterRequest?: (
+  postSubmit?: (
     data: DataTypeFor<T>,
     res: BatchSubmissionResult,
     context: StructuredHandlerContext,
@@ -215,22 +217,25 @@ export const structuredHandlers: {
         },
         reference_id: "consent",
       })),
-    afterRequest: async (data, res) => {
+    postSubmit: async (data, res) => {
       const consentId = (res.data as ConsentModel).id;
-      console.log(data.files);
       data.files.forEach(async (file) => {
-        console.log(file);
         const base64 = (await readFileAsDataURL(file.file)).split(",")[1];
-        await query(fileApi.upload, {
-          body: {
-            file_data: base64,
-            original_name: file.file.name,
-            name: file.name,
-            associating_id: consentId,
-            file_type: "consent",
-            file_category: "consent_attachment",
-          },
-        })({ signal: new AbortController().signal });
+        try {
+          await query(fileApi.upload, {
+            body: {
+              file_data: base64,
+              original_name: file.file.name,
+              name: file.name,
+              associating_id: consentId,
+              file_type: "consent",
+              file_category: "consent_attachment",
+            },
+          })({ signal: new AbortController().signal });
+        } catch {
+          console.error("Error uploading file", file.name);
+          toast.error(`Error uploading file ${file.name}.`);
+        }
       });
     },
   },
@@ -242,13 +247,13 @@ export const getStructuredRequests = async <T extends StructuredQuestionType>(
   context: StructuredHandlerContext,
 ) => await structuredHandlers[type].getRequests(data, context);
 
-export const processAfterRequest = async <T extends StructuredQuestionType>(
+export const processPostSubmit = async <T extends StructuredQuestionType>(
   type: T,
   data: DataTypeFor<T>,
   res: BatchSubmissionResult,
   context: StructuredHandlerContext,
 ) => {
-  if (structuredHandlers[type].afterRequest) {
-    await structuredHandlers[type].afterRequest(data, res, context);
+  if (structuredHandlers[type].postSubmit) {
+    await structuredHandlers[type].postSubmit(data, res, context);
   }
 };
