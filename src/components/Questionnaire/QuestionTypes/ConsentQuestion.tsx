@@ -145,18 +145,28 @@ const ConsentBlock = ({
         <div className="space-y-2  flex flex-col">
           <Label>{t("consent_valid_from")}</Label>
           <DatePicker
-            date={value.period?.start}
+            date={value.period?.start || undefined}
             onChange={(date) =>
-              handleUpdate({ period: { ...value.period, start: date } })
+              handleUpdate({
+                period: {
+                  start: date || null,
+                  end: value.period?.end || null,
+                },
+              })
             }
           />
         </div>
         <div className="space-y-2  flex flex-col">
           <Label>{t("consent_valid_until")}</Label>
           <DatePicker
-            date={value.period?.end}
+            date={value.period?.end || undefined}
             onChange={(date) =>
-              handleUpdate({ period: { ...value.period, end: date } })
+              handleUpdate({
+                period: {
+                  start: value.period?.start || null,
+                  end: date || null,
+                },
+              })
             }
           />
         </div>
@@ -410,7 +420,7 @@ export function ConsentQuestion(props: FilesQuestionProps) {
             date: new Date(),
             period: {
               start: new Date(),
-              end: undefined,
+              end: null,
             },
             encounter: encounterId,
             verification_details: [],
