@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { t } from "i18next";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -5,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import CareIcon from "@/CAREUI/icons/CareIcon";
 
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -137,37 +137,57 @@ const ConsentBlock = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2 flex flex-col md:col-span-2">
           <Label>{t("consent_given_on")}</Label>
-          <DatePicker
-            date={value.date}
-            onChange={(date) => handleUpdate({ date })}
+          <Input
+            type="datetime-local"
+            value={
+              value.date
+                ? format(new Date(value.date), "yyyy-MM-dd'T'HH:mm")
+                : undefined
+            }
+            onChange={(e) => {
+              const value = e.target.value;
+              handleUpdate({ date: value ? new Date(value) : undefined });
+            }}
           />
         </div>
         <div className="space-y-2  flex flex-col">
           <Label>{t("consent_valid_from")}</Label>
-          <DatePicker
-            date={value.period?.start || undefined}
-            onChange={(date) =>
+          <Input
+            type="datetime-local"
+            value={
+              value.period?.start
+                ? format(new Date(value.period.start), "yyyy-MM-dd'T'HH:mm")
+                : undefined
+            }
+            onChange={(e) => {
+              const v = e.target.value;
               handleUpdate({
                 period: {
-                  start: date || null,
+                  start: value ? new Date(v) : null,
                   end: value.period?.end || null,
                 },
-              })
-            }
+              });
+            }}
           />
         </div>
         <div className="space-y-2  flex flex-col">
           <Label>{t("consent_valid_until")}</Label>
-          <DatePicker
-            date={value.period?.end || undefined}
-            onChange={(date) =>
+          <Input
+            type="datetime-local"
+            value={
+              value.period?.end
+                ? format(new Date(value.period.end), "yyyy-MM-dd'T'HH:mm")
+                : undefined
+            }
+            onChange={(e) => {
+              const v = e.target.value;
               handleUpdate({
                 period: {
                   start: value.period?.start || null,
-                  end: date || null,
+                  end: value ? new Date(v) : null,
                 },
-              })
-            }
+              });
+            }}
           />
         </div>
       </div>
