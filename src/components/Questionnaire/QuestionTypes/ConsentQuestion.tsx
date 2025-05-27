@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { t } from "i18next";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import CareIcon from "@/CAREUI/icons/CareIcon";
@@ -115,6 +115,8 @@ const ConsentBlock = ({
     multiple: true,
   });
 
+  const [showFileUploadDropdown, setShowFileUploadDropdown] = useState(false);
+
   useEffect(() => {
     if (fileUpload.files.length) {
       handleUpdate({
@@ -130,6 +132,7 @@ const ConsentBlock = ({
         files: undefined,
       });
     }
+    setShowFileUploadDropdown(false);
   }, [fileUpload.files, fileUpload.fileNames]);
 
   return (
@@ -276,11 +279,18 @@ const ConsentBlock = ({
         </Select>
       </div>
       <Label className="mt-4">{t("supporting_documents")}</Label>
-      <DropdownMenu>
+      <DropdownMenu
+        open={showFileUploadDropdown}
+        onOpenChange={setShowFileUploadDropdown}
+      >
         <DropdownMenuTrigger asChild>
           <Button
             variant={"secondary"}
             className="border border-secondary-300 w-full mt-4"
+            onClick={(e) => {
+              e.preventDefault();
+              setShowFileUploadDropdown(!showFileUploadDropdown);
+            }}
           >
             <CareIcon icon="l-file-upload-alt" />
             {t("attach_documents")}
@@ -295,11 +305,11 @@ const ConsentBlock = ({
             onSelect={(e) => {
               e.preventDefault();
             }}
+            asChild
           >
             <Label className="py-1 flex flex-row items-center cursor-pointer text-primary-900  w-full">
-              <CareIcon icon="l-file-upload-alt" className="mr-1" />
+              <CareIcon icon="l-file-upload-alt" />
               <span>{t("choose_file")}</span>
-
               {fileUpload.Input({
                 className: "hidden",
               })}
