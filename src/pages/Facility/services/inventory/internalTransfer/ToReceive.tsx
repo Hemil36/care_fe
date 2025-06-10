@@ -3,18 +3,11 @@ import { useQueryParams } from "raviger";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import Page from "@/components/Common/Page";
+
+import ToReceiveSupplyRequestTable from "@/pages/Facility/services/inventory/internalTransfer/ToReceiveSupplyRequestTable";
 
 interface Props {
   facilityId: string;
@@ -57,10 +50,7 @@ function EmptyState() {
   );
 }
 
-export default function ToReceive({
-  facilityId: _facilityId,
-  locationId: _locationId,
-}: Props) {
+export default function ToReceive({ facilityId, locationId }: Props) {
   const { t } = useTranslation();
   const [qParams, setQueryParams] = useQueryParams();
   const currentTab = (qParams.tab as Tab) || "requests_raised";
@@ -133,44 +123,10 @@ export default function ToReceive({
           </TabsList>
 
           <TabsContent value="requests_raised" className="mt-4 space-y-4">
-            <div className="flex items-center gap-4">
-              <Input
-                placeholder={t("search_raised_requests")}
-                value={qParams.search || ""}
-                onChange={(e) => updateQuery({ search: e.target.value })}
-                className="max-w-sm"
-              />
-              <Button variant="outline" onClick={() => {}} className="gap-2">
-                {t("filter_by_status")}
-              </Button>
-              <Button variant="outline" onClick={() => {}} className="gap-2">
-                {t("filter_by_priority")}
-              </Button>
-            </div>
-
-            <div className="rounded-lg border bg-white">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("item")}</TableHead>
-                    <TableHead>{t("pack_size")}</TableHead>
-                    <TableHead>{t("qty_requested")}</TableHead>
-                    <TableHead>{t("deliver_from")}</TableHead>
-                    <TableHead>{t("status")}</TableHead>
-                    <TableHead>{t("priority")}</TableHead>
-                    <TableHead>{t("action")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {/* Empty state */}
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-96">
-                      <EmptyState />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
+            <ToReceiveSupplyRequestTable
+              facilityId={facilityId}
+              locationId={locationId}
+            />
           </TabsContent>
 
           <TabsContent value="receive_items" className="mt-4">
