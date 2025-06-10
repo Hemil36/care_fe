@@ -11,6 +11,7 @@ import { Appointments } from "./Appointments";
 import { PatientFilesTab } from "./PatientFiles";
 import { PatientUsers } from "./PatientUsers";
 import { ResourceRequests } from "./ResourceRequests";
+import { Vaccinations } from "./Vaccinations";
 import { Updates } from "./patientUpdates";
 
 export interface PatientProps {
@@ -37,6 +38,10 @@ export const BASE_PATIENT_TABS: Tab[] = [
   {
     route: "appointments",
     component: Appointments,
+  },
+  {
+    route: "vaccinations",
+    component: Vaccinations,
   },
   {
     route: "encounters",
