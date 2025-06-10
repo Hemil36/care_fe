@@ -67,6 +67,15 @@ export function LocationNav() {
               url: `${baseUrl}/supply_deliveries`,
             },
             {
+              header: t("internal_transfers"),
+              name: t("to_receive"),
+              url: `${baseUrl}/internal_transfers/to_receive`,
+            },
+            {
+              name: t("to_dispatch"),
+              url: `${baseUrl}/internal_transfers/to_dispatch`,
+            },
+            {
               header: t("external_supply"),
               // headerIcon: <CareIcon icon="l-box" className="text-gray-400" />,
               name: t("purchase_orders"),

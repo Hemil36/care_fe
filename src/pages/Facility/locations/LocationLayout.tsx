@@ -9,6 +9,7 @@ import { ApproveExternalSupplyDelivery } from "@/pages/Facility/services/invento
 import { IncomingDeliveries } from "@/pages/Facility/services/inventory/externalSupply/IncomingDeliveries";
 import { PurchaseOrderForm } from "@/pages/Facility/services/inventory/externalSupply/PurchaseOrderForm";
 import { PurchaseOrders } from "@/pages/Facility/services/inventory/externalSupply/PurchaseOrders";
+import ToReceive from "@/pages/Facility/services/inventory/internalTransfer/ToReceive";
 import DispensesView from "@/pages/Facility/services/pharmacy/DispensesView";
 import MedicationBillForm from "@/pages/Facility/services/pharmacy/MedicationBillForm";
 import MedicationDispenseHistory from "@/pages/Facility/services/pharmacy/MedicationDispenseHistory";
@@ -135,6 +136,11 @@ const getRoutes = (facilityId: string, locationId: string) => ({
       locationId={locationId}
       supplyDeliveryId={id}
     />
+  ),
+
+  // Inventory - Internal Transfers
+  "/internal_transfers/to_receive": () => (
+    <ToReceive facilityId={facilityId} locationId={locationId} />
   ),
 
   // Inventory - External Supply
