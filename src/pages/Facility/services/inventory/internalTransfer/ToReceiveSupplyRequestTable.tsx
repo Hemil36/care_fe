@@ -81,7 +81,7 @@ export default function ToReceiveSupplyRequestTable({
         limit: resultsPerPage,
         offset: ((qParams.page ?? 1) - 1) * resultsPerPage,
         status: qParams.status,
-        priority: qParams.priority,
+        priority: qParams.priority, // TODO: add priority filter in backend
         item: qParams.item,
         deliver_from_isnull: false,
       },
