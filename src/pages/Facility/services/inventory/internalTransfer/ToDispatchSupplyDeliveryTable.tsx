@@ -1,10 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowUpRightSquare,
-  BarChart3,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { ArrowUpRightSquare, X } from "lucide-react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -42,22 +37,22 @@ import query from "@/Utils/request/query";
 import { ProductKnowledgeStatus } from "@/types/inventory/productKnowledge/productKnowledge";
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
 import {
-  SupplyRequestPriority,
-  SupplyRequestRead,
-  SupplyRequestStatus,
-  getSupplyRequestPriorityBadgeColor,
-  getSupplyRequestStatusBadgeColor,
-} from "@/types/inventory/supplyRequest/supplyRequest";
-import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
+  SupplyDeliveryRead,
+  SupplyDeliveryStatus,
+  getSupplyDeliveryStatusBadgeColor,
+} from "@/types/inventory/supplyDelivery/supplyDelivery";
+import supplyDeliveryApi from "@/types/inventory/supplyDelivery/supplyDeliveryApi";
 
 interface Props {
   facilityId: string;
   locationId: string;
+  defaultStatus: SupplyDeliveryStatus;
 }
 
-export default function ToDispatchSupplyRequestTable({
+export default function ToDispatchSupplyDeliveryTable({
   facilityId,
   locationId,
+  defaultStatus,
 }: Props) {
   const { t } = useTranslation();
   const { qParams, updateQuery, Pagination, resultsPerPage } = useFilters({
@@ -65,7 +60,11 @@ export default function ToDispatchSupplyRequestTable({
     disableCache: true,
   });
 
-  const effectiveStatus = qParams.status || SupplyRequestStatus.active;
+  // Use defaultStatus when status is not set or is invalid
+  const effectiveStatus =
+    qParams.status && qParams.status !== "undefined"
+      ? qParams.status
+      : defaultStatus;
 
   const { data: productKnowledgeResponse } = useQuery({
     queryKey: ["productKnowledge", facilityId],
@@ -80,26 +79,25 @@ export default function ToDispatchSupplyRequestTable({
 
   const { data: response, isLoading } = useQuery({
     queryKey: [
-      "supplyRequests",
+      "supplyDeliveries",
       facilityId,
       locationId,
       qParams,
       effectiveStatus,
     ],
-    queryFn: query.debounced(supplyRequestApi.listSupplyRequest, {
+    queryFn: query.debounced(supplyDeliveryApi.listSupplyDelivery, {
       queryParams: {
-        deliver_from: locationId,
+        facility: facilityId,
+        origin: locationId,
         limit: resultsPerPage,
         offset: ((qParams.page ?? 1) - 1) * resultsPerPage,
         status: effectiveStatus,
-        priority: qParams.priority,
-        item: qParams.item,
-        deliver_to_isnull: false,
+        supplied_item_product_knowledge: qParams.item,
       },
     }),
   });
 
-  const requests = response?.results || [];
+  const deliveries = response?.results || [];
   const productKnowledges = productKnowledgeResponse?.results || [];
 
   const selectedProduct = productKnowledges.find((p) => p.id === qParams.item);
@@ -112,7 +110,7 @@ export default function ToDispatchSupplyRequestTable({
             <Button
               variant="outline"
               role="combobox"
-              className="w-full justify-between"
+              className="w-full justify-between border-gray-300"
             >
               <span className="truncate">
                 {selectedProduct ? selectedProduct.name : t("search_by_item")}
@@ -167,121 +165,15 @@ export default function ToDispatchSupplyRequestTable({
             </Command>
           </PopoverContent>
         </Popover>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              className="gap-2 font-medium"
-            >
-              <SlidersHorizontal className="size-4" />
-              <span>{t("filter_by_status")}</span>
-              {effectiveStatus && (
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "ml-2",
-                    getSupplyRequestStatusBadgeColor(effectiveStatus),
-                  )}
-                >
-                  {t(effectiveStatus)}
-                </Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0" align="start">
-            <Command>
-              <CommandGroup>
-                {Object.values(SupplyRequestStatus).map((status) => (
-                  <CommandItem
-                    key={status}
-                    value={status}
-                    onSelect={() =>
-                      updateQuery({
-                        status:
-                          effectiveStatus === status
-                            ? SupplyRequestStatus.active
-                            : status,
-                      })
-                    }
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        effectiveStatus === status
-                          ? "opacity-100"
-                          : "opacity-0",
-                      )}
-                    />
-                    {t(status)}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-        </Popover>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              className="gap-2 font-medium"
-            >
-              <BarChart3 className="size-4" />
-              <span>{t("filter_by_priority")}</span>
-              {qParams.priority && (
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "ml-2",
-                    getSupplyRequestPriorityBadgeColor(qParams.priority),
-                  )}
-                >
-                  {t(qParams.priority)}
-                </Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0" align="start">
-            <Command>
-              <CommandGroup>
-                {Object.values(SupplyRequestPriority).map((priority) => (
-                  <CommandItem
-                    key={priority}
-                    value={priority}
-                    onSelect={() =>
-                      updateQuery({
-                        priority:
-                          qParams.priority === priority ? undefined : priority,
-                      })
-                    }
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        qParams.priority === priority
-                          ? "opacity-100"
-                          : "opacity-0",
-                      )}
-                    />
-                    {t(priority)}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-        </Popover>
       </div>
 
       {isLoading ? (
         <TableSkeleton count={5} />
-      ) : !requests.length ? (
+      ) : !deliveries.length ? (
         <EmptyState
           icon="l-box"
-          title={t("no_requests_found")}
-          description={t("no_requests_found_description")}
+          title={t("no_deliveries_found")}
+          description={t("no_deliveries_found_description")}
         />
       ) : (
         <div className="overflow-hidden rounded-md border-2 border-white shadow-md">
@@ -295,49 +187,60 @@ export default function ToDispatchSupplyRequestTable({
                 <TableHead className="text-gray-700">
                   {t("deliver_to")}
                 </TableHead>
+                <TableHead className="text-gray-700">
+                  {t("condition")}
+                </TableHead>
                 <TableHead className="text-gray-700">{t("status")}</TableHead>
-                <TableHead className="text-gray-700">{t("priority")}</TableHead>
                 <TableHead className="text-gray-700">{t("action")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="bg-white">
-              {requests.map((request: SupplyRequestRead) => (
+              {deliveries.map((delivery: SupplyDeliveryRead) => (
                 <TableRow
-                  key={request.id}
+                  key={delivery.id}
                   className="hover:bg-gray-50 divide-x"
                 >
                   <TableCell className="font-semibold text-gray-950">
-                    {request.item.name}
+                    {delivery.supplied_item?.product_knowledge.name ||
+                      delivery.supplied_inventory_item?.product
+                        .product_knowledge.name}
                   </TableCell>
-                  <TableCell className="font-medium text-gray-950">
-                    <div className="flex items-center gap-2">
+                  <TableCell className="font-medium text-gray-950 text-right">
+                    <div className="flex items-center gap-2 justify-end">
                       <span className="font-medium min-w-8 text-right">
-                        {request.quantity}{" "}
-                        {request.item.definitional?.dosage_form?.display}
+                        {delivery.supplied_item_quantity}
+                      </span>
+                      <span className="font-medium min-w-8 text-right">
+                        {delivery.supplied_item?.product_knowledge.definitional
+                          ?.dosage_form.display || t("units")}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell className="font-medium text-gray-950">
-                    {request.deliver_to.name}
+                    {delivery.destination.name}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {delivery.supplied_item_condition && (
+                      <Badge
+                        variant={
+                          delivery.supplied_item_condition === "damaged"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                        className="capitalize"
+                      >
+                        {t(delivery.supplied_item_condition)}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="font-medium">
                     <Badge
                       variant="outline"
-                      className={getSupplyRequestStatusBadgeColor(
-                        request.status,
+                      className={getSupplyDeliveryStatusBadgeColor(
+                        delivery.status,
                       )}
                     >
-                      {t(request.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <Badge
-                      variant="outline"
-                      className={getSupplyRequestPriorityBadgeColor(
-                        request.priority,
-                      )}
-                    >
-                      {t(request.priority)}
+                      {t(delivery.status)}
                     </Badge>
                   </TableCell>
                   <TableCell>

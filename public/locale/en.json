@@ -2434,6 +2434,8 @@
   "no_country_found": "No country found",
   "no_data_found": "No data found",
   "no_definitions_found": "No definitions found",
+  "no_deliveries_found": "No delivery found",
+  "no_deliveries_found_description": "No deliveries found for selected status or product.",
   "no_departments_teams_found": "No Departments or Teams found",
   "no_description": "No Description",
   "no_devices_available": "No devices available",

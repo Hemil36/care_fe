@@ -2,13 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useQueryParams } from "raviger";
 import { Trans, useTranslation } from "react-i18next";
 
-import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import Page from "@/components/Common/Page";
 
 import query from "@/Utils/request/query";
+import ToDispatchSupplyDeliveryTable from "@/pages/Facility/services/inventory/internalTransfer/ToDispatchSupplyDeliveryTable";
 import ToDispatchSupplyRequestTable from "@/pages/Facility/services/inventory/internalTransfer/ToDispatchSupplyRequestTable";
+import { SupplyDeliveryStatus } from "@/types/inventory/supplyDelivery/supplyDelivery";
 import locationApi from "@/types/location/locationApi";
 
 interface Props {
@@ -35,12 +36,13 @@ export default function ToDispatch({ facilityId, locationId }: Props) {
     }),
   });
 
-  const updateQuery = (params: Record<string, string>) => {
-    setQueryParams({ ...qParams, ...params });
-  };
-
   const handleTabChange = (value: string) => {
-    updateQuery({ tab: value });
+    const { status: _, ...newParams } = qParams;
+    setQueryParams({
+      ...newParams,
+      tab: value,
+      page: "1",
+    });
   };
 
   return (
@@ -111,34 +113,34 @@ export default function ToDispatch({ facilityId, locationId }: Props) {
           </TabsContent>
 
           <TabsContent value="in_progress" className="mt-4">
-            <EmptyState
-              icon="l-box"
-              title={t("no_requests_found")}
-              description={t("no_requests_found_description")}
+            <ToDispatchSupplyDeliveryTable
+              facilityId={facilityId}
+              locationId={locationId}
+              defaultStatus={SupplyDeliveryStatus.in_progress}
             />
           </TabsContent>
 
           <TabsContent value="completed" className="mt-4">
-            <EmptyState
-              icon="l-box"
-              title={t("no_requests_found")}
-              description={t("no_requests_found_description")}
+            <ToDispatchSupplyDeliveryTable
+              facilityId={facilityId}
+              locationId={locationId}
+              defaultStatus={SupplyDeliveryStatus.completed}
             />
           </TabsContent>
 
           <TabsContent value="abandoned" className="mt-4">
-            <EmptyState
-              icon="l-box"
-              title={t("no_requests_found")}
-              description={t("no_requests_found_description")}
+            <ToDispatchSupplyDeliveryTable
+              facilityId={facilityId}
+              locationId={locationId}
+              defaultStatus={SupplyDeliveryStatus.abandoned}
             />
           </TabsContent>
 
           <TabsContent value="entered_in_error" className="mt-4">
-            <EmptyState
-              icon="l-box"
-              title={t("no_requests_found")}
-              description={t("no_requests_found_description")}
+            <ToDispatchSupplyDeliveryTable
+              facilityId={facilityId}
+              locationId={locationId}
+              defaultStatus={SupplyDeliveryStatus.entered_in_error}
             />
           </TabsContent>
         </Tabs>
