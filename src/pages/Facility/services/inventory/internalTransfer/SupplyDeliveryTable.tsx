@@ -50,7 +50,7 @@ interface Props {
   mode?: "dispatch" | "receive";
 }
 
-export default function ToDispatchSupplyDeliveryTable({
+export default function SupplyDeliveryTable({
   facilityId,
   locationId,
   defaultStatus,

@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3, SlidersHorizontal, X } from "lucide-react";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
@@ -56,11 +55,7 @@ export default function ToReceiveSupplyRequestTable({
     disableCache: true,
   });
 
-  useEffect(() => {
-    if (!qParams.status) {
-      updateQuery({ status: SupplyRequestStatus.active });
-    }
-  }, [qParams.status, updateQuery]);
+  const effectiveStatus = qParams.status || SupplyRequestStatus.active;
 
   const { data: productKnowledgeResponse } = useQuery({
     queryKey: ["productKnowledge", facilityId],
@@ -74,13 +69,19 @@ export default function ToReceiveSupplyRequestTable({
   });
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ["supplyRequests", facilityId, locationId, qParams],
+    queryKey: [
+      "supplyRequests",
+      facilityId,
+      locationId,
+      qParams,
+      effectiveStatus,
+    ],
     queryFn: query.debounced(supplyRequestApi.listSupplyRequest, {
       queryParams: {
         deliver_to: locationId,
         limit: resultsPerPage,
         offset: ((qParams.page ?? 1) - 1) * resultsPerPage,
-        status: qParams.status,
+        status: effectiveStatus,
         priority: qParams.priority, // TODO: add priority filter in backend
         item: qParams.item,
         deliver_from_isnull: false,
@@ -192,12 +193,12 @@ export default function ToReceiveSupplyRequestTable({
             >
               <SlidersHorizontal className="size-4" />
               <span>{t("filter_by_status")}</span>
-              {qParams.status && (
+              {effectiveStatus && (
                 <Badge
-                  variant="secondary"
-                  className={cn("ml-2", getStatusBadgeColor(qParams.status))}
+                  variant="outline"
+                  className={cn("ml-2", getStatusBadgeColor(effectiveStatus))}
                 >
-                  {t(qParams.status)}
+                  {t(effectiveStatus)}
                 </Badge>
               )}
             </Button>
@@ -212,7 +213,7 @@ export default function ToReceiveSupplyRequestTable({
                     onSelect={() =>
                       updateQuery({
                         status:
-                          qParams.status === status
+                          effectiveStatus === status
                             ? SupplyRequestStatus.active
                             : status,
                       })
@@ -221,7 +222,9 @@ export default function ToReceiveSupplyRequestTable({
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        qParams.status === status ? "opacity-100" : "opacity-0",
+                        effectiveStatus === status
+                          ? "opacity-100"
+                          : "opacity-0",
                       )}
                     />
                     {t(status)}

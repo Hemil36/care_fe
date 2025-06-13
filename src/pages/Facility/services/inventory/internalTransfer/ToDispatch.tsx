@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Page from "@/components/Common/Page";
 
 import query from "@/Utils/request/query";
-import ToDispatchSupplyDeliveryTable from "@/pages/Facility/services/inventory/internalTransfer/ToDispatchSupplyDeliveryTable";
+import SupplyDeliveryTable from "@/pages/Facility/services/inventory/internalTransfer/SupplyDeliveryTable";
 import ToDispatchSupplyRequestTable from "@/pages/Facility/services/inventory/internalTransfer/ToDispatchSupplyRequestTable";
 import { SupplyDeliveryStatus } from "@/types/inventory/supplyDelivery/supplyDelivery";
 import locationApi from "@/types/location/locationApi";
@@ -113,7 +113,7 @@ export default function ToDispatch({ facilityId, locationId }: Props) {
           </TabsContent>
 
           <TabsContent value="in_progress" className="mt-4">
-            <ToDispatchSupplyDeliveryTable
+            <SupplyDeliveryTable
               facilityId={facilityId}
               locationId={locationId}
               defaultStatus={SupplyDeliveryStatus.in_progress}
@@ -121,7 +121,7 @@ export default function ToDispatch({ facilityId, locationId }: Props) {
           </TabsContent>
 
           <TabsContent value="completed" className="mt-4">
-            <ToDispatchSupplyDeliveryTable
+            <SupplyDeliveryTable
               facilityId={facilityId}
               locationId={locationId}
               defaultStatus={SupplyDeliveryStatus.completed}
@@ -129,7 +129,7 @@ export default function ToDispatch({ facilityId, locationId }: Props) {
           </TabsContent>
 
           <TabsContent value="abandoned" className="mt-4">
-            <ToDispatchSupplyDeliveryTable
+            <SupplyDeliveryTable
               facilityId={facilityId}
               locationId={locationId}
               defaultStatus={SupplyDeliveryStatus.abandoned}
@@ -137,7 +137,7 @@ export default function ToDispatch({ facilityId, locationId }: Props) {
           </TabsContent>
 
           <TabsContent value="entered_in_error" className="mt-4">
-            <ToDispatchSupplyDeliveryTable
+            <SupplyDeliveryTable
               facilityId={facilityId}
               locationId={locationId}
               defaultStatus={SupplyDeliveryStatus.entered_in_error}

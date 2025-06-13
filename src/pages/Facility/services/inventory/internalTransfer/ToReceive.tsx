@@ -7,7 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import Page from "@/components/Common/Page";
 
+import SupplyDeliveryTable from "@/pages/Facility/services/inventory/internalTransfer/SupplyDeliveryTable";
 import ToReceiveSupplyRequestTable from "@/pages/Facility/services/inventory/internalTransfer/ToReceiveSupplyRequestTable";
+import { SupplyDeliveryStatus } from "@/types/inventory/supplyDelivery/supplyDelivery";
 
 interface Props {
   facilityId: string;
@@ -21,46 +23,18 @@ type Tab =
   | "abandoned"
   | "entered_in_error";
 
-function EmptyState() {
-  const { t } = useTranslation();
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="rounded-full bg-gray-100 p-3">
-        <svg
-          className="size-6 text-gray-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-          />
-        </svg>
-      </div>
-      <h3 className="mt-4 text-sm font-medium text-gray-900">
-        {t("no_requests_found")}
-      </h3>
-      <p className="mt-1 text-sm text-gray-500">
-        {t("no_requests_found_description")}
-      </p>
-    </div>
-  );
-}
-
 export default function ToReceive({ facilityId, locationId }: Props) {
   const { t } = useTranslation();
   const [qParams, setQueryParams] = useQueryParams();
   const currentTab = (qParams.tab as Tab) || "requests_raised";
 
-  const updateQuery = (params: Record<string, string>) => {
-    setQueryParams({ ...qParams, ...params });
-  };
-
   const handleTabChange = (value: string) => {
-    updateQuery({ tab: value });
+    const { status: _, ...newParams } = qParams;
+    setQueryParams({
+      ...newParams,
+      tab: value,
+      page: "1",
+    });
   };
 
   return (
@@ -130,19 +104,39 @@ export default function ToReceive({ facilityId, locationId }: Props) {
           </TabsContent>
 
           <TabsContent value="receive_items" className="mt-4">
-            <EmptyState />
+            <SupplyDeliveryTable
+              facilityId={facilityId}
+              locationId={locationId}
+              defaultStatus={SupplyDeliveryStatus.in_progress}
+              mode="receive"
+            />
           </TabsContent>
 
           <TabsContent value="received" className="mt-4">
-            <EmptyState />
+            <SupplyDeliveryTable
+              facilityId={facilityId}
+              locationId={locationId}
+              defaultStatus={SupplyDeliveryStatus.completed}
+              mode="receive"
+            />
           </TabsContent>
 
           <TabsContent value="abandoned" className="mt-4">
-            <EmptyState />
+            <SupplyDeliveryTable
+              facilityId={facilityId}
+              locationId={locationId}
+              defaultStatus={SupplyDeliveryStatus.abandoned}
+              mode="receive"
+            />
           </TabsContent>
 
           <TabsContent value="entered_in_error" className="mt-4">
-            <EmptyState />
+            <SupplyDeliveryTable
+              facilityId={facilityId}
+              locationId={locationId}
+              defaultStatus={SupplyDeliveryStatus.entered_in_error}
+              mode="receive"
+            />
           </TabsContent>
         </Tabs>
       </div>
