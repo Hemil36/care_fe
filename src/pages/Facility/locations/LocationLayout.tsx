@@ -25,6 +25,7 @@ import SupplyDeliveryList, {
   SupplyDeliveryTab,
 } from "@/pages/Facility/services/supply/SupplyDeliveryList";
 import SupplyDeliveryView from "@/pages/Facility/services/supply/SupplyDeliveryView";
+import SupplyRequestDispatch from "@/pages/Facility/services/supply/SupplyRequestDispatch";
 import SupplyRequestForm from "@/pages/Facility/services/supply/SupplyRequestForm";
 import SupplyRequestList, {
   SupplyRequestTab,
@@ -102,6 +103,13 @@ const getRoutes = (facilityId: string, locationId: string) => ({
   ),
   "/supply_requests/:id/edit": ({ id }: { id: string }) => (
     <SupplyRequestForm
+      facilityId={facilityId}
+      locationId={locationId}
+      supplyRequestId={id}
+    />
+  ),
+  "/supply_requests/:id/dispatch": ({ id }: { id: string }) => (
+    <SupplyRequestDispatch
       facilityId={facilityId}
       locationId={locationId}
       supplyRequestId={id}
