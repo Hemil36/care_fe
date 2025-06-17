@@ -1,5 +1,5 @@
 import { PlusIcon } from "lucide-react";
-import { useQueryParams } from "raviger";
+import { useNavigate, useQueryParams } from "raviger";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ type Tab =
 
 export default function ToReceive({ facilityId, locationId }: Props) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [qParams, setQueryParams] = useQueryParams();
   const currentTab = (qParams.tab as Tab) || "requests_raised";
 
@@ -52,7 +53,9 @@ export default function ToReceive({ facilityId, locationId }: Props) {
           <div>
             {currentTab === "requests_raised" && (
               <Button
-                onClick={() => {}}
+                onClick={() => {
+                  navigate("/internal_transfers/raise_stock_request");
+                }}
                 className="whitespace-nowrap bg-primary-700 hover:bg-primary-800"
               >
                 <PlusIcon className="size-4" />
