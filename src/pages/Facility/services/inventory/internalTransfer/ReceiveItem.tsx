@@ -1,8 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
-import { AlertTriangleIcon, CheckIcon } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  CheckIcon,
+  MoreVertical,
+  XIcon,
+} from "lucide-react";
 import { navigate } from "raviger";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -10,9 +16,26 @@ import { z } from "zod";
 
 import { cn } from "@/lib/utils";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Form,
   FormControl,
@@ -39,6 +62,7 @@ import supplyDeliveryApi from "@/types/inventory/supplyDelivery/supplyDeliveryAp
 import {
   SupplyRequestCreate,
   SupplyRequestStatus,
+  getSupplyRequestPriorityBadgeColor,
   getSupplyRequestStatusBadgeColor,
 } from "@/types/inventory/supplyRequest/supplyRequest";
 import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
@@ -64,6 +88,7 @@ export default function ReceiveItem({
 }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const form = useForm<ReceiveItemForm>({
     resolver: zodResolver(receiveItemSchema),
@@ -145,7 +170,21 @@ export default function ReceiveItem({
 
   const handleCancel = () => {
     navigate(
-      `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive`,
+      `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive?tab=receive_items&page=1`,
+    );
+  };
+
+  const handleMarkAsEnteredInError = () => {
+    if (!delivery) return;
+
+    updateSupplyDelivery({
+      status: SupplyDeliveryStatus.entered_in_error,
+      supplied_item_condition:
+        delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
+    } satisfies SupplyDeliveryUpdate);
+
+    navigate(
+      `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive?tab=receive_items&page=1`,
     );
   };
 
@@ -168,28 +207,90 @@ export default function ReceiveItem({
 
   const isPending = isUpdatingDelivery || isUpdatingRequest;
 
+  const storageGuidelines = delivery &&
+    delivery.supply_request &&
+    delivery.supply_request?.item.storage_guidelines &&
+    delivery.supply_request.item.storage_guidelines.length > 0 && (
+      <div className="space-y-2">
+        {delivery.supply_request.item.storage_guidelines.map(
+          (guideline, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-2 p-3 bg-blue-50 rounded-md border border-blue-200"
+            >
+              <div className="bg-blue-100 text-blue-950 px-2 py-1 rounded-full text-xs border border-blue-700">
+                {t("storage")}
+              </div>
+              <div className="text-blue-900 font-medium text-sm">
+                {guideline.note}
+              </div>
+            </div>
+          ),
+        )}
+      </div>
+    );
+
+  const receivedQuantity = delivery && (
+    <div>
+      <Label className="text-sm font-medium text-gray-700">
+        {t("received_quantity")}
+      </Label>
+      <div className="text-lg font-bold mt-1">
+        {delivery.supplied_item_quantity}{" "}
+        {delivery.supplied_item?.product_knowledge.definitional?.dosage_form
+          .display || t("units")}
+      </div>
+
+      {delivery.supplied_item_quantity !==
+        delivery.supply_request?.quantity && (
+        <div className="flex items-center gap-2 text-yellow-900 text-sm mt-2 bg-yellow-50 rounded-md p-1">
+          <AlertTriangleIcon className="w-4 h-4" />
+          <span>
+            {t("received_quantity_is_different_from_requested_quantity")}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <Page title={t("to_receive")} hideTitleOnPage>
-      <div className="container mx-auto max-w-6xl">
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold text-gray-900">
-            {t("to_receive")}
-          </h1>
-          <div className="text-sm text-gray-600">
-            {delivery.status === "in_progress" ? (
-              <>
-                {t("dispatch_in_progress_from")} {delivery.origin?.name}{" "}
-                {t("to")} {delivery.destination.name}
-              </>
-            ) : delivery.status === "completed" ? (
-              <>
-                {t("received")} {t("from")} {delivery.destination.name}{" "}
-                {t("to")} {delivery.origin?.name}
-              </>
-            ) : null}
+      <div className="">
+        <div className="flex justify-between">
+          <div className="mb-6">
+            <h1 className="text-xl font-semibold text-gray-900">
+              {t("to_receive")}
+            </h1>
+            <div className="text-sm text-gray-600">
+              {delivery.status === "in_progress" ? (
+                <>
+                  {t("dispatch_in_progress_from")} {delivery.origin?.name}{" "}
+                  {t("to")} {delivery.destination.name}
+                </>
+              ) : delivery.status === "completed" ? (
+                <>
+                  {t("received")} {t("from")} {delivery.destination.name}{" "}
+                  {t("to")} {delivery.origin?.name}
+                </>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              className="size-8 p-0 border-gray-400 shadow-sm text-gray-700"
+              onClick={() =>
+                window.history.length > 2
+                  ? window.history.back()
+                  : handleCancel()
+              }
+            >
+              <XIcon className="size-5" />
+            </Button>
           </div>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left side - Dispatch Details */}
           <div className="bg-white rounded-lg border p-6 space-y-6">
@@ -314,220 +415,235 @@ export default function ReceiveItem({
           </div>
 
           {/* Right side - Verify Received Items Form */}
-          <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-semibold">
-              {t("verify_received_items")}
-            </h2>
-            <div className="text-sm text-gray-600 mb-2">
-              {t("check_item_condition_and_verify_receipt")}
-            </div>
+          {delivery.status === SupplyDeliveryStatus.in_progress ? (
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-lg font-semibold">
+                {t("verify_received_items")}
+              </h2>
+              <div className="text-sm text-gray-600 mb-2">
+                {t("check_item_condition_and_verify_receipt")}
+              </div>
 
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-2"
-              >
-                <div className="bg-gray-50 rounded-md py-2 px-3 space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="condition"
-                    render={({ field }) => {
-                      const conditionOptions = [
-                        {
-                          value: SupplyDeliveryCondition.normal,
-                          label: "normal",
-                        },
-                        {
-                          value: SupplyDeliveryCondition.damaged,
-                          label: "damaged",
-                        },
-                      ];
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="space-y-2"
+                >
+                  <div className="bg-gray-50 rounded-md py-2 px-3 space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="condition"
+                      render={({ field }) => {
+                        const conditionOptions = [
+                          {
+                            value: SupplyDeliveryCondition.normal,
+                            label: "normal",
+                          },
+                          {
+                            value: SupplyDeliveryCondition.damaged,
+                            label: "damaged",
+                          },
+                        ];
 
-                      return (
-                        <FormItem>
-                          <FormLabel>{t("item_condition")}</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              className="flex flex-wrap gap-3"
-                            >
-                              {conditionOptions.map((option) => (
+                        return (
+                          <FormItem>
+                            <FormLabel>{t("item_condition")}</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                className="flex flex-wrap gap-3"
+                              >
+                                {conditionOptions.map((option) => (
+                                  <Label
+                                    key={option.value}
+                                    htmlFor={option.value}
+                                    className={cn(
+                                      "flex items-center justify-center px-4 py-3 rounded-md border-[1.5px] cursor-pointer transition-all text-gray-950",
+                                      field.value === option.value
+                                        ? "border-primary-600 bg-primary-100"
+                                        : "border-gray-300 bg-white hover:border-gray-400",
+                                    )}
+                                  >
+                                    <RadioGroupItem
+                                      value={option.value}
+                                      id={option.value}
+                                    />
+                                    <div className="flex items-center space-x-2">
+                                      <span className="font-medium">
+                                        {t(option.label)}
+                                      </span>
+                                    </div>
+                                  </Label>
+                                ))}
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="receivingStatus"
+                      render={({ field }) => {
+                        const statusOptions = [
+                          {
+                            value: SupplyDeliveryStatus.completed,
+                            label: "completed",
+                          },
+                          {
+                            value: SupplyDeliveryStatus.abandoned,
+                            label: "abandoned",
+                          },
+                          {
+                            value: SupplyDeliveryStatus.entered_in_error,
+                            label: "entered_in_error",
+                          },
+                        ];
+
+                        return (
+                          <FormItem>
+                            <FormLabel>{t("receiving_status")}</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                className="flex flex-wrap gap-3"
+                              >
+                                {statusOptions.map((option) => (
+                                  <Label
+                                    key={option.value}
+                                    htmlFor={option.value}
+                                    className={`flex items-center justify-center px-4 py-3 rounded-md border-[1.5px] cursor-pointer transition-all ${
+                                      field.value === option.value
+                                        ? "border-primary-600 bg-primary-100"
+                                        : "border-gray-300 bg-white hover:border-gray-400"
+                                    }`}
+                                  >
+                                    <RadioGroupItem
+                                      value={option.value}
+                                      id={option.value}
+                                    />
+                                    <div className="flex items-center space-x-2">
+                                      <span className="font-medium">
+                                        {t(option.label)}
+                                      </span>
+                                    </div>
+                                  </Label>
+                                ))}
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+
+                    {receivedQuantity}
+
+                    {storageGuidelines}
+
+                    {delivery.supply_request?.status ===
+                      SupplyRequestStatus.active && (
+                      <FormField
+                        control={form.control}
+                        name="markAsFullyReceived"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center">
+                              <div className="flex items-center space-x-2">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    id="markAsFullyReceived"
+                                  />
+                                </FormControl>
+                              </div>
+                              <div className="text-xs text-gray-600 flex flex-col">
                                 <Label
-                                  key={option.value}
-                                  htmlFor={option.value}
-                                  className={cn(
-                                    "flex items-center justify-center px-4 py-3 rounded-md border-[1.5px] cursor-pointer transition-all text-gray-950",
-                                    field.value === option.value
-                                      ? "border-primary-600 bg-primary-100"
-                                      : "border-gray-300 bg-white hover:border-gray-400",
+                                  className="text-sm font-medium"
+                                  htmlFor="markAsFullyReceived"
+                                >
+                                  {t("mark_as_fully_received")}
+                                </Label>
+                                <div className="text-xs text-gray-600">
+                                  {t(
+                                    "tick_if_all_items_are_received_the_request_will_be_cleared_from_the_pending_list",
                                   )}
-                                >
-                                  <RadioGroupItem
-                                    value={option.value}
-                                    id={option.value}
-                                  />
-                                  <div className="flex items-center space-x-2">
-                                    <span className="font-medium">
-                                      {t(option.label)}
-                                    </span>
-                                  </div>
-                                </Label>
-                              ))}
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="receivingStatus"
-                    render={({ field }) => {
-                      const statusOptions = [
-                        {
-                          value: SupplyDeliveryStatus.completed,
-                          label: "completed",
-                        },
-                        {
-                          value: SupplyDeliveryStatus.abandoned,
-                          label: "abandoned",
-                        },
-                        {
-                          value: SupplyDeliveryStatus.entered_in_error,
-                          label: "entered_in_error",
-                        },
-                      ];
-
-                      return (
-                        <FormItem>
-                          <FormLabel>{t("receiving_status")}</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              className="flex flex-wrap gap-3"
-                            >
-                              {statusOptions.map((option) => (
-                                <Label
-                                  key={option.value}
-                                  htmlFor={option.value}
-                                  className={`flex items-center justify-center px-4 py-3 rounded-md border-[1.5px] cursor-pointer transition-all ${
-                                    field.value === option.value
-                                      ? "border-primary-600 bg-primary-100"
-                                      : "border-gray-300 bg-white hover:border-gray-400"
-                                  }`}
-                                >
-                                  <RadioGroupItem
-                                    value={option.value}
-                                    id={option.value}
-                                  />
-                                  <div className="flex items-center space-x-2">
-                                    <span className="font-medium">
-                                      {t(option.label)}
-                                    </span>
-                                  </div>
-                                </Label>
-                              ))}
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
-                  />
-
-                  <div>
-                    <FormLabel>{t("received_quantity")}</FormLabel>
-                    <div className="text-lg font-bold mt-1">
-                      {delivery.supplied_item_quantity}{" "}
-                      {delivery.supplied_item?.product_knowledge.definitional
-                        ?.dosage_form.display || t("units")}
-                    </div>
-
-                    {delivery.supplied_item_quantity !==
-                      delivery.supply_request?.quantity && (
-                      <div className="flex items-center gap-2 text-yellow-900 text-sm mt-2 bg-yellow-50 rounded-md p-1">
-                        <AlertTriangleIcon className="w-4 h-4" />
-                        <span>
-                          {t(
-                            "received_quantity_is_different_from_requested_quantity",
-                          )}
-                        </span>
-                      </div>
+                                </div>
+                              </div>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     )}
                   </div>
 
-                  {delivery.supply_request?.item.storage_guidelines &&
-                    delivery.supply_request.item.storage_guidelines.length >
-                      0 && (
-                      <div className="space-y-2">
-                        {delivery.supply_request.item.storage_guidelines.map(
-                          (guideline, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-2 p-3 bg-blue-50 rounded-md border border-blue-200"
-                            >
-                              <div className="bg-blue-100 text-blue-950 px-2 py-1 rounded-full text-xs border border-blue-700">
-                                {t("storage")}
-                              </div>
-                              <div className="text-blue-900 font-medium text-sm">
-                                {guideline.note}
-                              </div>
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    )}
+                  <div className="flex justify-end gap-3 pt-6 border-t">
+                    <Button variant="outline" onClick={handleCancel}>
+                      {t("cancel")}
+                    </Button>
+                    <AlertDialog
+                      open={isDialogOpen}
+                      onOpenChange={setIsDialogOpen}
+                    >
+                      <AlertDialogTrigger asChild>
+                        <Button type="button" disabled={isPending}>
+                          <CheckIcon className="w-4 h-4" />
+                          {t("mark_as_received")}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            {t("confirm_submission")}
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {t("are_you_sure_you_cannot_change_once_submitted")}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => {
+                              setIsDialogOpen(false);
+                              form.handleSubmit(handleSubmit)();
+                            }}
+                          >
+                            {t("done")}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </form>
+              </Form>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg border p-6 space-y-6">
+              <div className="flex justify-between">
+                {receivedQuantity}
 
-                  {delivery.supply_request?.status ===
-                    SupplyRequestStatus.active && (
-                    <FormField
-                      control={form.control}
-                      name="markAsFullyReceived"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                              <Label className="text-sm font-medium">
-                                {t("mark_as_fully_received")}
-                              </Label>
-                            </div>
-                            <div className="text-xs text-gray-600 text-center -ml-6">
-                              {t(
-                                "tick_if_all_items_are_received_the_request_will_be_cleared_from_the_pending_list",
-                              )}
-                            </div>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-3 pt-6 border-t">
-                  <Button variant="outline" onClick={handleCancel}>
-                    {t("cancel")}
-                  </Button>
-                  <Button type="submit" disabled={isPending}>
-                    <CheckIcon className="w-4 h-4" />
-                    {delivery.status !== SupplyDeliveryStatus.in_progress
-                      ? t("update_delivery")
-                      : t("mark_as_received")}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="size-8 p-0">
+                      <MoreVertical className="size-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleMarkAsEnteredInError}>
+                      {t("mark_as_entered_in_error")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              {storageGuidelines}
+            </div>
+          )}
         </div>
 
         {/* Bottom section - Request raised by */}
@@ -570,7 +686,9 @@ export default function ReceiveItem({
                 <div className="font-semibold text-gray-950 text-normal mt-0.5">
                   <Badge
                     variant="outline"
-                    className="bg-blue-100 text-blue-800"
+                    className={getSupplyRequestPriorityBadgeColor(
+                      delivery.supply_request.priority,
+                    )}
                   >
                     {t(delivery.supply_request.priority)}
                   </Badge>
