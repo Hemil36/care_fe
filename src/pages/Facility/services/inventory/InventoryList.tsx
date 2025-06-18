@@ -177,7 +177,7 @@ export function InventoryList({ facilityId, locationId }: InventoryListProps) {
                 <TableHead className="text-gray-700">{t("batch")}</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="bg-white">
+            <TableBody className="bg-white text-base">
               {data?.results?.map((inventory) => (
                 <TableRow
                   key={inventory.id}

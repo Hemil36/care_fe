@@ -1,7 +1,6 @@
+import { Eye } from "lucide-react";
 import { navigate } from "raviger";
 import { useTranslation } from "react-i18next";
-
-import CareIcon from "@/CAREUI/icons/CareIcon";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,7 +85,7 @@ export default function PurchaseOrderTable({
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="bg-white">
+        <TableBody className="bg-white text-base">
           {requests.map((request: SupplyRequestRead) => (
             <TableRow key={request.id} className="divide-x">
               <TableCell className="font-semibold text-gray-950">
@@ -104,7 +103,7 @@ export default function PurchaseOrderTable({
               <TableCell>
                 <Badge
                   className={STATUS_COLORS[request.status]}
-                  variant="secondary"
+                  variant="outline"
                 >
                   {t(request.status)}
                 </Badge>
@@ -112,7 +111,7 @@ export default function PurchaseOrderTable({
               <TableCell>
                 <Badge
                   className={PRIORITY_COLORS[request.priority]}
-                  variant="secondary"
+                  variant="outline"
                 >
                   {t(request.priority)}
                 </Badge>
@@ -120,15 +119,15 @@ export default function PurchaseOrderTable({
               <TableCell>
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="font-semibold text-gray-950"
+                  size="md"
+                  className="shadow-sm border-gray-400 font-semibold text-gray-950"
                   onClick={() =>
                     navigate(
                       `/facility/${facilityId}/locations/${locationId}/external_supply/purchase_orders/${request.id}`,
                     )
                   }
                 >
-                  <CareIcon icon="l-eye" className="size-4" />
+                  <Eye />
                   {t("view_details")}
                 </Button>
               </TableCell>

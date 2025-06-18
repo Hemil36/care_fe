@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ScanQrCode, X } from "lucide-react";
+import { ArrowUpRightSquare, ChevronDown, ScanQrCode, X } from "lucide-react";
 import { navigate } from "raviger";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -164,21 +164,21 @@ function ServiceRequestTable({
   const { t } = useTranslation();
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader className="bg-gray-100">
-          <TableRow className="divide-gray-200">
-            <TableHead>{t("patient_name")}</TableHead>
-            <TableHead>{t("service_type")}</TableHead>
-            <TableHead>{t("status")}</TableHead>
-            <TableHead>{t("priority")}</TableHead>
-            <TableHead>{t("actions")}</TableHead>
+    <div className="overflow-hidden rounded-md border-2 border-white shadow-md">
+      <Table className="rounded-md">
+        <TableHeader className="bg-gray-100 text-gray-700 text-sm">
+          <TableRow className="divide-x">
+            <TableHead className="text-gray-700">{t("patient_name")}</TableHead>
+            <TableHead className="text-gray-700">{t("service_type")}</TableHead>
+            <TableHead className="text-gray-700">{t("status")}</TableHead>
+            <TableHead className="text-gray-700">{t("priority")}</TableHead>
+            <TableHead className="text-gray-700">{t("actions")}</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="bg-white">
+        <TableBody className="bg-white text-base">
           {requests.map((request) => (
-            <TableRow key={request.id} className="divide-x divide-gray-200">
-              <TableCell className="font-medium">
+            <TableRow key={request.id} className="hover:bg-gray-50 divide-x">
+              <TableCell className="font-semibold text-gray-950 w-1/3">
                 <div className="font-semibold text-gray-900">
                   {request.encounter.patient.name}
                 </div>
@@ -186,7 +186,9 @@ function ServiceRequestTable({
                   {request.encounter.patient.id}
                 </div>
               </TableCell>
-              <TableCell>{request.title}</TableCell>
+              <TableCell className="font-medium text-gray-950">
+                {request.title}
+              </TableCell>
               <TableCell>
                 <Badge
                   variant="outline"
@@ -203,17 +205,18 @@ function ServiceRequestTable({
                   {t(request.priority)}
                 </Badge>
               </TableCell>
-              <TableCell className="text-left">
+              <TableCell className="w-10">
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="md"
+                  className="shadow-sm border-gray-400 font-semibold text-gray-950"
                   onClick={() =>
                     navigate(
                       `/facility/${facilityId}/locations/${locationId}/service_requests/${request.id}`,
                     )
                   }
                 >
-                  <CareIcon icon="l-edit" />
+                  <ArrowUpRightSquare strokeWidth={1.5} className="-mr-1" />
                   {t("see_details")}
                 </Button>
               </TableCell>

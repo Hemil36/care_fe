@@ -267,7 +267,7 @@ export default function MedicationRequestList({
               <TableHead className="text-gray-700">{t("action")}</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="bg-white">
+          <TableBody className="bg-white text-base">
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8">
@@ -318,7 +318,7 @@ export default function MedicationRequestList({
                     <TableCell>
                       <Button
                         variant="outline"
-                        size="sm"
+                        size="md"
                         className="w-auto font-semibold text-gray-950 border-gray-400"
                         onClick={() => {
                           navigate(
@@ -326,7 +326,7 @@ export default function MedicationRequestList({
                           );
                         }}
                       >
-                        <ArrowUpRightSquare className="mr-2 size-4" />
+                        <ArrowUpRightSquare strokeWidth={1.5} />
                         {t("see_prescription")}
                       </Button>
                     </TableCell>
