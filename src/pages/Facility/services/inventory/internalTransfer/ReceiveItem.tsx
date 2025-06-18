@@ -264,7 +264,7 @@ export default function ReceiveItem({
 
   return (
     <Page title={t("to_receive")} hideTitleOnPage>
-      <div className="">
+      <div className="max-w-6xl container mx-auto">
         <div className="flex justify-between">
           <div className="mb-6">
             <h1 className="text-xl font-semibold text-gray-900">
@@ -300,9 +300,9 @@ export default function ReceiveItem({
             </Button>
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left side - Dispatch Details */}
-          <div className="bg-white rounded-lg border p-6 space-y-6">
+          <div className="bg-white rounded-lg border p-6 space-y-6 lg:col-span-1">
             <div className="space-y-4">
               <div>
                 <Label className="text-sm font-medium text-gray-700">
@@ -381,7 +381,7 @@ export default function ReceiveItem({
                   <Label className="text-sm font-medium text-gray-700">
                     {t("lot") + "/" + t("batch") + " " + t("no")}:
                   </Label>
-                  <div className="text-gray-950 text-normal font-semibold">
+                  <div className="text-gray-950 text-normal font-semibold break-all">
                     {delivery.supplied_item?.batch?.lot_number ||
                       delivery.supplied_inventory_item?.product?.batch
                         ?.lot_number ||
@@ -425,7 +425,7 @@ export default function ReceiveItem({
 
           {/* Right side - Verify Received Items Form */}
           {delivery.status === SupplyDeliveryStatus.in_progress ? (
-            <div className="bg-white rounded-lg border p-6">
+            <div className="bg-white rounded-lg border p-6 lg:col-span-2">
               <h2 className="text-lg font-semibold">
                 {t("verify_received_items")}
               </h2>
@@ -635,7 +635,7 @@ export default function ReceiveItem({
               </Form>
             </div>
           ) : (
-            <div className="bg-white rounded-lg border p-6 space-y-6">
+            <div className="bg-white rounded-lg border p-6 space-y-6 lg:col-span-2">
               <div className="flex justify-between">
                 {receivedQuantity}
 

@@ -35,6 +35,7 @@ const PATHS_WITHOUT_SIDEBAR = [
   "/session-expired",
   // Pattern matches (using regex)
   /^\/facility\/[^/]+\/services_requests\/[^/]+$/,
+  /^\/facility\/[^/]+\/locations\/[^/]+\/internal_transfers\/to_receive\/[^/]+$/,
 ];
 
 export type RouteParams<T extends string> =
