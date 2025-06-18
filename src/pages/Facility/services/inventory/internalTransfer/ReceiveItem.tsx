@@ -554,42 +554,39 @@ export default function ReceiveItem({
 
                     {storageGuidelines}
 
-                    {delivery.supply_request?.status ===
-                      SupplyRequestStatus.active && (
-                      <FormField
-                        control={form.control}
-                        name="markAsFullyReceived"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="flex items-center">
-                              <div className="flex items-center space-x-2">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                    id="markAsFullyReceived"
-                                  />
-                                </FormControl>
-                              </div>
-                              <div className="text-xs text-gray-600 flex flex-col">
-                                <Label
-                                  className="text-sm font-medium"
-                                  htmlFor="markAsFullyReceived"
-                                >
-                                  {t("mark_as_fully_received")}
-                                </Label>
-                                <div className="text-xs text-gray-600">
-                                  {t(
-                                    "tick_if_all_items_are_received_the_request_will_be_cleared_from_the_pending_list",
-                                  )}
-                                </div>
+                    <FormField
+                      control={form.control}
+                      name="markAsFullyReceived"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center">
+                            <div className="flex items-center space-x-2">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  id="markAsFullyReceived"
+                                />
+                              </FormControl>
+                            </div>
+                            <div className="text-xs text-gray-600 flex flex-col">
+                              <Label
+                                className="text-sm font-medium"
+                                htmlFor="markAsFullyReceived"
+                              >
+                                {t("mark_as_fully_received")}
+                              </Label>
+                              <div className="text-xs text-gray-600">
+                                {t(
+                                  "tick_if_all_items_are_received_the_request_will_be_cleared_from_the_pending_list",
+                                )}
                               </div>
                             </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
 
                   <div className="flex justify-end gap-3 pt-6 border-t">
