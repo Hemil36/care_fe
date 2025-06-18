@@ -7,8 +7,9 @@ import { InventoryList } from "@/pages/Facility/services/inventory/InventoryList
 import { ReceiveStock } from "@/pages/Facility/services/inventory/ReceiveStock";
 import { ApproveExternalSupplyDelivery } from "@/pages/Facility/services/inventory/externalSupply/ApproveDeliveries";
 import { IncomingDeliveries } from "@/pages/Facility/services/inventory/externalSupply/IncomingDeliveries";
-import { PurchaseOrderForm } from "@/pages/Facility/services/inventory/externalSupply/PurchaseOrderForm";
+import PurchaseOrderForm from "@/pages/Facility/services/inventory/externalSupply/PurchaseOrderForm";
 import { PurchaseOrders } from "@/pages/Facility/services/inventory/externalSupply/PurchaseOrders";
+import PurchaseRequestView from "@/pages/Facility/services/inventory/externalSupply/PurchaseRequestView";
 import RaiseStockRequest from "@/pages/Facility/services/inventory/internalTransfer/RaiseStockRequest";
 import ReceiveItem from "@/pages/Facility/services/inventory/internalTransfer/ReceiveItem";
 import ToDispatch from "@/pages/Facility/services/inventory/internalTransfer/ToDispatch";
@@ -179,10 +180,17 @@ const getRoutes = (facilityId: string, locationId: string) => ({
     <PurchaseOrderForm facilityId={facilityId} locationId={locationId} />
   ),
   "/external_supply/purchase_orders/:id": ({ id }: { id: string }) => (
-    <SupplyRequestView
+    <PurchaseRequestView
       facilityId={facilityId}
       locationId={locationId}
-      supplyRequestId={id}
+      purchaseOrderId={id}
+    />
+  ),
+  "/external_supply/purchase_orders/:id/edit": ({ id }: { id: string }) => (
+    <PurchaseOrderForm
+      facilityId={facilityId}
+      locationId={locationId}
+      productOrderId={id}
     />
   ),
   "/external_supply/incoming_deliveries": () => (

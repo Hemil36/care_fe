@@ -29,7 +29,6 @@ import Page from "@/components/Common/Page";
 import useFilters from "@/hooks/useFilters";
 
 import query from "@/Utils/request/query";
-import SupplyRequestTable from "@/pages/Facility/services/supply/components/SupplyRequestTable";
 import { ProductKnowledgeStatus } from "@/types/inventory/productKnowledge/productKnowledge";
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
 import {
@@ -38,6 +37,8 @@ import {
 } from "@/types/inventory/supplyRequest/supplyRequest";
 import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
 import locationApi from "@/types/location/locationApi";
+
+import PurchaseOrderTable from "./PurchaseOrderTable";
 
 interface Props {
   facilityId: string;
@@ -289,12 +290,11 @@ export function PurchaseOrders({ facilityId, locationId }: Props) {
               className="mt-2 space-y-4"
             >
               {renderFilters()}
-              <SupplyRequestTable
+              <PurchaseOrderTable
                 requests={orders}
                 isLoading={isLoading}
                 facilityId={facilityId}
                 locationId={locationId}
-                baseUrl="external_supply/purchase_orders"
                 emptyTitle={t("no_purchase_orders_found")}
                 emptyDescription={t("no_purchase_orders_found_description")}
               />
