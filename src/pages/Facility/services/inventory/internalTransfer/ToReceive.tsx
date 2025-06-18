@@ -54,7 +54,9 @@ export default function ToReceive({ facilityId, locationId }: Props) {
             {currentTab === "requests_raised" && (
               <Button
                 onClick={() => {
-                  navigate("/internal_transfers/raise_stock_request");
+                  navigate(
+                    "/internal_transfers/to_receive/raise_stock_request",
+                  );
                 }}
                 className="whitespace-nowrap bg-primary-700 hover:bg-primary-800"
               >

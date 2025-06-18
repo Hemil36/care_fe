@@ -154,6 +154,9 @@ const getRoutes = (facilityId: string, locationId: string) => ({
   "/internal_transfers/to_receive": () => (
     <ToReceive facilityId={facilityId} locationId={locationId} />
   ),
+  "/internal_transfers/to_receive/raise_stock_request": () => (
+    <RaiseStockRequest facilityId={facilityId} locationId={locationId} />
+  ),
   "/internal_transfers/to_receive/:deliveryId": ({
     deliveryId,
   }: {
@@ -167,9 +170,6 @@ const getRoutes = (facilityId: string, locationId: string) => ({
   ),
   "/internal_transfers/to_dispatch": () => (
     <ToDispatch facilityId={facilityId} locationId={locationId} />
-  ),
-  "/internal_transfers/raise_stock_request": () => (
-    <RaiseStockRequest facilityId={facilityId} locationId={locationId} />
   ),
 
   // Inventory - External Supply

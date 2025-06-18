@@ -59,7 +59,7 @@ const supplyRequestSchema = z.object({
   category: z.nativeEnum(SupplyRequestCategory),
   priority: z.nativeEnum(SupplyRequestPriority),
   reason: z.nativeEnum(SupplyRequestReason),
-  deliver_from: z.string().optional(),
+  deliver_from: z.string(),
   deliver_to: z.string(),
   item: z.string().min(1, "Item is required"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
