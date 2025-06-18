@@ -287,7 +287,7 @@ export default function ToDispatchSupplyRequestTable({
       ) : (
         <div className="overflow-hidden rounded-md border-2 border-white shadow-md">
           <Table className="rounded-md">
-            <TableHeader className="bg-gray-100 text-gray-700">
+            <TableHeader className="bg-gray-100 text-gray-700 text-xs">
               <TableRow className="divide-x">
                 <TableHead className="text-gray-700">{t("item")}</TableHead>
                 <TableHead className="text-gray-700">
@@ -307,13 +307,15 @@ export default function ToDispatchSupplyRequestTable({
                   key={request.id}
                   className="hover:bg-gray-50 divide-x"
                 >
-                  <TableCell className="font-semibold text-gray-950">
+                  <TableCell className="font-semibold text-gray-950 w-1/3">
                     {request.item.name}
                   </TableCell>
                   <TableCell className="font-medium text-gray-950">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium min-w-8 text-right">
-                        {request.quantity}{" "}
+                      <span className="font-semibold min-w-8 text-right">
+                        {request.quantity}
+                      </span>
+                      <span className="text-gray-600 capitalize">
                         {request.item.definitional?.dosage_form?.display}
                       </span>
                     </div>
@@ -331,7 +333,7 @@ export default function ToDispatchSupplyRequestTable({
                       {t(request.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium ">
                     <Badge
                       variant="outline"
                       className={getSupplyRequestPriorityBadgeColor(
@@ -341,18 +343,18 @@ export default function ToDispatchSupplyRequestTable({
                       {t(request.priority)}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="w-10">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="shadow-sm border-gray-400 font-semibold text-sm text-gray-950"
+                      className="shadow-sm border-gray-400 font-semibold text-xs text-gray-950 p-2"
                       onClick={() =>
                         navigate(
                           `/facility/${facilityId}/locations/${locationId}/supply_requests/${request.id}/dispatch`,
                         )
                       }
                     >
-                      <ArrowUpRightSquare strokeWidth={1} />
+                      <ArrowUpRightSquare strokeWidth={1.5} className="-mr-1" />
                       {t("see_details")}
                     </Button>
                   </TableCell>
