@@ -53,21 +53,21 @@ interface Props {
   locationId: string;
 }
 
-const supplyRequestSchema = z.object({
-  status: z.nativeEnum(SupplyRequestStatus),
-  intent: z.nativeEnum(SupplyRequestIntent),
-  category: z.nativeEnum(SupplyRequestCategory),
-  priority: z.nativeEnum(SupplyRequestPriority),
-  reason: z.nativeEnum(SupplyRequestReason),
-  deliver_from: z.string(),
-  deliver_to: z.string(),
+const supplyRequestItemSchema = z.object({
   item: z.string().min(1, "Item is required"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
 });
 
 const formSchema = z.object({
+  status: z.nativeEnum(SupplyRequestStatus),
+  intent: z.nativeEnum(SupplyRequestIntent),
+  category: z.nativeEnum(SupplyRequestCategory),
+  priority: z.nativeEnum(SupplyRequestPriority),
+  reason: z.nativeEnum(SupplyRequestReason),
+  deliver_from: z.string().min(1, "Please select a location to deliver from"),
+  deliver_to: z.string(),
   requests: z
-    .array(supplyRequestSchema)
+    .array(supplyRequestItemSchema)
     .min(1, "At least one request is required"),
 });
 
@@ -119,15 +119,17 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      status: SupplyRequestStatus.active,
+      intent: SupplyRequestIntent.order,
+      category: SupplyRequestCategory.central,
+      priority: SupplyRequestPriority.routine,
+      reason: SupplyRequestReason.ward_stock,
+      deliver_to: locationId,
+      deliver_from: "",
       requests: [
         {
-          status: SupplyRequestStatus.active,
-          intent: SupplyRequestIntent.order,
-          category: SupplyRequestCategory.central,
-          priority: SupplyRequestPriority.routine,
-          reason: SupplyRequestReason.ward_stock,
-          deliver_to: locationId,
           quantity: 1,
+          item: "",
         },
       ],
     },
@@ -147,7 +149,12 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
   });
 
   function onSubmit(data: z.infer<typeof formSchema>) {
-    upsertSupplyRequest({ datapoints: data.requests });
+    const { requests, ...commonData } = data;
+    const datapoints = requests.map((request) => ({
+      ...commonData,
+      ...request,
+    }));
+    upsertSupplyRequest({ datapoints });
   }
 
   const deliveryFromOptions =
@@ -298,13 +305,6 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
                     className="rounded-md border border-gray-200 bg-white text-gray-900 hover:bg-gray-50"
                     onClick={() =>
                       append({
-                        status: form.getValues("requests.0.status"),
-                        intent: form.getValues("requests.0.intent"),
-                        category: form.getValues("requests.0.category"),
-                        priority: form.getValues("requests.0.priority"),
-                        reason: form.getValues("requests.0.reason"),
-                        deliver_from: form.getValues("requests.0.deliver_from"),
-                        deliver_to: locationId,
                         quantity: 1,
                         item: "",
                       })
@@ -329,12 +329,9 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
                     {t("status")}
                   </FormLabel>
                   <RadioGroup
-                    value={form.watch("requests.0.status")}
+                    value={form.watch("status")}
                     onValueChange={(value) =>
-                      form.setValue(
-                        "requests.0.status",
-                        value as SupplyRequestStatus,
-                      )
+                      form.setValue("status", value as SupplyRequestStatus)
                     }
                     className="flex gap-4"
                   >
@@ -371,7 +368,7 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
                   <div>
                     <FormField
                       control={form.control}
-                      name="requests.0.priority"
+                      name="priority"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium text-gray-900 mb-2 block">
@@ -446,7 +443,7 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
                   <div>
                     <FormField
                       control={form.control}
-                      name="requests.0.reason"
+                      name="reason"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium text-gray-900 mb-2 block">
@@ -496,7 +493,7 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
                 <div>
                   <FormField
                     control={form.control}
-                    name="requests.0.deliver_from"
+                    name="deliver_from"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-medium text-gray-900 mb-2 block">
