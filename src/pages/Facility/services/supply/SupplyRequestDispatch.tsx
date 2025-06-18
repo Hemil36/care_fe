@@ -283,7 +283,9 @@ export default function SupplyRequestDispatch({
         <div>
           <div className="text-xs font-medium">Qty to Dispatch</div>
           <div className="text-sm font-semibold text-gray-950">
-            {supplyRequest.quantity} tablets
+            {supplyRequest.quantity}{" "}
+            {supplyRequest.item.definitional?.dosage_form?.display ||
+              t("units")}
           </div>
         </div>
         <div>
