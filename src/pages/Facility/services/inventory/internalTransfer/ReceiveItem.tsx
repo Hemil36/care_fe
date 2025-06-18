@@ -108,32 +108,18 @@ export default function ReceiveItem({
     }),
     enabled: !!deliveryId,
   });
-
-  const { mutate: updateSupplyDelivery, isPending: isUpdatingDelivery } =
+  const { mutateAsync: updateSupplyDelivery, isPending: isUpdatingDelivery } =
     useMutation({
       mutationFn: mutate(supplyDeliveryApi.updateSupplyDelivery, {
         pathParams: { supplyDeliveryId: deliveryId },
       }),
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: ["supplyDeliveries"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["supplyDelivery", deliveryId],
-        });
-      },
     });
 
-  const { mutate: updateSupplyRequest, isPending: isUpdatingRequest } =
+  const { mutateAsync: updateSupplyRequest, isPending: isUpdatingRequest } =
     useMutation({
       mutationFn: mutate(supplyRequestApi.updateSupplyRequest, {
         pathParams: { supplyRequestId: delivery?.supply_request?.id || "" },
       }),
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: ["supplyRequests"],
-        });
-      },
     });
 
   const handleSubmit = async (data: ReceiveItemForm) => {
@@ -141,14 +127,14 @@ export default function ReceiveItem({
 
     try {
       // Update supply delivery
-      updateSupplyDelivery({
+      await updateSupplyDelivery({
         status: data.receivingStatus,
         supplied_item_condition: data.condition,
       } satisfies SupplyDeliveryUpdate);
 
       // Update supply request if checkbox is checked
       if (data.markAsFullyReceived && delivery.supply_request) {
-        updateSupplyRequest({
+        await updateSupplyRequest({
           status: SupplyRequestStatus.completed,
           intent: delivery.supply_request.intent,
           category: delivery.supply_request.category,
@@ -160,6 +146,12 @@ export default function ReceiveItem({
           item: delivery.supply_request.item.id,
         } satisfies SupplyRequestCreate);
       }
+
+      queryClient.invalidateQueries({ queryKey: ["supplyDeliveries"] });
+      queryClient.invalidateQueries({ queryKey: ["supplyRequests"] });
+      queryClient.invalidateQueries({
+        queryKey: ["supplyDelivery", deliveryId],
+      });
 
       toast.success(t("item_marked_as_received"));
     } catch {
