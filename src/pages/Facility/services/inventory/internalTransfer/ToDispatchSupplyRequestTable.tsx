@@ -287,7 +287,7 @@ export default function ToDispatchSupplyRequestTable({
       ) : (
         <div className="overflow-hidden rounded-md border-2 border-white shadow-md">
           <Table className="rounded-md">
-            <TableHeader className="bg-gray-100 text-gray-700 text-xs">
+            <TableHeader className="bg-gray-100 text-gray-700">
               <TableRow className="divide-x">
                 <TableHead className="text-gray-700">{t("item")}</TableHead>
                 <TableHead className="text-gray-700">
@@ -301,7 +301,7 @@ export default function ToDispatchSupplyRequestTable({
                 <TableHead className="text-gray-700">{t("action")}</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="bg-white">
+            <TableBody className="bg-white text-base">
               {requests.map((request: SupplyRequestRead) => (
                 <TableRow
                   key={request.id}
@@ -333,7 +333,7 @@ export default function ToDispatchSupplyRequestTable({
                       {t(request.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium ">
+                  <TableCell className="font-medium">
                     <Badge
                       variant="outline"
                       className={getSupplyRequestPriorityBadgeColor(
@@ -346,8 +346,8 @@ export default function ToDispatchSupplyRequestTable({
                   <TableCell className="w-10">
                     <Button
                       variant="outline"
-                      size="sm"
-                      className="shadow-sm border-gray-400 font-semibold text-xs text-gray-950 p-2"
+                      size="md"
+                      className="shadow-sm border-gray-400 font-semibold text-gray-950"
                       onClick={() =>
                         navigate(
                           `/facility/${facilityId}/locations/${locationId}/supply_requests/${request.id}/dispatch`,

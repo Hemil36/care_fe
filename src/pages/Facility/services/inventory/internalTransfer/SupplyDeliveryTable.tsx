@@ -209,23 +209,23 @@ export default function SupplyDeliveryTable({
                 <TableHead className="text-gray-700">{t("action")}</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="bg-white">
+            <TableBody className="bg-white text-base">
               {deliveries.map((delivery: SupplyDeliveryRead) => (
                 <TableRow
                   key={delivery.id}
                   className="hover:bg-gray-50 divide-x"
                 >
-                  <TableCell className="font-semibold text-gray-950">
+                  <TableCell className="font-semibold text-gray-950 w-1/3">
                     {delivery.supplied_item?.product_knowledge.name ||
                       delivery.supplied_inventory_item?.product
                         .product_knowledge.name}
                   </TableCell>
-                  <TableCell className="font-medium text-gray-950 text-right">
-                    <div className="flex items-center gap-2 justify-end">
-                      <span className="font-medium min-w-8 text-right">
+                  <TableCell className="font-medium text-gray-950">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold min-w-8 text-right">
                         {delivery.supplied_item_quantity}
                       </span>
-                      <span className="font-medium min-w-8 text-right">
+                      <span className="text-gray-600 capitalize">
                         {delivery.supplied_item?.product_knowledge.definitional
                           ?.dosage_form.display || t("units")}
                       </span>
@@ -236,7 +236,7 @@ export default function SupplyDeliveryTable({
                       ? delivery.destination.name
                       : delivery.origin?.name}
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell>
                     {delivery.supplied_item_condition && (
                       <Badge
                         variant={
@@ -250,7 +250,7 @@ export default function SupplyDeliveryTable({
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell>
                     <Badge
                       variant="outline"
                       className={getSupplyDeliveryStatusBadgeColor(
@@ -260,14 +260,14 @@ export default function SupplyDeliveryTable({
                       {t(delivery.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="w-10">
                     <Button
                       variant="outline"
-                      size="sm"
-                      className="shadow-sm border-gray-400 font-semibold text-sm text-gray-950"
+                      size="md"
+                      className="shadow-sm border-gray-400 font-semibold text-gray-950"
                       onClick={() => handleSeeDetails(delivery.id)}
                     >
-                      <ArrowUpRightSquare strokeWidth={1} />
+                      <ArrowUpRightSquare strokeWidth={1.5} />
                       {t("see_details")}
                     </Button>
                   </TableCell>
