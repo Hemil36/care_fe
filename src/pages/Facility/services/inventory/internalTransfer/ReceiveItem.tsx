@@ -89,6 +89,8 @@ export default function ReceiveItem({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
+  const [isAbandonDialogOpen, setIsAbandonDialogOpen] = useState(false);
 
   const form = useForm<ReceiveItemForm>({
     resolver: zodResolver(receiveItemSchema),
@@ -160,9 +162,6 @@ export default function ReceiveItem({
       }
 
       toast.success(t("item_marked_as_received"));
-      navigate(
-        `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive`,
-      );
     } catch {
       toast.error(t("error_updating_delivery"));
     }
@@ -183,9 +182,19 @@ export default function ReceiveItem({
         delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
     } satisfies SupplyDeliveryUpdate);
 
-    navigate(
-      `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive?tab=receive_items&page=1`,
-    );
+    toast.success(t("item_marked_as_entered_in_error"));
+  };
+
+  const handleMarkAsAbandoned = () => {
+    if (!delivery) return;
+
+    updateSupplyDelivery({
+      status: SupplyDeliveryStatus.abandoned,
+      supplied_item_condition:
+        delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
+    } satisfies SupplyDeliveryUpdate);
+
+    toast.success(t("item_marked_as_abandoned"));
   };
 
   if (isLoading || !delivery) {
@@ -603,7 +612,12 @@ export default function ReceiveItem({
                             {t("confirm_submission")}
                           </AlertDialogTitle>
                           <AlertDialogDescription>
-                            {t("are_you_sure_you_cannot_change_once_submitted")}
+                            {form.watch("receivingStatus") ===
+                            SupplyDeliveryStatus.completed
+                              ? t(
+                                  "are_you_sure_you_cannot_change_once_submitted",
+                                )
+                              : t("confirm_submission")}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -635,9 +649,33 @@ export default function ReceiveItem({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleMarkAsEnteredInError}>
-                      {t("mark_as_entered_in_error")}
-                    </DropdownMenuItem>
+                    {delivery.status === SupplyDeliveryStatus.abandoned ? (
+                      <DropdownMenuItem
+                        onClick={() => setIsErrorDialogOpen(true)}
+                      >
+                        {t("mark_as_entered_in_error")}
+                      </DropdownMenuItem>
+                    ) : delivery.status ===
+                      SupplyDeliveryStatus.entered_in_error ? (
+                      <DropdownMenuItem
+                        onClick={() => setIsAbandonDialogOpen(true)}
+                      >
+                        {t("mark_as_abandoned")}
+                      </DropdownMenuItem>
+                    ) : (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => setIsErrorDialogOpen(true)}
+                        >
+                          {t("mark_as_entered_in_error")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setIsAbandonDialogOpen(true)}
+                        >
+                          {t("mark_as_abandoned")}
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -738,6 +776,70 @@ export default function ReceiveItem({
             </div>
           </div>
         )}
+
+        {/* Alert Dialog for Mark as Entered in Error */}
+        <AlertDialog
+          open={isErrorDialogOpen}
+          onOpenChange={setIsErrorDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("confirm_submission")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {delivery?.status === SupplyDeliveryStatus.completed
+                  ? t(
+                      "once_delivery_is_completed_you_can_not_change_the_status",
+                    )
+                  : t("are_you_sure")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+              {delivery?.status !== SupplyDeliveryStatus.completed && (
+                <AlertDialogAction
+                  onClick={() => {
+                    setIsErrorDialogOpen(false);
+                    handleMarkAsEnteredInError();
+                  }}
+                >
+                  {t("mark_as_entered_in_error")}
+                </AlertDialogAction>
+              )}
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Alert Dialog for Mark as Abandoned */}
+        <AlertDialog
+          open={isAbandonDialogOpen}
+          onOpenChange={setIsAbandonDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("confirm_submission")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {delivery?.status === SupplyDeliveryStatus.completed
+                  ? t(
+                      "once_delivery_is_completed_you_can_not_change_the_status",
+                    )
+                  : t("are_you_sure")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+              {delivery?.status !== SupplyDeliveryStatus.completed && (
+                <AlertDialogAction
+                  onClick={() => {
+                    setIsAbandonDialogOpen(false);
+                    handleMarkAsAbandoned();
+                  }}
+                >
+                  {t("mark_as_abandoned")}
+                </AlertDialogAction>
+              )}
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Page>
   );
