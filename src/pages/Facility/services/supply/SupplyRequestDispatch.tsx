@@ -259,7 +259,7 @@ export default function SupplyRequestDispatch({
           className="size-8 p-0 border-gray-400 shadow-sm text-gray-700"
           onClick={() =>
             navigate(
-              `/facility/${facilityId}/locations/${locationId}/supply_requests`,
+              `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch`,
             )
           }
         >
