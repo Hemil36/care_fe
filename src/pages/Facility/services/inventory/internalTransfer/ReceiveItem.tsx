@@ -8,9 +8,9 @@ import {
   XIcon,
 } from "lucide-react";
 import { navigate } from "raviger";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -25,10 +25,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -81,6 +80,48 @@ interface Props {
   deliveryId: string;
 }
 
+interface StatusChangeAlertDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: React.ReactNode;
+  onConfirm: () => void;
+  cancelText: string;
+  buttonText: string;
+  buttonVariant: "primary" | "destructive";
+}
+
+function StatusChangeAlertDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  onConfirm,
+  cancelText,
+  buttonText,
+  buttonVariant,
+}: StatusChangeAlertDialogProps) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className={cn(buttonVariants({ variant: buttonVariant }))}
+          >
+            {buttonText}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 export default function ReceiveItem({
   facilityId,
   locationId,
@@ -88,9 +129,19 @@ export default function ReceiveItem({
 }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
-  const [isAbandonDialogOpen, setIsAbandonDialogOpen] = useState(false);
+  type DialogType = "submit" | "error" | "abandon" | null;
+  const [dialogState, setDialogState] = useState<{
+    isOpen: boolean;
+    type: DialogType;
+  }>({ isOpen: false, type: null });
+
+  const { data: delivery, isLoading } = useQuery({
+    queryKey: ["supplyDelivery", deliveryId],
+    queryFn: query(supplyDeliveryApi.retrieveSupplyDelivery, {
+      pathParams: { supplyDeliveryId: deliveryId },
+    }),
+    enabled: !!deliveryId,
+  });
 
   const form = useForm<ReceiveItemForm>({
     resolver: zodResolver(receiveItemSchema),
@@ -101,13 +152,18 @@ export default function ReceiveItem({
     },
   });
 
-  const { data: delivery, isLoading } = useQuery({
-    queryKey: ["supplyDelivery", deliveryId],
-    queryFn: query(supplyDeliveryApi.retrieveSupplyDelivery, {
-      pathParams: { supplyDeliveryId: deliveryId },
-    }),
-    enabled: !!deliveryId,
-  });
+  // Update form values when delivery data loads
+  useEffect(() => {
+    if (delivery) {
+      form.reset({
+        condition:
+          delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
+        receivingStatus: delivery.status,
+        markAsFullyReceived: false,
+      });
+    }
+  }, [delivery, form]);
+
   const { mutateAsync: updateSupplyDelivery, isPending: isUpdatingDelivery } =
     useMutation({
       mutationFn: mutate(supplyDeliveryApi.updateSupplyDelivery, {
@@ -166,28 +222,151 @@ export default function ReceiveItem({
   };
 
   const handleMarkAsEnteredInError = () => {
-    if (!delivery) return;
-
-    updateSupplyDelivery({
-      status: SupplyDeliveryStatus.entered_in_error,
-      supplied_item_condition:
-        delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
-    } satisfies SupplyDeliveryUpdate);
-
+    form.setValue("receivingStatus", SupplyDeliveryStatus.entered_in_error);
+    form.setValue(
+      "condition",
+      delivery?.supplied_item_condition || SupplyDeliveryCondition.normal,
+    );
+    setDialogState({ isOpen: false, type: null });
+    form.handleSubmit(handleSubmit)();
     toast.success(t("item_marked_as_entered_in_error"));
   };
 
   const handleMarkAsAbandoned = () => {
-    if (!delivery) return;
-
-    updateSupplyDelivery({
-      status: SupplyDeliveryStatus.abandoned,
-      supplied_item_condition:
-        delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
-    } satisfies SupplyDeliveryUpdate);
-
+    form.setValue("receivingStatus", SupplyDeliveryStatus.abandoned);
+    form.setValue(
+      "condition",
+      delivery?.supplied_item_condition || SupplyDeliveryCondition.normal,
+    );
+    setDialogState({ isOpen: false, type: null });
+    form.handleSubmit(handleSubmit)();
     toast.success(t("item_marked_as_abandoned"));
   };
+
+  function getButtonTextString(
+    condition: SupplyDeliveryCondition,
+    status: SupplyDeliveryStatus,
+  ) {
+    let buttonText = t("mark_as_received");
+    let buttonVariant = "primary";
+    let buttonIcon = <CheckIcon className="w-4 h-4" />;
+    if (condition === SupplyDeliveryCondition.normal) {
+      switch (status) {
+        case SupplyDeliveryStatus.completed:
+          buttonText = t("mark_as_received");
+          break;
+        case SupplyDeliveryStatus.abandoned:
+          buttonText = t("mark_as_not_received");
+          buttonVariant = "destructive";
+          buttonIcon = <XIcon className="w-4 h-4" />;
+          break;
+        case SupplyDeliveryStatus.entered_in_error:
+          buttonText = t("mark_as_invalid");
+          buttonIcon = <XIcon className="w-4 h-4" />;
+          buttonVariant = "destructive";
+          break;
+        default:
+          buttonText = t("mark_as_received");
+      }
+    } else if (condition === SupplyDeliveryCondition.damaged) {
+      switch (status) {
+        case SupplyDeliveryStatus.completed:
+          buttonText = t("mark_as_damaged");
+          buttonVariant = "destructive";
+          buttonIcon = <XIcon className="w-4 h-4" />;
+          break;
+        case SupplyDeliveryStatus.abandoned:
+          buttonText = t("discard_damaged_item");
+          buttonVariant = "destructive";
+          buttonIcon = <XIcon className="w-4 h-4" />;
+          break;
+        case SupplyDeliveryStatus.entered_in_error:
+          buttonText = t("mark_as_invalid");
+          buttonVariant = "destructive";
+          buttonIcon = <XIcon className="w-4 h-4" />;
+          break;
+        default:
+          buttonText = t("mark_as_damaged");
+          buttonVariant = "destructive";
+      }
+    }
+    return {
+      buttonText,
+      buttonVariant: buttonVariant as "primary" | "destructive",
+      buttonIcon,
+    };
+  }
+
+  const { buttonText, buttonVariant, buttonIcon } = getButtonTextString(
+    form.watch("condition"),
+    form.watch("receivingStatus"),
+  );
+
+  const getDialogConfig = (type: DialogType) => {
+    switch (type) {
+      case "submit":
+        return {
+          title: t("confirm_submission"),
+          description: (
+            <Trans
+              i18nKey="are_you_sure_you_cannot_change_once_submitted"
+              values={{
+                action: buttonText,
+              }}
+              components={{
+                strong: <span className="font-medium text-gray-700" />,
+              }}
+            />
+          ),
+          onConfirm: () => {
+            setDialogState({ isOpen: false, type: null });
+            form.handleSubmit(handleSubmit)();
+          },
+        };
+      case "error":
+        return {
+          title: t("confirm_submission"),
+          description: (
+            <Trans
+              i18nKey="are_you_sure_you_cannot_change_once_submitted"
+              values={{
+                action: buttonText,
+              }}
+              components={{
+                strong: <span className="font-medium text-gray-700" />,
+              }}
+            />
+          ),
+          onConfirm: () => {
+            setDialogState({ isOpen: false, type: null });
+            handleMarkAsEnteredInError();
+          },
+        };
+      case "abandon":
+        return {
+          title: t("confirm_submission"),
+          description: (
+            <Trans
+              i18nKey="are_you_sure_you_cannot_change_once_submitted"
+              values={{
+                action: buttonText,
+              }}
+              components={{
+                strong: <span className="font-medium text-gray-700" />,
+              }}
+            />
+          ),
+          onConfirm: () => {
+            setDialogState({ isOpen: false, type: null });
+            handleMarkAsAbandoned();
+          },
+        };
+      default:
+        return null;
+    }
+  };
+
+  const dialogConfig = getDialogConfig(dialogState.type);
 
   if (isLoading || !delivery) {
     return (
@@ -205,8 +384,6 @@ export default function ReceiveItem({
       </Page>
     );
   }
-
-  const isPending = isUpdatingDelivery || isUpdatingRequest;
 
   const storageGuidelines = delivery &&
     delivery.supply_request &&
@@ -585,43 +762,17 @@ export default function ReceiveItem({
                     <Button variant="outline" onClick={handleCancel}>
                       {t("cancel")}
                     </Button>
-                    <AlertDialog
-                      open={isDialogOpen}
-                      onOpenChange={setIsDialogOpen}
+                    <Button
+                      variant={buttonVariant}
+                      type="button"
+                      disabled={isUpdatingDelivery || isUpdatingRequest}
+                      onClick={() =>
+                        setDialogState({ isOpen: true, type: "submit" })
+                      }
                     >
-                      <AlertDialogTrigger asChild>
-                        <Button type="button" disabled={isPending}>
-                          <CheckIcon className="w-4 h-4" />
-                          {t("mark_as_received")}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            {t("confirm_submission")}
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            {form.watch("receivingStatus") ===
-                            SupplyDeliveryStatus.completed
-                              ? t(
-                                  "are_you_sure_you_cannot_change_once_submitted",
-                                )
-                              : t("confirm_submission")}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => {
-                              setIsDialogOpen(false);
-                              form.handleSubmit(handleSubmit)();
-                            }}
-                          >
-                            {t("done")}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                      {buttonIcon}
+                      {buttonText}
+                    </Button>
                   </div>
                 </form>
               </Form>
@@ -640,26 +791,34 @@ export default function ReceiveItem({
                   <DropdownMenuContent align="end">
                     {delivery.status === SupplyDeliveryStatus.abandoned ? (
                       <DropdownMenuItem
-                        onClick={() => setIsErrorDialogOpen(true)}
+                        onClick={() =>
+                          setDialogState({ isOpen: true, type: "error" })
+                        }
                       >
                         {t("mark_as_entered_in_error")}
                       </DropdownMenuItem>
                     ) : delivery.status ===
                       SupplyDeliveryStatus.entered_in_error ? (
                       <DropdownMenuItem
-                        onClick={() => setIsAbandonDialogOpen(true)}
+                        onClick={() =>
+                          setDialogState({ isOpen: true, type: "abandon" })
+                        }
                       >
                         {t("mark_as_abandoned")}
                       </DropdownMenuItem>
                     ) : (
                       <>
                         <DropdownMenuItem
-                          onClick={() => setIsErrorDialogOpen(true)}
+                          onClick={() =>
+                            setDialogState({ isOpen: true, type: "error" })
+                          }
                         >
                           {t("mark_as_entered_in_error")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => setIsAbandonDialogOpen(true)}
+                          onClick={() =>
+                            setDialogState({ isOpen: true, type: "abandon" })
+                          }
                         >
                           {t("mark_as_abandoned")}
                         </DropdownMenuItem>
@@ -766,69 +925,19 @@ export default function ReceiveItem({
           </div>
         )}
 
-        {/* Alert Dialog for Mark as Entered in Error */}
-        <AlertDialog
-          open={isErrorDialogOpen}
-          onOpenChange={setIsErrorDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t("confirm_submission")}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {delivery?.status === SupplyDeliveryStatus.completed
-                  ? t(
-                      "once_delivery_is_completed_you_can_not_change_the_status",
-                    )
-                  : t("are_you_sure")}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-              {delivery?.status !== SupplyDeliveryStatus.completed && (
-                <AlertDialogAction
-                  onClick={() => {
-                    setIsErrorDialogOpen(false);
-                    handleMarkAsEnteredInError();
-                  }}
-                >
-                  {t("mark_as_entered_in_error")}
-                </AlertDialogAction>
-              )}
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Alert Dialog for Mark as Abandoned */}
-        <AlertDialog
-          open={isAbandonDialogOpen}
-          onOpenChange={setIsAbandonDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t("confirm_submission")}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {delivery?.status === SupplyDeliveryStatus.completed
-                  ? t(
-                      "once_delivery_is_completed_you_can_not_change_the_status",
-                    )
-                  : t("are_you_sure")}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-              {delivery?.status !== SupplyDeliveryStatus.completed && (
-                <AlertDialogAction
-                  onClick={() => {
-                    setIsAbandonDialogOpen(false);
-                    handleMarkAsAbandoned();
-                  }}
-                >
-                  {t("mark_as_abandoned")}
-                </AlertDialogAction>
-              )}
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Single consolidated AlertDialog */}
+        {dialogState.isOpen && dialogState.type && dialogConfig && (
+          <StatusChangeAlertDialog
+            open={dialogState.isOpen}
+            onOpenChange={(open) =>
+              setDialogState({ isOpen: open, type: null })
+            }
+            {...dialogConfig}
+            cancelText={t("cancel")}
+            buttonText={buttonText}
+            buttonVariant={buttonVariant}
+          />
+        )}
       </div>
     </Page>
   );
