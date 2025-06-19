@@ -285,32 +285,28 @@ export default function ToDispatchSupplyRequestTable({
           description={t("no_requests_found_description")}
         />
       ) : (
-        <div className="overflow-hidden rounded-md border-2 border-white shadow-md">
-          <Table className="rounded-md">
-            <TableHeader className="bg-gray-100 text-gray-700">
-              <TableRow className="divide-x">
-                <TableHead className="text-gray-700">{t("item")}</TableHead>
-                <TableHead className="text-gray-700">
-                  {t("qty_requested")}
-                </TableHead>
-                <TableHead className="text-gray-700">
-                  {t("deliver_to")}
-                </TableHead>
-                <TableHead className="text-gray-700">{t("status")}</TableHead>
-                <TableHead className="text-gray-700">{t("priority")}</TableHead>
-                <TableHead className="text-gray-700">{t("action")}</TableHead>
+        <div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("item")}</TableHead>
+                <TableHead>{t("qty_requested")}</TableHead>
+                <TableHead>{t("deliver_to")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("priority")}</TableHead>
+                <TableHead>{t("action")}</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="bg-white text-base">
+            <TableBody>
               {requests.map((request: SupplyRequestRead) => (
                 <TableRow
                   key={request.id}
                   className="hover:bg-gray-50 divide-x"
                 >
-                  <TableCell className="font-semibold text-gray-950 w-1/3">
+                  <TableCell className="font-semibold w-1/3">
                     {request.item.name}
                   </TableCell>
-                  <TableCell className="font-medium text-gray-950">
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold min-w-8 text-right">
                         {request.quantity}
@@ -320,10 +316,8 @@ export default function ToDispatchSupplyRequestTable({
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-medium text-gray-950">
-                    {request.deliver_to.name}
-                  </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell>{request.deliver_to.name}</TableCell>
+                  <TableCell>
                     <Badge
                       variant="outline"
                       className={getSupplyRequestStatusBadgeColor(
@@ -333,7 +327,7 @@ export default function ToDispatchSupplyRequestTable({
                       {t(request.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell>
                     <Badge
                       variant="outline"
                       className={getSupplyRequestPriorityBadgeColor(
@@ -346,15 +340,14 @@ export default function ToDispatchSupplyRequestTable({
                   <TableCell className="w-10">
                     <Button
                       variant="outline"
-                      size="md"
-                      className="shadow-sm border-gray-400 font-semibold text-gray-950"
+                      className="font-semibold"
                       onClick={() =>
                         navigate(
                           `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch/${request.id}`,
                         )
                       }
                     >
-                      <ArrowUpRightSquare strokeWidth={1.5} className="-mr-1" />
+                      <ArrowUpRightSquare strokeWidth={1.5} />
                       {t("see_details")}
                     </Button>
                   </TableCell>

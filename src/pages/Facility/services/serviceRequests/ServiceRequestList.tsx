@@ -22,14 +22,6 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import Page from "@/components/Common/Page";
@@ -37,6 +29,14 @@ import {
   CardGridSkeleton,
   TableSkeleton,
 } from "@/components/Common/SkeletonLoading";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/Common/Table";
 import SpecimenIDScanDialog from "@/components/Scan/SpecimenIDScanDialog";
 
 import useFilters from "@/hooks/useFilters";
@@ -164,31 +164,27 @@ function ServiceRequestTable({
   const { t } = useTranslation();
 
   return (
-    <div className="overflow-hidden rounded-md border-2 border-white shadow-md">
-      <Table className="rounded-md">
-        <TableHeader className="bg-gray-100 text-gray-700 text-sm">
-          <TableRow className="divide-x">
-            <TableHead className="text-gray-700">{t("patient_name")}</TableHead>
-            <TableHead className="text-gray-700">{t("service_type")}</TableHead>
-            <TableHead className="text-gray-700">{t("status")}</TableHead>
-            <TableHead className="text-gray-700">{t("priority")}</TableHead>
-            <TableHead className="text-gray-700">{t("actions")}</TableHead>
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("patient_name")}</TableHead>
+            <TableHead>{t("service_type")}</TableHead>
+            <TableHead>{t("status")}</TableHead>
+            <TableHead>{t("priority")}</TableHead>
+            <TableHead>{t("actions")}</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="bg-white text-base">
+        <TableBody>
           {requests.map((request) => (
-            <TableRow key={request.id} className="hover:bg-gray-50 divide-x">
-              <TableCell className="font-semibold text-gray-950 w-1/3">
-                <div className="font-semibold text-gray-900">
-                  {request.encounter.patient.name}
-                </div>
+            <TableRow key={request.id}>
+              <TableCell className="font-semibold">
+                <div>{request.encounter.patient.name}</div>
                 <div className="text-xs text-gray-500">
                   {request.encounter.patient.id}
                 </div>
               </TableCell>
-              <TableCell className="font-medium text-gray-950">
-                {request.title}
-              </TableCell>
+              <TableCell>{request.title}</TableCell>
               <TableCell>
                 <Badge
                   variant="outline"
@@ -208,15 +204,14 @@ function ServiceRequestTable({
               <TableCell className="w-10">
                 <Button
                   variant="outline"
-                  size="md"
-                  className="shadow-sm border-gray-400 font-semibold text-gray-950"
+                  className="font-semibold"
                   onClick={() =>
                     navigate(
                       `/facility/${facilityId}/locations/${locationId}/service_requests/${request.id}`,
                     )
                   }
                 >
-                  <ArrowUpRightSquare strokeWidth={1.5} className="-mr-1" />
+                  <ArrowUpRightSquare strokeWidth={1.5} />
                   {t("see_details")}
                 </Button>
               </TableCell>

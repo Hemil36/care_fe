@@ -21,6 +21,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+
+import { TableSkeleton } from "@/components/Common/SkeletonLoading";
 import {
   Table,
   TableBody,
@@ -28,9 +30,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-
-import { TableSkeleton } from "@/components/Common/SkeletonLoading";
+} from "@/components/Common/Table";
 
 import useFilters from "@/hooks/useFilters";
 
@@ -191,36 +191,29 @@ export default function SupplyDeliveryTable({
           description={t("no_deliveries_found_description")}
         />
       ) : (
-        <div className="overflow-hidden rounded-md border-2 border-white shadow-md">
-          <Table className="rounded-md">
-            <TableHeader className="bg-gray-100 text-gray-700">
-              <TableRow className="divide-x">
-                <TableHead className="text-gray-700">{t("item")}</TableHead>
-                <TableHead className="text-gray-700">
-                  {t("qty_requested")}
-                </TableHead>
-                <TableHead className="text-gray-700">
+        <div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("item")}</TableHead>
+                <TableHead>{t("qty_requested")}</TableHead>
+                <TableHead>
                   {mode === "dispatch" ? t("deliver_to") : t("deliver_from")}
                 </TableHead>
-                <TableHead className="text-gray-700">
-                  {t("condition")}
-                </TableHead>
-                <TableHead className="text-gray-700">{t("status")}</TableHead>
-                <TableHead className="text-gray-700">{t("action")}</TableHead>
+                <TableHead>{t("condition")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("action")}</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="bg-white text-base">
+            <TableBody>
               {deliveries.map((delivery: SupplyDeliveryRead) => (
-                <TableRow
-                  key={delivery.id}
-                  className="hover:bg-gray-50 divide-x"
-                >
-                  <TableCell className="font-semibold text-gray-950 w-1/3">
+                <TableRow key={delivery.id}>
+                  <TableCell className="font-semibold w-1/3">
                     {delivery.supplied_item?.product_knowledge.name ||
                       delivery.supplied_inventory_item?.product
                         .product_knowledge.name}
                   </TableCell>
-                  <TableCell className="font-medium text-gray-950">
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold min-w-8 text-right">
                         {delivery.supplied_item_quantity}
@@ -231,7 +224,7 @@ export default function SupplyDeliveryTable({
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-medium text-gray-950">
+                  <TableCell>
                     {mode === "dispatch"
                       ? delivery.destination.name
                       : delivery.origin?.name}
@@ -263,8 +256,7 @@ export default function SupplyDeliveryTable({
                   <TableCell className="w-10">
                     <Button
                       variant="outline"
-                      size="md"
-                      className="shadow-sm border-gray-400 font-semibold text-gray-950"
+                      className="font-semibold"
                       onClick={() => handleSeeDetails(delivery.id)}
                     >
                       <ArrowUpRightSquare strokeWidth={1.5} />
