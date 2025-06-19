@@ -28,6 +28,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import Page from "@/components/Common/Page";
 
@@ -36,6 +44,7 @@ import useAppHistory from "@/hooks/useAppHistory";
 import mutate from "@/Utils/request/mutate";
 import query from "@/Utils/request/query";
 import { PaginatedResponse } from "@/Utils/request/types";
+import { ProductKnowledgeBase } from "@/types/inventory/productKnowledge/productKnowledge";
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
 import {
   SupplyRequestCategory,
@@ -77,6 +86,9 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
   const navigate = useNavigate();
   const [searchDeliveryFrom, setSearchDeliveryFrom] = useState("");
   const [searchItem, setSearchItem] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState<
+    Record<string, ProductKnowledgeBase>
+  >({});
 
   const {
     data: deliveryFromLocations,
@@ -104,19 +116,7 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
     }),
   });
 
-  // Create a map of product IDs to their units for easy lookup
-  const productUnits = React.useMemo(() => {
-    if (!products?.results) return {};
-    return products.results.reduce(
-      (acc, product) => {
-        acc[product.id] = product.definitional?.dosage_form?.display || "units";
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-  }, [products?.results]);
-
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       status: SupplyRequestStatus.active,
@@ -126,12 +126,7 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
       reason: SupplyRequestReason.ward_stock,
       deliver_to: locationId,
       deliver_from: "",
-      requests: [
-        {
-          quantity: 1,
-          item: "",
-        },
-      ],
+      requests: [{ quantity: null as unknown as number, item: "" }],
     },
   });
 
@@ -201,114 +196,138 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
                   {t("items_to_request")}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-12 items-center gap-2 px-2 pb-2 text-sm font-semibold text-gray-700 border-b border-gray-100">
-                  <div className="col-span-6">{t("select_item_from_lot")}</div>
-                  <div className="col-span-4">{t("quantity")}</div>
-                  <div className="col-span-2 text-right">{t("action")}</div>
-                </div>
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="grid grid-cols-12 items-center gap-2 px-2 py-3 border-b last:border-b-0 border-gray-100 bg-white"
-                  >
-                    <div className="col-span-6">
-                      <FormField
-                        control={form.control}
-                        name={`requests.${index}.item`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Autocomplete
-                                options={productOptions}
-                                value={field.value || ""}
-                                onChange={field.onChange}
-                                isLoading={isLoadingProducts}
-                                onSearch={setSearchItem}
-                                placeholder={t("select_product")}
-                                inputPlaceholder={t("search_product")}
-                                noOptionsMessage={t("no_products_found")}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="col-span-4">
-                      <FormField
-                        control={form.control}
-                        name={`requests.${index}.quantity`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <div className="relative flex items-center">
-                                <Input
-                                  type="number"
-                                  min={1}
-                                  placeholder={t("enter_quantity")}
-                                  className="h-10 rounded-md border border-gray-200 bg-white px-3 text-base focus:border-primary-600 focus:ring-2 focus:ring-primary-100 pr-16"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(parseInt(e.target.value))
+              <CardContent>
+                <div className="border border-gray-300 rounded-lg overflow-hidden">
+                  <Table className="bg-gray-50">
+                    <TableHeader>
+                      <TableRow className="bg-gray-100 border-b border-gray-300 rounded-t-lg">
+                        <TableHead className="text-gray-800 w-[60%] border-r border-gray-300">
+                          {t("select_item_from_lot")}
+                        </TableHead>
+                        <TableHead className="text-gray-800 w-[25%] border-r border-gray-300">
+                          {t("quantity")}
+                        </TableHead>
+                        <TableHead className="text-gray-800 w-[5%] text-center">
+                          {t("action")}
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {fields.map((field, index) => (
+                        <TableRow
+                          key={field.id}
+                          className="border-b border-gray-300 last:border-b-0"
+                        >
+                          <TableCell className="min-w-[300px] border-r border-gray-300">
+                            <FormField
+                              control={form.control}
+                              name={`requests.${index}.item`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Autocomplete
+                                      options={productOptions}
+                                      value={field.value}
+                                      onChange={(value) => {
+                                        const selectedProduct =
+                                          products?.results.find(
+                                            (p) => p.id === value,
+                                          );
+                                        if (selectedProduct) {
+                                          setSelectedProducts((prev) => ({
+                                            ...prev,
+                                            [value]: selectedProduct,
+                                          }));
+                                        }
+                                        field.onChange(value);
+                                      }}
+                                      isLoading={isLoadingProducts}
+                                      onSearch={setSearchItem}
+                                      placeholder={t("select_product")}
+                                      inputPlaceholder={t("search_product")}
+                                      noOptionsMessage={t("no_products_found")}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell className="border-r border-gray-300">
+                            <FormField
+                              control={form.control}
+                              name={`requests.${index}.quantity`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <div className="relative flex items-center max-w-[200px]">
+                                      <Input
+                                        type="number"
+                                        min={1}
+                                        placeholder={t("quantity")}
+                                        className="h-10 rounded-md border border-gray-200 bg-white px-3 text-base focus:border-primary-600 focus:ring-2 focus:ring-primary-100 pr-16"
+                                        {...field}
+                                        onChange={(e) =>
+                                          field.onChange(
+                                            parseInt(e.target.value),
+                                          )
+                                        }
+                                      />
+                                      <span className="absolute right-3 text-sm text-gray-500">
+                                        {form.watch(`requests.${index}.item`) &&
+                                          selectedProducts[
+                                            form.watch(`requests.${index}.item`)
+                                          ]?.definitional?.dosage_form?.display}
+                                      </span>
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-gray-400 hover:bg-gray-100"
+                                >
+                                  <span className="sr-only">
+                                    {t("actions")}
+                                  </span>
+                                  <MoreVertical className="h-5 w-5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={() => remove(index)}
+                                  disabled={fields.length === 1}
+                                  className={
+                                    fields.length === 1
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
                                   }
-                                />
-                                <span className="absolute right-3 text-sm text-gray-500">
-                                  {form.watch(`requests.${index}.item`)
-                                    ? productUnits[
-                                        form.watch(`requests.${index}.item`)
-                                      ]
-                                    : ""}
-                                </span>
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="col-span-2 flex justify-end">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-gray-400 hover:bg-gray-100"
-                          >
-                            <span className="sr-only">{t("actions")}</span>
-                            <MoreVertical className="h-5 w-5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => remove(index)}
-                            disabled={fields.length === 1}
-                            className={
-                              fields.length === 1
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                            }
-                          >
-                            {t("remove")}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                ))}
-                <div className="pt-2">
+                                >
+                                  {t("remove")}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <div className="pt-4">
                   <Button
                     type="button"
                     variant="outline"
                     className="rounded-md border border-gray-200 bg-white text-gray-900 hover:bg-gray-50"
-                    onClick={() =>
-                      append({
-                        quantity: 1,
-                        item: "",
-                      })
-                    }
+                    onClick={() => append({ quantity: 1, item: "" })}
                   >
                     <PlusIcon className="w-4 h-4" /> {t("add_another_item")}
                   </Button>
