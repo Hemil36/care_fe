@@ -350,7 +350,7 @@ export default function ToDispatchSupplyRequestTable({
                       className="shadow-sm border-gray-400 font-semibold text-gray-950"
                       onClick={() =>
                         navigate(
-                          `/facility/${facilityId}/locations/${locationId}/supply_requests/${request.id}/dispatch`,
+                          `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch/${request.id}`,
                         )
                       }
                     >

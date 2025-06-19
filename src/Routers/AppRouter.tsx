@@ -36,7 +36,7 @@ const PATHS_WITHOUT_SIDEBAR = [
   // Pattern matches (using regex)
   /^\/facility\/[^/]+\/services_requests\/[^/]+$/,
   /^\/facility\/[^/]+\/locations\/[^/]+\/internal_transfers\/to_receive\/[^/]+$/,
-  /^\/facility\/[^/]+\/locations\/[^/]+\/supply_requests\/[^/]+\/dispatch$/,
+  /^\/facility\/[^/]+\/locations\/[^/]+\/internal_transfers\/to_dispatch\/[^/]+$/,
 ];
 
 export type RouteParams<T extends string> =

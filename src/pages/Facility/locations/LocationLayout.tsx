@@ -111,13 +111,6 @@ const getRoutes = (facilityId: string, locationId: string) => ({
       supplyRequestId={id}
     />
   ),
-  "/supply_requests/:id/dispatch": ({ id }: { id: string }) => (
-    <SupplyRequestDispatch
-      facilityId={facilityId}
-      locationId={locationId}
-      supplyRequestId={id}
-    />
-  ),
 
   // Supply Delivery Routes
   "/supply_deliveries": () => (
@@ -170,6 +163,14 @@ const getRoutes = (facilityId: string, locationId: string) => ({
   ),
   "/internal_transfers/to_dispatch": () => (
     <ToDispatch facilityId={facilityId} locationId={locationId} />
+  ),
+
+  "/internal_transfers/to_dispatch/:id": ({ id }: { id: string }) => (
+    <SupplyRequestDispatch
+      facilityId={facilityId}
+      locationId={locationId}
+      supplyRequestId={id}
+    />
   ),
 
   // Inventory - External Supply
