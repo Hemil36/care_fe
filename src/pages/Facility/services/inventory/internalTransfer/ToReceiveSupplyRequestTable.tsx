@@ -6,6 +6,7 @@ import {
   X,
 } from "lucide-react";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { navigate } from "raviger";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ import { TableSkeleton } from "@/components/Common/SkeletonLoading";
 import useFilters from "@/hooks/useFilters";
 
 import query from "@/Utils/request/query";
+import { makeUrl } from "@/Utils/request/utils";
 import { ProductKnowledgeStatus } from "@/types/inventory/productKnowledge/productKnowledge";
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
 import {
@@ -347,7 +349,13 @@ export default function ToReceiveSupplyRequestTable({
                       variant="outline"
                       size="md"
                       className="shadow-sm border-gray-400 font-semibold text-gray-950"
-                      onClick={() => {}}
+                      onClick={() => {
+                        const path = makeUrl(
+                          `/facility/${facilityId}/locations/${locationId}/internal_transfers/requests/${request.id}`,
+                          qParams,
+                        );
+                        navigate(path);
+                      }}
                     >
                       <ArrowUpRightSquare strokeWidth={1.5} />
                       {t("see_details")}

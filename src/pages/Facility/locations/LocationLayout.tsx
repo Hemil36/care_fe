@@ -12,6 +12,7 @@ import { PurchaseOrders } from "@/pages/Facility/services/inventory/externalSupp
 import PurchaseRequestView from "@/pages/Facility/services/inventory/externalSupply/PurchaseRequestView";
 import RaiseStockRequest from "@/pages/Facility/services/inventory/internalTransfer/RaiseStockRequest";
 import ReceiveItem from "@/pages/Facility/services/inventory/internalTransfer/ReceiveItem";
+import SupplyRequestDetail from "@/pages/Facility/services/inventory/internalTransfer/SupplyRequestDetail";
 import ToDispatch from "@/pages/Facility/services/inventory/internalTransfer/ToDispatch";
 import ToReceive from "@/pages/Facility/services/inventory/internalTransfer/ToReceive";
 import DispensesView from "@/pages/Facility/services/pharmacy/DispensesView";
@@ -170,6 +171,14 @@ const getRoutes = (facilityId: string, locationId: string) => ({
       facilityId={facilityId}
       locationId={locationId}
       supplyRequestId={id}
+    />
+  ),
+
+  "/internal_transfers/requests/:id": ({ id }: { id: string }) => (
+    <SupplyRequestDetail
+      facilityId={facilityId}
+      locationId={locationId}
+      id={id}
     />
   ),
 
