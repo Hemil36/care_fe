@@ -249,20 +249,21 @@ export default function SupplyRequestDispatch({
   if (!supplyRequest) return null;
 
   return (
-    <div className="space-y-2 p-6">
+    <div className="space-y-2 container mx-auto max-w-5xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">Dispatch Items</h2>
         <Button
-          variant="ghost"
-          size="icon"
+          variant="outline"
+          size="sm"
+          className="size-8 p-0 border-gray-400 shadow-sm text-gray-700"
           onClick={() =>
             navigate(
               `/facility/${facilityId}/locations/${locationId}/supply_requests`,
             )
           }
         >
-          <X className="h-4 w-4" />
+          <X className="size-5" />
         </Button>
       </div>
 
@@ -457,7 +458,7 @@ export default function SupplyRequestDispatch({
 
       {/* Main Form */}
       {supplyRequest.status === SupplyRequestStatus.active && (
-        <div className="rounded-lg border bg-gray-100 mx-4">
+        <div className="rounded-lg border bg-gray-100 mx-4 mt-6">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
