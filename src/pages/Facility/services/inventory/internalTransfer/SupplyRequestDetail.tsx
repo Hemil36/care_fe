@@ -1,8 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
 import { MoreVertical } from "lucide-react";
 import { useQueryParams } from "raviger";
-import { useTranslation } from "react-i18next";
+import { ReactNode, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,17 +25,63 @@ import {
 } from "@/components/ui/table";
 
 import BackButton from "@/components/Common/BackButton";
+import ConfirmActionDialog from "@/components/Common/ConfirmActionDialog";
 import Page from "@/components/Common/Page";
 import { TableSkeleton } from "@/components/Common/SkeletonLoading";
 
+import mutate from "@/Utils/request/mutate";
 import query from "@/Utils/request/query";
 import {
   SupplyDeliveryRead,
   getSupplyDeliveryStatusBadgeColor,
 } from "@/types/inventory/supplyDelivery/supplyDelivery";
 import supplyDeliveryApi from "@/types/inventory/supplyDelivery/supplyDeliveryApi";
-import { getSupplyRequestPriorityBadgeColor } from "@/types/inventory/supplyRequest/supplyRequest";
+import {
+  getSupplyRequestPriorityBadgeColor,
+  getSupplyRequestStatusBadgeColor,
+} from "@/types/inventory/supplyRequest/supplyRequest";
+import {
+  SupplyRequestCreate,
+  SupplyRequestStatus,
+} from "@/types/inventory/supplyRequest/supplyRequest";
 import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
+
+const statusUpdateConfig: Partial<
+  Record<
+    SupplyRequestStatus,
+    {
+      labelKey: string;
+      actionTextKey: string;
+      variant?: "primary" | "destructive" | "default";
+    }
+  >
+> = {
+  [SupplyRequestStatus.suspended]: {
+    labelKey: "suspend",
+    actionTextKey: "suspend_this_request",
+    variant: "destructive",
+  },
+  [SupplyRequestStatus.cancelled]: {
+    labelKey: "cancel",
+    actionTextKey: "cancel_this_request",
+    variant: "destructive",
+  },
+  [SupplyRequestStatus.entered_in_error]: {
+    labelKey: "mark_as_error",
+    actionTextKey: "mark_this_as_error",
+    variant: "destructive",
+  },
+  [SupplyRequestStatus.active]: {
+    labelKey: "mark_as_active",
+    actionTextKey: "activate_this_request",
+    variant: "primary",
+  },
+  [SupplyRequestStatus.draft]: {
+    labelKey: "move_to_draft",
+    actionTextKey: "move_this_to_draft",
+    variant: "primary",
+  },
+};
 
 interface Props {
   facilityId: string;
@@ -48,6 +96,20 @@ export default function SupplyRequestDetail({
 }: Props) {
   const { t } = useTranslation();
   const [qParams] = useQueryParams();
+  const queryClient = useQueryClient();
+  const [dialog, setDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: ReactNode;
+    onConfirm: () => void;
+    variant: "primary" | "destructive" | "default";
+  }>({
+    open: false,
+    title: "",
+    description: null,
+    onConfirm: () => {},
+    variant: "primary",
+  });
 
   const { data: supplyRequest, isLoading } = useQuery({
     queryKey: ["supplyRequest", id],
@@ -67,6 +129,90 @@ export default function SupplyRequestDetail({
 
   const deliveries = deliveriesResponse?.results || [];
 
+  const { mutate: updateSupplyRequestStatus } = useMutation({
+    mutationFn: mutate(supplyRequestApi.updateSupplyRequest, {
+      pathParams: { supplyRequestId: id },
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["supplyRequest", id] });
+      queryClient.invalidateQueries({ queryKey: ["supplyRequests"] });
+      toast.success(t("status_updated_successfully"));
+      setDialog({ ...dialog, open: false });
+    },
+    onError: () => {
+      toast.error(t("error_updating_status"));
+    },
+  });
+
+  const handleStatusUpdate = (status: SupplyRequestStatus) => {
+    if (!supplyRequest) return;
+    const data: SupplyRequestCreate = {
+      status: status,
+      intent: supplyRequest.intent,
+      category: supplyRequest.category,
+      priority: supplyRequest.priority,
+      reason: supplyRequest.reason,
+      quantity: supplyRequest.quantity,
+      deliver_from: supplyRequest.deliver_from?.id,
+      deliver_to: supplyRequest.deliver_to.id,
+      item: supplyRequest.item.id,
+    };
+    updateSupplyRequestStatus(data);
+  };
+
+  const openDialog = (newStatus: SupplyRequestStatus) => {
+    const config = statusUpdateConfig[newStatus];
+    if (!config) return;
+
+    setDialog({
+      open: true,
+      title: t(config.labelKey),
+      description: (
+        <Trans
+          i18nKey="confirm_action_description"
+          values={{ action: t(config.actionTextKey) }}
+          components={{ 1: <strong className="text-gray-900" /> }}
+        />
+      ),
+      onConfirm: () => handleStatusUpdate(newStatus),
+      variant: config.variant || "destructive",
+    });
+  };
+
+  const getActions = (status: SupplyRequestStatus) => {
+    const availableActions: SupplyRequestStatus[] = [];
+    switch (status) {
+      case SupplyRequestStatus.draft:
+      case SupplyRequestStatus.active:
+        availableActions.push(
+          SupplyRequestStatus.suspended,
+          SupplyRequestStatus.cancelled,
+          SupplyRequestStatus.entered_in_error,
+        );
+        break;
+      case SupplyRequestStatus.suspended:
+        availableActions.push(
+          SupplyRequestStatus.active,
+          SupplyRequestStatus.draft,
+          SupplyRequestStatus.cancelled,
+          SupplyRequestStatus.entered_in_error,
+        );
+        break;
+      default:
+        break;
+    }
+    return availableActions
+      .map((newStatus) => {
+        const config = statusUpdateConfig[newStatus];
+        if (!config) return null;
+        return {
+          label: t(config.labelKey),
+          action: () => openDialog(newStatus),
+        };
+      })
+      .filter(Boolean);
+  };
+
   if (isLoading || !supplyRequest) {
     return (
       <Page title={t("loading")} hideTitleOnPage>
@@ -83,6 +229,8 @@ export default function SupplyRequestDetail({
     qParams as Record<string, string>,
   ).toString()}`;
 
+  const actions = getActions(supplyRequest.status);
+
   return (
     <div className="max-w-5xl container mx-auto">
       <div className="flex justify-between items-center mb-4">
@@ -90,22 +238,33 @@ export default function SupplyRequestDetail({
           <BackButton to={backUrl} />
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="border-gray-400 shadow-sm"
-            >
-              <MoreVertical className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>{t("pause_request")}</DropdownMenuItem>
-            <DropdownMenuItem>{t("cancel_request")}</DropdownMenuItem>
-            <DropdownMenuItem>{t("mark_as_error")}</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {actions.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-gray-400 shadow-sm"
+              >
+                <MoreVertical className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {actions.map(
+                (action) =>
+                  action && (
+                    <DropdownMenuItem
+                      key={action.label}
+                      onClick={action.action}
+                      className="cursor-pointer hover:bg-gray-100 focus:bg-gray-200 capitalize"
+                    >
+                      {action.label}
+                    </DropdownMenuItem>
+                  ),
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <div>
@@ -114,14 +273,14 @@ export default function SupplyRequestDetail({
         </h5>
         <p className="text-gray-600">
           {t("request_raised_by")} {supplyRequest.deliver_from?.name}
-          {". "}
+          {", "}
           {`${deliveries.length} ${t("deliveries") + " " + t("have") + " " + t("been") + " " + t("received")}`}
         </p>
       </div>
 
-      <Card className="rounded-none shadow-sm rounded-md mt-4">
+      <Card className="shadow-sm rounded-md mt-4">
         <CardContent className="p-4">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-5 gap-4">
             <div>
               <p className="text-sm text-gray-500">{t("item")}</p>
               <p className="font-semibold text-lg">
@@ -152,6 +311,17 @@ export default function SupplyRequestDetail({
                 )}
               >
                 {t(supplyRequest.priority)}
+              </Badge>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">{t("status")}</p>
+              <Badge
+                variant="outline"
+                className={getSupplyRequestStatusBadgeColor(
+                  supplyRequest.status,
+                )}
+              >
+                {t(supplyRequest.status)}
               </Badge>
             </div>
           </div>
@@ -254,6 +424,16 @@ export default function SupplyRequestDetail({
           </div>
         )}
       </div>
+      <ConfirmActionDialog
+        open={dialog.open}
+        onOpenChange={(open) => setDialog({ ...dialog, open })}
+        title={dialog.title}
+        description={dialog.description}
+        onConfirm={dialog.onConfirm}
+        variant={dialog.variant}
+        confirmText={t("confirm")}
+        cancelText={t("cancel")}
+      />
     </div>
   );
 }
