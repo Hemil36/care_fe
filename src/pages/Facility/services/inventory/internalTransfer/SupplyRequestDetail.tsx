@@ -164,15 +164,24 @@ export default function SupplyRequestDetail({
     const config = statusUpdateConfig[newStatus];
     if (!config) return;
 
+    const isIrreversible =
+      newStatus === SupplyRequestStatus.cancelled ||
+      newStatus === SupplyRequestStatus.entered_in_error;
+
     setDialog({
       open: true,
       title: t(config.labelKey),
       description: (
-        <Trans
-          i18nKey="confirm_action_description"
-          values={{ action: t(config.actionTextKey) }}
-          components={{ 1: <strong className="text-gray-900" /> }}
-        />
+        <>
+          <Trans
+            i18nKey="confirm_action_description"
+            values={{ action: t(config.actionTextKey) }}
+            components={{ 1: <strong className="text-gray-900" /> }}
+          />
+          {isIrreversible && (
+            <p className="mt-2">{t("this_action_cannot_be_undone")}</p>
+          )}
+        </>
       ),
       onConfirm: () => handleStatusUpdate(newStatus),
       variant: config.variant || "destructive",
@@ -183,6 +192,13 @@ export default function SupplyRequestDetail({
     const availableActions: SupplyRequestStatus[] = [];
     switch (status) {
       case SupplyRequestStatus.draft:
+        availableActions.push(
+          SupplyRequestStatus.active,
+          SupplyRequestStatus.suspended,
+          SupplyRequestStatus.cancelled,
+          SupplyRequestStatus.entered_in_error,
+        );
+        break;
       case SupplyRequestStatus.active:
         availableActions.push(
           SupplyRequestStatus.suspended,
@@ -282,13 +298,13 @@ export default function SupplyRequestDetail({
         <CardContent className="p-4">
           <div className="grid grid-cols-5 gap-4">
             <div>
-              <p className="text-sm text-gray-500">{t("item")}</p>
-              <p className="font-semibold text-lg">
+              <p className="text-sm text-gray-700 font-medium">{t("item")}</p>
+              <p className="font-semibold text-lg text-gray-950">
                 {supplyRequest.item?.name}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-700 font-medium">
                 {t("requested") + " " + t("quantity")}
               </p>
               <p className="font-semibold text-lg">
@@ -297,13 +313,17 @@ export default function SupplyRequestDetail({
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">{t("deliver_from")}</p>
-              <p className="font-semibold text-lg">
+              <p className="text-sm text-gray-700 font-medium">
+                {t("deliver_from")}
+              </p>
+              <p className="font-semibold text-lg text-gray-950">
                 {supplyRequest.deliver_from?.name}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">{t("priority")}</p>
+              <p className="text-sm text-gray-700 font-medium">
+                {t("priority")}
+              </p>
               <Badge
                 variant="outline"
                 className={getSupplyRequestPriorityBadgeColor(
@@ -314,7 +334,7 @@ export default function SupplyRequestDetail({
               </Badge>
             </div>
             <div>
-              <p className="text-sm text-gray-500">{t("status")}</p>
+              <p className="text-sm text-gray-700 font-medium">{t("status")}</p>
               <Badge
                 variant="outline"
                 className={getSupplyRequestStatusBadgeColor(
@@ -334,13 +354,13 @@ export default function SupplyRequestDetail({
         </h2>
         {deliveriesLoading ? (
           <TableSkeleton count={5} />
-        ) : (
+        ) : deliveries.length > 0 ? (
           <div className="overflow-hidden rounded-md border-2 border-white shadow-md">
             <Table className="rounded-md">
               <TableHeader className="bg-gray-100 text-gray-700 text-sm">
                 <TableRow className="divide-x">
                   <TableHead className="text-gray-700">
-                    {t("item_received")}
+                    {t("item") + " " + t("received")}
                   </TableHead>
                   <TableHead className="text-gray-700">
                     {t("quantity") + " " + t("received")}
@@ -421,6 +441,12 @@ export default function SupplyRequestDetail({
                 ))}
               </TableBody>
             </Table>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center p-4 bg-white rounded-md">
+            <p className="text-base text-gray-800 font-medium">
+              {t("no_deliveries_dispatched_for_this_supply_request")}
+            </p>
           </div>
         )}
       </div>
