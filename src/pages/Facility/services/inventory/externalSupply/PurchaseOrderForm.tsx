@@ -124,7 +124,7 @@ export default function PurchaseOrderForm({
 
   const { data: availableSuppliers } = useQuery({
     queryKey: ["organizations", supplierSearchQuery],
-    queryFn: query(organizationApi.list, {
+    queryFn: query.debounced(organizationApi.list, {
       queryParams: {
         org_type: "product_supplier",
         name: supplierSearchQuery || undefined,
