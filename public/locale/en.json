@@ -2717,6 +2717,7 @@
   "or_enter_manually_below": "or enter the ID manually",
   "oral_issue_for_non_oral_nutrition_route_error": "Can be specified only if nutrition route is set to Oral",
   "order": "Order",
+  "ordered": "Ordered",
   "ordering": "Ordering",
   "organization": "Organization",
   "organization_access_help": "Organizations help you manage facilities, users, and resources efficiently. Contact your administrator to get access.",

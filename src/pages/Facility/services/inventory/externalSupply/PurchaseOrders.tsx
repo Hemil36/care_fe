@@ -44,14 +44,12 @@ interface Props {
   locationId: string;
 }
 
-const TAB_TRIGGER_STYLES =
-  "border-0 border-b-2 border-transparent px-4 py-2 text-gray-600 hover:text-gray-900 data-[state=active]:text-primary-800 data-[state=active]:border-primary-700 data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none";
-
 const TABS_CONFIG = [
   { value: "pending_pos", label: "pending_pos", status: "active" },
-  { value: "in_progress", label: "in_progress", status: "processed" },
+  { value: "ordered", label: "ordered", status: "ordered" },
   { value: "completed", label: "completed", status: "completed" },
-  { value: "abandoned", label: "abandoned", status: "cancelled" },
+  { value: "suspended", label: "suspended", status: "suspended" },
+  { value: "cancelled", label: "cancelled", status: "cancelled" },
   {
     value: "entered_in_error",
     label: "entered_in_error",
@@ -270,12 +268,12 @@ export function PurchaseOrders({ facilityId, locationId }: Props) {
         </div>
 
         <Tabs value={currentTab} onValueChange={handleTabChange}>
-          <TabsList className="w-full justify-start border-b border-gray-200 bg-transparent p-0 h-auto rounded-none">
+          <TabsList className="w-full justify-evenly sm:justify-start border-b rounded-none bg-transparent p-0 h-auto overflow-x-auto">
             {TABS_CONFIG.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className={TAB_TRIGGER_STYLES}
+                className="border-b-3 px-2.5 py-1 font-semibold text-gray-600 hover:text-gray-900 data-[state=active]:border-b-primary-700  data-[state=active]:text-primary-800 data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none"
               >
                 {t(tab.label)}
               </TabsTrigger>
