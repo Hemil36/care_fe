@@ -2620,6 +2620,7 @@
   "no_suppliers_found": "No suppliers found",
   "no_supply_deliveries_found": "No Supply Deliveries Found",
   "no_supply_deliveries_found_description": "There are no supply deliveries matching your search criteria.",
+  "no_supply_request_found_for_delivery": "No supply request found for this delivery",
   "no_supply_requests_found": "No supply requests found",
   "no_supply_requests_found_description": "No supply requests found for this location",
   "no_symptoms_recorded": "No symptoms recorded",

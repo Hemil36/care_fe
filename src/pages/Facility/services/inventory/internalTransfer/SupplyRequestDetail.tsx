@@ -288,7 +288,7 @@ export default function SupplyRequestDetail({
           {t("request") + " " + t("raised")}
         </h5>
         <p className="text-gray-600">
-          {t("request_raised_by")} {supplyRequest.deliver_from?.name}
+          {t("request_raised_by")} {supplyRequest.deliver_to?.name}
           {", "}
           {`${deliveries.length} ${t("deliveries") + " " + t("have") + " " + t("been") + " " + t("received")}`}
         </p>

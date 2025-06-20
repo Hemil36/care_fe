@@ -1,8 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowUpRightSquare, X } from "lucide-react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { navigate } from "raviger";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,7 @@ import { ProductKnowledgeStatus } from "@/types/inventory/productKnowledge/produ
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
 import {
   SupplyDeliveryRead,
+  SupplyDeliveryRetrieve,
   SupplyDeliveryStatus,
   getSupplyDeliveryStatusBadgeColor,
 } from "@/types/inventory/supplyDelivery/supplyDelivery";
@@ -80,6 +82,27 @@ export default function SupplyDeliveryTable({
     }),
   });
 
+  const { mutate: retrieveDelivery, isPending: isRetrieving } = useMutation<
+    SupplyDeliveryRetrieve,
+    Error,
+    string
+  >({
+    mutationFn: (deliveryId: string) =>
+      query(supplyDeliveryApi.retrieveSupplyDelivery, {
+        pathParams: { supplyDeliveryId: deliveryId },
+      })({ signal: new AbortController().signal }),
+    onSuccess: (data) => {
+      const supplyRequestId = data.supply_request?.id;
+      if (mode === "dispatch" && supplyRequestId) {
+        navigate(
+          `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch/${supplyRequestId}`,
+        );
+      } else {
+        toast.error(t("no_supply_request_found_for_delivery"));
+      }
+    },
+  });
+
   const { data: response, isLoading } = useQuery({
     queryKey: [
       "supplyDeliveries",
@@ -113,7 +136,7 @@ export default function SupplyDeliveryTable({
         `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive/${deliveryId}`,
       );
     } else {
-      // Handle dispatch mode navigation if needed
+      retrieveDelivery(deliveryId);
     }
   };
 
@@ -258,6 +281,7 @@ export default function SupplyDeliveryTable({
                       variant="outline"
                       className="font-semibold"
                       onClick={() => handleSeeDetails(delivery.id)}
+                      disabled={isRetrieving}
                     >
                       <ArrowUpRightSquare strokeWidth={1.5} />
                       {t("see_details")}

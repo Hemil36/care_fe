@@ -14,6 +14,7 @@ import PurchaseRequestView from "@/pages/Facility/services/inventory/externalSup
 import RaiseStockRequest from "@/pages/Facility/services/inventory/internalTransfer/RaiseStockRequest";
 import ReceiveItem from "@/pages/Facility/services/inventory/internalTransfer/ReceiveItem";
 import SupplyRequestDetail from "@/pages/Facility/services/inventory/internalTransfer/SupplyRequestDetail";
+import SupplyRequestDispatch from "@/pages/Facility/services/inventory/internalTransfer/SupplyRequestDispatch";
 import ToDispatch from "@/pages/Facility/services/inventory/internalTransfer/ToDispatch";
 import ToReceive from "@/pages/Facility/services/inventory/internalTransfer/ToReceive";
 import DispensesView from "@/pages/Facility/services/pharmacy/DispensesView";
@@ -30,7 +31,6 @@ import SupplyDeliveryList, {
   SupplyDeliveryTab,
 } from "@/pages/Facility/services/supply/SupplyDeliveryList";
 import SupplyDeliveryView from "@/pages/Facility/services/supply/SupplyDeliveryView";
-import SupplyRequestDispatch from "@/pages/Facility/services/supply/SupplyRequestDispatch";
 import SupplyRequestForm from "@/pages/Facility/services/supply/SupplyRequestForm";
 import SupplyRequestList, {
   SupplyRequestTab,
