@@ -246,7 +246,11 @@ export default function SupplyDeliveryTable({
                       </span>
                       <span className="text-gray-600 capitalize">
                         {delivery.supplied_item?.product_knowledge.definitional
-                          ?.dosage_form.display || t("units")}
+                          ?.dosage_form.display ||
+                          delivery.supplied_inventory_item?.product
+                            ?.product_knowledge.definitional?.dosage_form
+                            ?.display ||
+                          t("units")}
                       </span>
                     </div>
                   </TableCell>
