@@ -9,6 +9,7 @@ import { ApproveExternalSupplyDelivery } from "@/pages/Facility/services/invento
 import { IncomingDeliveries } from "@/pages/Facility/services/inventory/externalSupply/IncomingDeliveries";
 import PurchaseOrderForm from "@/pages/Facility/services/inventory/externalSupply/PurchaseOrderForm";
 import { PurchaseOrders } from "@/pages/Facility/services/inventory/externalSupply/PurchaseOrders";
+import PurchaseOrdersBySupplier from "@/pages/Facility/services/inventory/externalSupply/PurchaseOrdersBySupplier";
 import PurchaseRequestView from "@/pages/Facility/services/inventory/externalSupply/PurchaseRequestView";
 import RaiseStockRequest from "@/pages/Facility/services/inventory/internalTransfer/RaiseStockRequest";
 import ReceiveItem from "@/pages/Facility/services/inventory/internalTransfer/ReceiveItem";
@@ -188,6 +189,18 @@ const getRoutes = (facilityId: string, locationId: string) => ({
   ),
   "/external_supply/purchase_orders/new": () => (
     <PurchaseOrderForm facilityId={facilityId} locationId={locationId} />
+  ),
+
+  "/external_supply/purchase_orders/supplier/:supplierId": ({
+    supplierId,
+  }: {
+    supplierId: string;
+  }) => (
+    <PurchaseOrdersBySupplier
+      facilityId={facilityId}
+      locationId={locationId}
+      supplierId={supplierId}
+    />
   ),
   "/external_supply/purchase_orders/:id": ({ id }: { id: string }) => (
     <PurchaseRequestView

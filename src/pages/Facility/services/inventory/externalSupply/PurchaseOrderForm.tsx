@@ -72,7 +72,7 @@ const formSchema = z.object({
   requests: z
     .array(purchaseOrderSchema)
     .min(1, "At least one request is required"),
-  vendor: z.string().min(1, "Vendor is required"),
+  supplier: z.string().min(1, "Vendor is required"),
 });
 
 interface Props {
@@ -152,7 +152,7 @@ export default function PurchaseOrderForm({
           deliver_to: locationId,
         },
       ],
-      vendor: "",
+      supplier: "",
     },
   });
 
@@ -172,7 +172,7 @@ export default function PurchaseOrderForm({
             item: existingData.item.id,
           },
         ],
-        //vendor: existingData.vendor?.id,
+        //supplier: existingData.supplier?.id,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -241,7 +241,7 @@ export default function PurchaseOrderForm({
       datapoints: data.requests.map((request) => ({
         ...request,
         id: productOrderId || undefined,
-        vendor: data.vendor || undefined,
+        supplier: data.supplier || undefined,
       })),
     });
   }
@@ -274,7 +274,7 @@ export default function PurchaseOrderForm({
               <CardContent className="space-y-4 bg-gray-50 m-2 p-2 rounded-md">
                 <FormField
                   control={form.control}
-                  name="vendor"
+                  name="supplier"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("vendor")}</FormLabel>

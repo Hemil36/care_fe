@@ -29,6 +29,7 @@ import Page from "@/components/Common/Page";
 import useFilters from "@/hooks/useFilters";
 
 import query from "@/Utils/request/query";
+import PurchaseOrderTable from "@/pages/Facility/services/inventory/externalSupply/components/PurchaseOrderTable";
 import { ProductKnowledgeStatus } from "@/types/inventory/productKnowledge/productKnowledge";
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
 import {
@@ -37,8 +38,6 @@ import {
 } from "@/types/inventory/supplyRequest/supplyRequest";
 import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
 import locationApi from "@/types/location/locationApi";
-
-import PurchaseOrderTable from "./PurchaseOrderTable";
 
 interface Props {
   facilityId: string;
