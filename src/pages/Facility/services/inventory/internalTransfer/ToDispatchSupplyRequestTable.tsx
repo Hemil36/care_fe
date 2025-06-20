@@ -26,6 +26,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+
+import { TableSkeleton } from "@/components/Common/SkeletonLoading";
 import {
   Table,
   TableBody,
@@ -33,9 +35,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-
-import { TableSkeleton } from "@/components/Common/SkeletonLoading";
+} from "@/components/Common/Table";
 
 import useFilters from "@/hooks/useFilters";
 
