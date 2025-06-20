@@ -98,6 +98,10 @@ export default function SupplyRequestDispatch({
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(
     null,
   );
+  const [dialogState, setDialogState] = useState<{
+    open: boolean;
+    data?: FormValues;
+  }>({ open: false });
 
   const backUrl = `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch?${new URLSearchParams(
     qParams as Record<string, string>,
@@ -134,6 +138,14 @@ export default function SupplyRequestDispatch({
 
   const deliveries = deliveriesResponse?.results || [];
 
+  const alreadyDispatchedQuantity = deliveries.reduce(
+    (sum, delivery) =>
+      delivery.status !== SupplyDeliveryStatus.entered_in_error
+        ? sum + delivery.supplied_item_quantity
+        : sum,
+    0,
+  );
+
   const form = useForm<FormValues>({
     resolver: zodResolver(dispatchFormSchema),
     defaultValues: {
@@ -146,11 +158,16 @@ export default function SupplyRequestDispatch({
 
   useEffect(() => {
     if (supplyRequest) {
+      const remainingQuantity =
+        supplyRequest.quantity - alreadyDispatchedQuantity;
       form.setValue("items", [
-        { inventory_item_id: "", quantity: supplyRequest.quantity },
+        {
+          inventory_item_id: "",
+          quantity: remainingQuantity > 0 ? remainingQuantity : 1,
+        },
       ]);
     }
-  }, [supplyRequest, form]);
+  }, [supplyRequest, alreadyDispatchedQuantity, form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -192,6 +209,60 @@ export default function SupplyRequestDispatch({
     },
   );
 
+  async function executeDispatch(data: FormValues) {
+    if (!supplyRequest) {
+      toast.error(t("supply_request_not_loaded"));
+      return;
+    }
+
+    try {
+      const deliveryPromises = data.items.map((item) =>
+        createDelivery({
+          status: data.status,
+          supplied_item_type: data.item_type,
+          supplied_item_quantity: item.quantity,
+          supplied_inventory_item: item.inventory_item_id,
+          origin: locationId,
+          destination: supplyRequest.deliver_to.id,
+          supply_request: supplyRequestId,
+        }),
+      );
+
+      const results = await Promise.allSettled(deliveryPromises);
+      const rejected = results.filter((r) => r.status === "rejected");
+
+      if (rejected.length === 0) {
+        toast.success(t("all_items_dispatched_successfully"));
+        if (data.is_fully_dispatched) {
+          markRequestAsFulfilled();
+        }
+        form.reset({
+          status: SupplyDeliveryStatus.in_progress,
+          item_type: SupplyDeliveryType.product,
+          items: [{ inventory_item_id: "", quantity: 1 }],
+          is_fully_dispatched: false,
+        });
+      } else {
+        toast.error(
+          t("failed_to_dispatch_some_items", {
+            failed: rejected.length,
+            total: results.length,
+          }),
+        );
+        const failedItems = data.items.filter(
+          (_, index) => results[index].status === "rejected",
+        );
+        form.reset({
+          ...data,
+          items: failedItems,
+          is_fully_dispatched: false,
+        });
+      }
+    } catch {
+      toast.error(t("something_went_wrong"));
+    }
+  }
+
   function markRequestAsFulfilled() {
     if (!supplyRequest) return;
 
@@ -218,56 +289,25 @@ export default function SupplyRequestDispatch({
   }
 
   async function onSubmit(data: FormValues) {
-    try {
-      const deliveryPromises = data.items.map((item) =>
-        createDelivery({
-          status: data.status,
-          supplied_item_type: data.item_type,
-          supplied_item_quantity: item.quantity,
-          supplied_inventory_item: item.inventory_item_id,
-          origin: locationId,
-          destination: supplyRequest?.deliver_to.id || "",
-          supply_request: supplyRequestId,
-        }),
-      );
+    if (!supplyRequest) {
+      toast.error(t("supply_request_not_loaded"));
+      return;
+    }
 
-      const results = await Promise.allSettled(deliveryPromises);
-      const rejected = results.filter((r) => r.status === "rejected");
+    const currentDispatchQuantity = data.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+    const prospectiveTotal =
+      alreadyDispatchedQuantity + currentDispatchQuantity;
 
-      if (rejected.length === 0) {
-        toast.success(t("all_items_dispatched_successfully"));
-        if (data.is_fully_dispatched) {
-          markRequestAsFulfilled();
-        }
-        form.reset({
-          status: SupplyDeliveryStatus.in_progress,
-          item_type: SupplyDeliveryType.product,
-          items: [
-            {
-              inventory_item_id: "",
-              quantity: 0,
-            },
-          ],
-          is_fully_dispatched: false,
-        });
-      } else {
-        toast.error(
-          t("failed_to_dispatch_some_items", {
-            failed: rejected.length,
-            total: results.length,
-          }),
-        );
-        const failedItems = data.items.filter(
-          (_, index) => results[index].status === "rejected",
-        );
-        form.reset({
-          ...data,
-          items: failedItems,
-          is_fully_dispatched: false,
-        });
-      }
-    } catch {
-      toast.error(t("something_went_wrong"));
+    if (
+      prospectiveTotal >= supplyRequest.quantity &&
+      !data.is_fully_dispatched
+    ) {
+      setDialogState({ open: true, data });
+    } else {
+      executeDispatch(data);
     }
   }
 
@@ -472,6 +512,56 @@ export default function SupplyRequestDispatch({
               disabled={isUpdatingDelivery}
             >
               {isUpdatingDelivery ? "Updating..." : "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={dialogState.open}
+        onOpenChange={(open) => setDialogState({ ...dialogState, open })}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("fulfill_request_title")}</DialogTitle>
+            <DialogDescription>
+              {t("fulfill_request_confirmation_message")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDialogState({ open: false })}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              variant="outline_primary"
+              onClick={() => {
+                if (dialogState.data) {
+                  executeDispatch({
+                    ...dialogState.data,
+                    is_fully_dispatched: false,
+                  });
+                }
+                setDialogState({ open: false });
+              }}
+            >
+              {t("proceed")}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                if (dialogState.data) {
+                  executeDispatch({
+                    ...dialogState.data,
+                    is_fully_dispatched: true,
+                  });
+                }
+                setDialogState({ open: false });
+              }}
+            >
+              {t("mark") + " " + t("&") + " " + t("proceed")}
             </Button>
           </DialogFooter>
         </DialogContent>
