@@ -231,24 +231,41 @@ export default function SupplyRequestDispatch({
         }),
       );
 
-      await Promise.all(deliveryPromises);
+      const results = await Promise.allSettled(deliveryPromises);
+      const rejected = results.filter((r) => r.status === "rejected");
 
-      toast.success(t("supply_delivery_created"));
-      if (data.is_fully_dispatched) {
-        markRequestAsFulfilled();
+      if (rejected.length === 0) {
+        toast.success(t("all_items_dispatched_successfully"));
+        if (data.is_fully_dispatched) {
+          markRequestAsFulfilled();
+        }
+        form.reset({
+          status: SupplyDeliveryStatus.in_progress,
+          item_type: SupplyDeliveryType.product,
+          items: [
+            {
+              inventory_item_id: "",
+              quantity: 0,
+            },
+          ],
+          is_fully_dispatched: false,
+        });
+      } else {
+        toast.error(
+          t("failed_to_dispatch_some_items", {
+            failed: rejected.length,
+            total: results.length,
+          }),
+        );
+        const failedItems = data.items.filter(
+          (_, index) => results[index].status === "rejected",
+        );
+        form.reset({
+          ...data,
+          items: failedItems,
+          is_fully_dispatched: false,
+        });
       }
-
-      form.reset({
-        status: SupplyDeliveryStatus.in_progress,
-        item_type: SupplyDeliveryType.product,
-        items: [
-          {
-            inventory_item_id: "",
-            quantity: 0,
-          },
-        ],
-        is_fully_dispatched: false,
-      });
     } catch {
       toast.error(t("something_went_wrong"));
     }
