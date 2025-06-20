@@ -66,13 +66,13 @@ const purchaseOrderSchema = z.object({
   deliver_from: z.string().optional(),
   deliver_to: z.string().min(1, "Delivery location is required"),
   item: z.string().min(1, "Item is required"),
-  vendor: z.string().min(1, "Vendor is required"),
 });
 
 const formSchema = z.object({
   requests: z
     .array(purchaseOrderSchema)
     .min(1, "At least one request is required"),
+  vendor: z.string().min(1, "Vendor is required"),
 });
 
 interface Props {
@@ -150,9 +150,9 @@ export default function PurchaseOrderForm({
           reason: SupplyRequestReason.ward_stock,
           quantity: 1,
           deliver_to: locationId,
-          vendor: "",
         },
       ],
+      vendor: "",
     },
   });
 
@@ -170,9 +170,9 @@ export default function PurchaseOrderForm({
             deliver_from: existingData.deliver_from?.id,
             deliver_to: locationId,
             item: existingData.item.id,
-            //vendor: existingData.vendor.id,
           },
         ],
+        //vendor: existingData.vendor?.id,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -241,6 +241,7 @@ export default function PurchaseOrderForm({
       datapoints: data.requests.map((request) => ({
         ...request,
         id: productOrderId || undefined,
+        vendor: data.vendor || undefined,
       })),
     });
   }
@@ -273,7 +274,7 @@ export default function PurchaseOrderForm({
               <CardContent className="space-y-4 bg-gray-50 m-2 p-2 rounded-md">
                 <FormField
                   control={form.control}
-                  name="requests.0.vendor"
+                  name="vendor"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("vendor")}</FormLabel>
@@ -508,7 +509,6 @@ export default function PurchaseOrderForm({
                         deliver_to: locationId,
                         quantity: 1,
                         item: "",
-                        vendor: "",
                       })
                     }
                     className="mt-4"
