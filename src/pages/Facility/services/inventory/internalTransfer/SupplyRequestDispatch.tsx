@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreVertical, PlusCircle, X } from "lucide-react";
-import { navigate } from "raviger";
+import { navigate, useQueryParams } from "raviger";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -94,9 +94,14 @@ export default function SupplyRequestDispatch({
 }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [qParams] = useQueryParams();
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(
     null,
   );
+
+  const backUrl = `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch?${new URLSearchParams(
+    qParams as Record<string, string>,
+  ).toString()}`;
 
   // Fetch supply request details
   const { data: supplyRequest } = useQuery({
@@ -257,11 +262,7 @@ export default function SupplyRequestDispatch({
           variant="outline"
           size="sm"
           className="size-8 p-0 border-gray-400 shadow-sm text-gray-700"
-          onClick={() =>
-            navigate(
-              `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch`,
-            )
-          }
+          onClick={() => navigate(backUrl)}
         >
           <X className="size-5" />
         </Button>
@@ -636,11 +637,7 @@ export default function SupplyRequestDispatch({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() =>
-                    navigate(
-                      `/facility/${facilityId}/locations/${locationId}/supply_requests`,
-                    )
-                  }
+                  onClick={() => navigate(backUrl)}
                 >
                   Cancel
                 </Button>

@@ -94,8 +94,11 @@ export default function SupplyDeliveryTable({
     onSuccess: (data) => {
       const supplyRequestId = data.supply_request?.id;
       if (mode === "dispatch" && supplyRequestId) {
+        const params = new URLSearchParams(
+          qParams as Record<string, string>,
+        ).toString();
         navigate(
-          `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch/${supplyRequestId}`,
+          `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch/${supplyRequestId}?${params}`,
         );
       } else {
         toast.error(t("no_supply_request_found_for_delivery"));

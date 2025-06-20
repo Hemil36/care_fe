@@ -341,11 +341,14 @@ export default function ToDispatchSupplyRequestTable({
                     <Button
                       variant="outline"
                       className="font-semibold"
-                      onClick={() =>
+                      onClick={() => {
+                        const params = new URLSearchParams(
+                          qParams as Record<string, string>,
+                        ).toString();
                         navigate(
-                          `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch/${request.id}`,
-                        )
-                      }
+                          `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch/${request.id}?${params}`,
+                        );
+                      }}
                     >
                       <ArrowUpRightSquare strokeWidth={1.5} />
                       {t("see_details")}
