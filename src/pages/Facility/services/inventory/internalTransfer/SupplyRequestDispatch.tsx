@@ -157,22 +157,15 @@ export default function SupplyRequestDispatch({
     name: "items",
   });
 
-  const { mutate: createDelivery, isPending: isCreatingDelivery } = useMutation(
-    {
+  const { mutateAsync: createDelivery, isPending: isCreatingDelivery } =
+    useMutation({
       mutationFn: mutate(supplyDeliveryApi.createSupplyDelivery),
       onSuccess: () => {
-        toast.success(t("supply_delivery_created"));
         queryClient.invalidateQueries({
           queryKey: ["supplyDeliveries", supplyRequestId],
         });
-
-        // If marked as fully dispatched, update the request status
-        if (form.getValues("is_fully_dispatched")) {
-          markRequestAsFulfilled();
-        }
       },
-    },
-  );
+    });
 
   const { mutate: updateRequest } = useMutation({
     mutationFn: mutate(supplyRequestApi.upsertSupplyRequest),
@@ -224,31 +217,41 @@ export default function SupplyRequestDispatch({
     updateDelivery(deliveryId);
   }
 
-  function onSubmit(data: FormValues) {
-    // Check if the total quantity of items is equal to the requested quantity
-    const totalQuantity = data.items.reduce(
-      (sum, item) => sum + item.quantity,
-      0,
-    );
-    if (totalQuantity !== supplyRequest?.quantity) {
-      toast.error(
-        "Total quantity of items must be equal to the requested quantity",
+  async function onSubmit(data: FormValues) {
+    try {
+      const deliveryPromises = data.items.map((item) =>
+        createDelivery({
+          status: data.status,
+          supplied_item_type: data.item_type,
+          supplied_item_quantity: item.quantity,
+          supplied_inventory_item: item.inventory_item_id,
+          origin: locationId,
+          destination: supplyRequest?.deliver_to.id || "",
+          supply_request: supplyRequestId,
+        }),
       );
-      return;
-    }
 
-    // Create a delivery for each item
-    data.items.forEach((item) => {
-      createDelivery({
-        status: data.status,
-        supplied_item_type: data.item_type,
-        supplied_item_quantity: item.quantity,
-        supplied_inventory_item: item.inventory_item_id,
-        origin: locationId,
-        destination: supplyRequest?.deliver_to.id || "",
-        supply_request: supplyRequestId,
+      await Promise.all(deliveryPromises);
+
+      toast.success(t("supply_delivery_created"));
+      if (data.is_fully_dispatched) {
+        markRequestAsFulfilled();
+      }
+
+      form.reset({
+        status: SupplyDeliveryStatus.in_progress,
+        item_type: SupplyDeliveryType.product,
+        items: [
+          {
+            inventory_item_id: "",
+            quantity: 0,
+          },
+        ],
+        is_fully_dispatched: false,
       });
-    });
+    } catch {
+      toast.error(t("something_went_wrong"));
+    }
   }
 
   if (!supplyRequest) return null;
