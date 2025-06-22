@@ -6,7 +6,7 @@ import { ValueSetEditor } from "@/components/ValueSet/ValueSetEditor";
 import { ValueSetList } from "@/components/ValueSet/ValueSetList";
 
 import { AppRoutes } from "@/Routers/AppRouter";
-import { RolesIndex } from "@/pages/Admin/Role/RolesIndex";
+import PermissionsIndex from "@/pages/Admin/Role/PermissionsIndex";
 
 const AdminRoutes: AppRoutes = {
   "/admin/questionnaire": () => <QuestionnaireList />,
@@ -17,7 +17,7 @@ const AdminRoutes: AppRoutes = {
     <ValueSetEditor onSuccess={() => navigate(`/admin/valuesets`)} />
   ),
   "/admin/valuesets/:slug/edit": ({ slug }) => <ValueSetEditor slug={slug} />,
-  "/admin/roles": () => <RolesIndex />,
+  "/admin/roles": () => <PermissionsIndex />,
 };
 
 export default AdminRoutes;
