@@ -83,6 +83,8 @@ export default function ReceiveItem({
 }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [isReceivingAbandonedItem, setIsReceivingAbandonedItem] =
+    useState(false);
   const [dialog, setDialog] = useState<{
     open: boolean;
     title: string;
@@ -183,6 +185,8 @@ export default function ReceiveItem({
       } else {
         toast.success(t("item_marked_as_abandoned"));
       }
+
+      setIsReceivingAbandonedItem(false);
     } catch {
       toast.error(t("error_updating_delivery"));
     } finally {
@@ -398,19 +402,49 @@ export default function ReceiveItem({
               "bg-white rounded-lg border p-6 space-y-6 lg:col-span-1",
               (delivery.status === SupplyDeliveryStatus.abandoned ||
                 delivery.status === SupplyDeliveryStatus.entered_in_error) &&
+                !isReceivingAbandonedItem &&
                 "lg:col-span-3",
             )}
           >
             <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-700">
-                  {t("item")}:
-                </Label>
-                <div className="text-normal font-semibold text-gray-950">
-                  {delivery.supplied_item?.product_knowledge.name ||
-                    delivery.supplied_inventory_item?.product.product_knowledge
-                      .name}
+              <div className="flex justify-between items-start">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">
+                    {t("item")}:
+                  </Label>
+                  <div className="text-normal font-semibold text-gray-950">
+                    {delivery.supplied_item?.product_knowledge.name ||
+                      delivery.supplied_inventory_item?.product
+                        .product_knowledge.name}
+                  </div>
                 </div>
+                {delivery.status === SupplyDeliveryStatus.abandoned &&
+                  !isReceivingAbandonedItem && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="size-8 p-0"
+                        >
+                          <MoreVertical className="size-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setIsReceivingAbandonedItem(true);
+                            form.setValue(
+                              "receivingStatus",
+                              SupplyDeliveryStatus.completed,
+                            );
+                          }}
+                        >
+                          {t("mark_as_received")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
               </div>
 
               <div>
@@ -522,7 +556,8 @@ export default function ReceiveItem({
           </div>
 
           {/* Right side - Verify Received Items Form */}
-          {delivery.status === SupplyDeliveryStatus.in_progress && (
+          {(delivery.status === SupplyDeliveryStatus.in_progress ||
+            isReceivingAbandonedItem) && (
             <div className="bg-white rounded-lg border p-6 lg:col-span-2">
               <h2 className="text-lg font-semibold">
                 {t("verify_received_items")}
@@ -606,7 +641,13 @@ export default function ReceiveItem({
                             value: SupplyDeliveryStatus.abandoned,
                             label: "abandoned",
                           },
-                        ];
+                        ].filter(
+                          (option) =>
+                            !(
+                              isReceivingAbandonedItem &&
+                              option.value === SupplyDeliveryStatus.abandoned
+                            ),
+                        );
 
                         return (
                           <FormItem>
@@ -690,7 +731,16 @@ export default function ReceiveItem({
                   </div>
 
                   <div className="flex justify-end gap-3 pt-6 border-t">
-                    <Button variant="outline" onClick={handleCancel}>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (isReceivingAbandonedItem) {
+                          setIsReceivingAbandonedItem(false);
+                        } else {
+                          handleCancel();
+                        }
+                      }}
+                    >
                       {t("cancel")}
                     </Button>
                     <Button
