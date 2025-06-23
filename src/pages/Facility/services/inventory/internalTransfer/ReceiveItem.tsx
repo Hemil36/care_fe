@@ -239,7 +239,7 @@ export default function ReceiveItem({
     if (delivery.status === SupplyDeliveryStatus.completed) {
       setDialog({
         open: true,
-        title: t("confirm_submission"),
+        title: t("info"),
         description: t(
           "once_delivery_is_completed_you_can_not_change_the_status",
         ),
