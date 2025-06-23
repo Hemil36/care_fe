@@ -20,9 +20,11 @@ interface ConfirmActionDialogProps {
   title: string;
   description: React.ReactNode;
   onConfirm: () => void;
-  cancelText: string;
+  cancelText?: string;
   confirmText: string;
   variant?: "primary" | "destructive" | "default";
+  disabled?: boolean;
+  hideCancel?: boolean;
 }
 
 export default function ConfirmActionDialog({
@@ -34,6 +36,8 @@ export default function ConfirmActionDialog({
   cancelText,
   confirmText,
   variant = "primary",
+  disabled,
+  hideCancel,
 }: ConfirmActionDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -43,10 +47,11 @@ export default function ConfirmActionDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          {!hideCancel && <AlertDialogCancel>{cancelText}</AlertDialogCancel>}
           <AlertDialogAction
             onClick={onConfirm}
             className={cn(buttonVariants({ variant }))}
+            disabled={disabled}
           >
             {confirmText}
           </AlertDialogAction>
