@@ -9,7 +9,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { navigate } from "raviger";
-import React, { useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -17,18 +17,8 @@ import { z } from "zod";
 
 import { cn } from "@/lib/utils";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -47,6 +37,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
+import ConfirmActionDialog from "@/components/Common/ConfirmActionDialog";
 import Page from "@/components/Common/Page";
 
 import mutate from "@/Utils/request/mutate";
@@ -91,47 +82,7 @@ interface Props {
   deliveryId: string;
 }
 
-interface StatusChangeAlertDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description: React.ReactNode;
-  onConfirm: () => void;
-  cancelText: string;
-  buttonText: string;
-  buttonVariant: "primary" | "destructive";
-}
-
-function StatusChangeAlertDialog({
-  open,
-  onOpenChange,
-  title,
-  description,
-  onConfirm,
-  cancelText,
-  buttonText,
-  buttonVariant,
-}: StatusChangeAlertDialogProps) {
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className={cn(buttonVariants({ variant: buttonVariant }))}
-          >
-            {buttonText}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
+type ActionType = "receive" | "error" | "abandon";
 
 export default function ReceiveItem({
   facilityId,
@@ -140,18 +91,19 @@ export default function ReceiveItem({
 }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  type DialogType = "submit" | "error" | "abandon" | null;
-  const [dialogState, setDialogState] = useState<{
-    isOpen: boolean;
-    type: DialogType;
-  }>({ isOpen: false, type: null });
-
-  const { data: delivery, isLoading } = useQuery({
-    queryKey: ["supplyDelivery", deliveryId],
-    queryFn: query(supplyDeliveryApi.retrieveSupplyDelivery, {
-      pathParams: { supplyDeliveryId: deliveryId },
-    }),
-    enabled: !!deliveryId,
+  const [dialog, setDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: ReactNode;
+    onConfirm: () => void;
+    variant: "primary" | "destructive" | "default";
+    confirmText?: string;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+    variant: "primary",
   });
 
   const form = useForm<ReceiveItemForm>({
@@ -163,18 +115,35 @@ export default function ReceiveItem({
     },
   });
 
-  // Update form values when delivery data loads
-  useEffect(() => {
-    if (delivery) {
-      form.reset({
-        condition:
-          delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
-        receivingStatus: delivery.status,
-        markAsFullyReceived: false,
-      });
-    }
-  }, [delivery, form]);
+  const receivingStatus = form.watch("receivingStatus");
 
+  const buttonTextMap: Record<SupplyDeliveryStatus, string> = {
+    [SupplyDeliveryStatus.completed]: t("mark_as_received"),
+    [SupplyDeliveryStatus.abandoned]: t("mark_as_abandoned"),
+    [SupplyDeliveryStatus.entered_in_error]: t("mark_as_entered_in_error"),
+    [SupplyDeliveryStatus.in_progress]: t("mark_as_received"),
+  };
+  const buttonText = buttonTextMap[receivingStatus] || t("mark_as_received");
+
+  const buttonVariant =
+    receivingStatus === SupplyDeliveryStatus.abandoned ||
+    receivingStatus === SupplyDeliveryStatus.entered_in_error
+      ? "destructive"
+      : "primary";
+
+  const ButtonIcon =
+    receivingStatus === SupplyDeliveryStatus.abandoned ||
+    receivingStatus === SupplyDeliveryStatus.entered_in_error
+      ? XIcon
+      : CheckIcon;
+
+  const { data: delivery, isLoading } = useQuery({
+    queryKey: ["supplyDelivery", deliveryId],
+    queryFn: query(supplyDeliveryApi.retrieveSupplyDelivery, {
+      pathParams: { supplyDeliveryId: deliveryId },
+    }),
+    enabled: !!deliveryId,
+  });
   const { mutateAsync: updateSupplyDelivery, isPending: isUpdatingDelivery } =
     useMutation({
       mutationFn: mutate(supplyDeliveryApi.updateSupplyDelivery, {
@@ -223,6 +192,8 @@ export default function ReceiveItem({
       toast.success(t("item_marked_as_received"));
     } catch {
       toast.error(t("error_updating_delivery"));
+    } finally {
+      setDialog((d) => ({ ...d, open: false }));
     }
   };
 
@@ -232,152 +203,119 @@ export default function ReceiveItem({
     );
   };
 
-  const handleMarkAsEnteredInError = () => {
-    form.setValue("receivingStatus", SupplyDeliveryStatus.entered_in_error);
-    form.setValue(
-      "condition",
-      delivery?.supplied_item_condition || SupplyDeliveryCondition.normal,
-    );
-    setDialogState({ isOpen: false, type: null });
-    form.handleSubmit(handleSubmit)();
-    toast.success(t("item_marked_as_entered_in_error"));
-  };
+  const openDialog = (action: ActionType) => {
+    if (!delivery) return;
+    const currentReceivingStatus = form.watch("receivingStatus");
 
-  const handleMarkAsAbandoned = () => {
-    form.setValue("receivingStatus", SupplyDeliveryStatus.abandoned);
-    form.setValue(
-      "condition",
-      delivery?.supplied_item_condition || SupplyDeliveryCondition.normal,
-    );
-    setDialogState({ isOpen: false, type: null });
-    form.handleSubmit(handleSubmit)();
-    toast.success(t("item_marked_as_abandoned"));
-  };
-
-  function getButtonTextString(
-    condition: SupplyDeliveryCondition,
-    status: SupplyDeliveryStatus,
-  ) {
-    let buttonText = t("mark_as_received");
-    let buttonVariant = "primary";
-    let buttonIcon = <CheckIcon className="w-4 h-4" />;
-    if (condition === SupplyDeliveryCondition.normal) {
-      switch (status) {
-        case SupplyDeliveryStatus.completed:
-          buttonText = t("mark_as_received");
-          break;
-        case SupplyDeliveryStatus.abandoned:
-          buttonText = t("mark_as_not_received");
-          buttonVariant = "destructive";
-          buttonIcon = <XIcon className="w-4 h-4" />;
-          break;
-        case SupplyDeliveryStatus.entered_in_error:
-          buttonText = t("mark_as_invalid");
-          buttonIcon = <XIcon className="w-4 h-4" />;
-          buttonVariant = "destructive";
-          break;
-        default:
-          buttonText = t("mark_as_received");
-      }
-    } else if (condition === SupplyDeliveryCondition.damaged) {
-      switch (status) {
-        case SupplyDeliveryStatus.completed:
-          buttonText = t("mark_as_damaged");
-          buttonVariant = "destructive";
-          buttonIcon = <XIcon className="w-4 h-4" />;
-          break;
-        case SupplyDeliveryStatus.abandoned:
-          buttonText = t("discard_damaged_item");
-          buttonVariant = "destructive";
-          buttonIcon = <XIcon className="w-4 h-4" />;
-          break;
-        case SupplyDeliveryStatus.entered_in_error:
-          buttonText = t("mark_as_invalid");
-          buttonVariant = "destructive";
-          buttonIcon = <XIcon className="w-4 h-4" />;
-          break;
-        default:
-          buttonText = t("mark_as_damaged");
-          buttonVariant = "destructive";
-      }
+    if (action === "receive") {
+      const isCompleted =
+        currentReceivingStatus === SupplyDeliveryStatus.completed;
+      const actionText =
+        buttonTextMap[currentReceivingStatus] || t("mark_as_received");
+      setDialog({
+        open: true,
+        title: t("confirm_submission"),
+        description: (
+          <>
+            <Trans
+              i18nKey="confirm_action_description"
+              values={{
+                action: actionText.toLowerCase(),
+              }}
+              components={{
+                1: <strong className="text-gray-900" />,
+              }}
+            />
+            {isCompleted && (
+              <p className="mt-2">{t("you_cannot_change_once_submitted")}</p>
+            )}
+          </>
+        ),
+        onConfirm: form.handleSubmit(handleSubmit),
+        variant: isCompleted ? "primary" : "destructive",
+        confirmText: t("done"),
+      });
+      return;
     }
-    return {
-      buttonText,
-      buttonVariant: buttonVariant as "primary" | "destructive",
-      buttonIcon,
-    };
-  }
 
-  const { buttonText, buttonVariant, buttonIcon } = getButtonTextString(
-    form.watch("condition"),
-    form.watch("receivingStatus"),
-  );
+    // Common logic for 'error' and 'abandon'
+    if (delivery.status === SupplyDeliveryStatus.completed) {
+      setDialog({
+        open: true,
+        title: t("confirm_submission"),
+        description: t(
+          "once_delivery_is_completed_you_can_not_change_the_status",
+        ),
+        onConfirm: () => setDialog({ ...dialog, open: false }),
+        variant: "default",
+        confirmText: t("ok"),
+      });
+      return;
+    }
 
-  const getDialogConfig = (type: DialogType) => {
-    switch (type) {
-      case "submit":
-        return {
-          title: t("confirm_submission"),
-          description: (
-            <Trans
-              i18nKey="are_you_sure_you_cannot_change_once_submitted"
-              values={{
-                action: buttonText,
-              }}
-              components={{
-                strong: <span className="font-medium text-gray-700" />,
-              }}
-            />
-          ),
-          onConfirm: () => {
-            setDialogState({ isOpen: false, type: null });
-            form.handleSubmit(handleSubmit)();
-          },
-        };
-      case "error":
-        return {
-          title: t("confirm_submission"),
-          description: (
-            <Trans
-              i18nKey="are_you_sure_you_cannot_change_once_submitted"
-              values={{
-                action: buttonText,
-              }}
-              components={{
-                strong: <span className="font-medium text-gray-700" />,
-              }}
-            />
-          ),
-          onConfirm: () => {
-            setDialogState({ isOpen: false, type: null });
-            handleMarkAsEnteredInError();
-          },
-        };
-      case "abandon":
-        return {
-          title: t("confirm_submission"),
-          description: (
-            <Trans
-              i18nKey="are_you_sure_you_cannot_change_once_submitted"
-              values={{
-                action: buttonText,
-              }}
-              components={{
-                strong: <span className="font-medium text-gray-700" />,
-              }}
-            />
-          ),
-          onConfirm: () => {
-            setDialogState({ isOpen: false, type: null });
-            handleMarkAsAbandoned();
-          },
-        };
-      default:
-        return null;
+    const isError = action === "error";
+    const actionText = isError
+      ? t("mark_as_entered_in_error")
+      : t("mark_as_abandoned");
+    setDialog({
+      open: true,
+      title: t("confirm_submission"),
+      description: (
+        <Trans
+          i18nKey="confirm_action_description"
+          values={{
+            action: actionText.toLowerCase(),
+          }}
+          components={{
+            1: <strong className="text-gray-900" />,
+          }}
+        />
+      ),
+      onConfirm: isError ? handleMarkAsEnteredInError : handleMarkAsAbandoned,
+      variant: "destructive",
+      confirmText: actionText,
+    });
+  };
+
+  const handleMarkAsEnteredInError = async () => {
+    if (!delivery) return;
+    try {
+      await updateSupplyDelivery({
+        status: SupplyDeliveryStatus.entered_in_error,
+        supplied_item_condition:
+          delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
+      } satisfies SupplyDeliveryUpdate);
+
+      toast.success(t("item_marked_as_entered_in_error"));
+      queryClient.invalidateQueries({
+        queryKey: ["supplyDelivery", deliveryId],
+      });
+    } catch {
+      toast.error(t("error_updating_delivery"));
+    } finally {
+      setDialog((d) => ({ ...d, open: false }));
     }
   };
 
-  const dialogConfig = getDialogConfig(dialogState.type);
+  const handleMarkAsAbandoned = async () => {
+    if (!delivery) return;
+    try {
+      await updateSupplyDelivery({
+        status: SupplyDeliveryStatus.abandoned,
+        supplied_item_condition:
+          delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
+      } satisfies SupplyDeliveryUpdate);
+
+      toast.success(t("item_marked_as_abandoned"));
+      queryClient.invalidateQueries({
+        queryKey: ["supplyDelivery", deliveryId],
+      });
+    } catch {
+      toast.error(t("error_updating_delivery"));
+    } finally {
+      setDialog((d) => ({ ...d, open: false }));
+    }
+  };
 
   if (isLoading || !delivery) {
     return (
@@ -395,6 +333,8 @@ export default function ReceiveItem({
       </Page>
     );
   }
+
+  const isPending = isUpdatingDelivery || isUpdatingRequest;
 
   const storageGuidelines = delivery &&
     delivery.supply_request &&
@@ -776,16 +716,10 @@ export default function ReceiveItem({
                     <Button
                       variant={buttonVariant}
                       type="button"
-                      disabled={
-                        isUpdatingDelivery ||
-                        isUpdatingRequest ||
-                        !form.formState.isValid
-                      }
-                      onClick={() =>
-                        setDialogState({ isOpen: true, type: "submit" })
-                      }
+                      disabled={isPending}
+                      onClick={() => openDialog("receive")}
                     >
-                      {buttonIcon}
+                      <ButtonIcon className="size-4" />
                       {buttonText}
                     </Button>
                   </div>
@@ -805,36 +739,20 @@ export default function ReceiveItem({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {delivery.status === SupplyDeliveryStatus.abandoned ? (
-                      <DropdownMenuItem
-                        onClick={() =>
-                          setDialogState({ isOpen: true, type: "error" })
-                        }
-                      >
+                      <DropdownMenuItem onClick={() => openDialog("error")}>
                         {t("mark_as_entered_in_error")}
                       </DropdownMenuItem>
                     ) : delivery.status ===
                       SupplyDeliveryStatus.entered_in_error ? (
-                      <DropdownMenuItem
-                        onClick={() =>
-                          setDialogState({ isOpen: true, type: "abandon" })
-                        }
-                      >
+                      <DropdownMenuItem onClick={() => openDialog("abandon")}>
                         {t("mark_as_abandoned")}
                       </DropdownMenuItem>
                     ) : (
                       <>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            setDialogState({ isOpen: true, type: "error" })
-                          }
-                        >
+                        <DropdownMenuItem onClick={() => openDialog("error")}>
                           {t("mark_as_entered_in_error")}
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            setDialogState({ isOpen: true, type: "abandon" })
-                          }
-                        >
+                        <DropdownMenuItem onClick={() => openDialog("abandon")}>
                           {t("mark_as_abandoned")}
                         </DropdownMenuItem>
                       </>
@@ -940,19 +858,16 @@ export default function ReceiveItem({
           </div>
         )}
 
-        {/* Single consolidated AlertDialog */}
-        {dialogState.isOpen && dialogState.type && dialogConfig && (
-          <StatusChangeAlertDialog
-            open={dialogState.isOpen}
-            onOpenChange={(open) =>
-              setDialogState({ isOpen: open, type: null })
-            }
-            {...dialogConfig}
-            cancelText={t("cancel")}
-            buttonText={buttonText}
-            buttonVariant={buttonVariant}
-          />
-        )}
+        <ConfirmActionDialog
+          open={dialog.open}
+          onOpenChange={(open) => setDialog({ ...dialog, open })}
+          title={dialog.title}
+          description={dialog.description}
+          onConfirm={dialog.onConfirm}
+          variant={dialog.variant}
+          confirmText={dialog.confirmText || t("confirm")}
+          cancelText={t("cancel")}
+        />
       </div>
     </Page>
   );
