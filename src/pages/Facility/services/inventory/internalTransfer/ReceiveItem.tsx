@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
-import { t } from "i18next";
 import {
   AlertTriangleIcon,
   CheckIcon,
@@ -60,17 +59,10 @@ import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
 
 const receiveItemSchema = z.object({
   condition: z.nativeEnum(SupplyDeliveryCondition),
-  receivingStatus: z
-    .nativeEnum(SupplyDeliveryStatus)
-    .refine(
-      (status) =>
-        [
-          SupplyDeliveryStatus.completed,
-          SupplyDeliveryStatus.abandoned,
-          SupplyDeliveryStatus.entered_in_error,
-        ].includes(status),
-      { message: t("field_required") },
-    ),
+  receivingStatus: z.enum([
+    SupplyDeliveryStatus.completed,
+    SupplyDeliveryStatus.abandoned,
+  ]),
   markAsFullyReceived: z.boolean(),
 });
 
@@ -82,7 +74,7 @@ interface Props {
   deliveryId: string;
 }
 
-type ActionType = "receive" | "error" | "abandon";
+type ActionType = "receive" | "abandon";
 
 export default function ReceiveItem({
   facilityId,
@@ -117,25 +109,22 @@ export default function ReceiveItem({
 
   const receivingStatus = form.watch("receivingStatus");
 
-  const buttonTextMap: Record<SupplyDeliveryStatus, string> = {
+  const buttonTextMap: Record<
+    SupplyDeliveryStatus.completed | SupplyDeliveryStatus.abandoned,
+    string
+  > = {
     [SupplyDeliveryStatus.completed]: t("mark_as_received"),
     [SupplyDeliveryStatus.abandoned]: t("mark_as_abandoned"),
-    [SupplyDeliveryStatus.entered_in_error]: t("mark_as_entered_in_error"),
-    [SupplyDeliveryStatus.in_progress]: t("mark_as_received"),
   };
   const buttonText = buttonTextMap[receivingStatus] || t("mark_as_received");
 
   const buttonVariant =
-    receivingStatus === SupplyDeliveryStatus.abandoned ||
-    receivingStatus === SupplyDeliveryStatus.entered_in_error
+    receivingStatus === SupplyDeliveryStatus.abandoned
       ? "destructive"
       : "primary";
 
   const ButtonIcon =
-    receivingStatus === SupplyDeliveryStatus.abandoned ||
-    receivingStatus === SupplyDeliveryStatus.entered_in_error
-      ? XIcon
-      : CheckIcon;
+    receivingStatus === SupplyDeliveryStatus.abandoned ? XIcon : CheckIcon;
 
   const { data: delivery, isLoading } = useQuery({
     queryKey: ["supplyDelivery", deliveryId],
@@ -162,13 +151,13 @@ export default function ReceiveItem({
     if (!delivery) return;
 
     try {
-      // Update supply delivery
       await updateSupplyDelivery({
         status: data.receivingStatus,
-        supplied_item_condition: data.condition,
-      } satisfies SupplyDeliveryUpdate);
+        ...(data.receivingStatus !== SupplyDeliveryStatus.abandoned && {
+          supplied_item_condition: data.condition,
+        }),
+      });
 
-      // Update supply request if checkbox is checked
       if (data.markAsFullyReceived && delivery.supply_request) {
         await updateSupplyRequest({
           status: SupplyRequestStatus.completed,
@@ -189,7 +178,11 @@ export default function ReceiveItem({
         queryKey: ["supplyDelivery", deliveryId],
       });
 
-      toast.success(t("item_marked_as_received"));
+      if (data.receivingStatus === SupplyDeliveryStatus.completed) {
+        toast.success(t("item_marked_as_received"));
+      } else {
+        toast.success(t("item_marked_as_abandoned"));
+      }
     } catch {
       toast.error(t("error_updating_delivery"));
     } finally {
@@ -238,7 +231,7 @@ export default function ReceiveItem({
       return;
     }
 
-    // Common logic for 'error' and 'abandon'
+    // Logic for 'abandon'
     if (delivery.status === SupplyDeliveryStatus.completed) {
       setDialog({
         open: true,
@@ -253,10 +246,7 @@ export default function ReceiveItem({
       return;
     }
 
-    const isError = action === "error";
-    const actionText = isError
-      ? t("mark_as_entered_in_error")
-      : t("mark_as_abandoned");
+    const actionText = t("mark_as_abandoned");
     setDialog({
       open: true,
       title: t("confirm_submission"),
@@ -271,30 +261,10 @@ export default function ReceiveItem({
           }}
         />
       ),
-      onConfirm: isError ? handleMarkAsEnteredInError : handleMarkAsAbandoned,
+      onConfirm: handleMarkAsAbandoned,
       variant: "destructive",
       confirmText: actionText,
     });
-  };
-
-  const handleMarkAsEnteredInError = async () => {
-    if (!delivery) return;
-    try {
-      await updateSupplyDelivery({
-        status: SupplyDeliveryStatus.entered_in_error,
-        supplied_item_condition:
-          delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
-      } satisfies SupplyDeliveryUpdate);
-
-      toast.success(t("item_marked_as_entered_in_error"));
-      queryClient.invalidateQueries({
-        queryKey: ["supplyDelivery", deliveryId],
-      });
-    } catch {
-      toast.error(t("error_updating_delivery"));
-    } finally {
-      setDialog((d) => ({ ...d, open: false }));
-    }
   };
 
   const handleMarkAsAbandoned = async () => {
@@ -302,8 +272,9 @@ export default function ReceiveItem({
     try {
       await updateSupplyDelivery({
         status: SupplyDeliveryStatus.abandoned,
-        supplied_item_condition:
-          delivery.supplied_item_condition || SupplyDeliveryCondition.normal,
+        ...(delivery.supplied_item_condition && {
+          supplied_item_condition: delivery.supplied_item_condition,
+        }),
       } satisfies SupplyDeliveryUpdate);
 
       toast.success(t("item_marked_as_abandoned"));
@@ -422,7 +393,14 @@ export default function ReceiveItem({
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left side - Dispatch Details */}
-          <div className="bg-white rounded-lg border p-6 space-y-6 lg:col-span-1">
+          <div
+            className={cn(
+              "bg-white rounded-lg border p-6 space-y-6 lg:col-span-1",
+              (delivery.status === SupplyDeliveryStatus.abandoned ||
+                delivery.status === SupplyDeliveryStatus.entered_in_error) &&
+                "lg:col-span-3",
+            )}
+          >
             <div className="space-y-4">
               <div>
                 <Label className="text-sm font-medium text-gray-700">
@@ -544,7 +522,7 @@ export default function ReceiveItem({
           </div>
 
           {/* Right side - Verify Received Items Form */}
-          {delivery.status === SupplyDeliveryStatus.in_progress ? (
+          {delivery.status === SupplyDeliveryStatus.in_progress && (
             <div className="bg-white rounded-lg border p-6 lg:col-span-2">
               <h2 className="text-lg font-semibold">
                 {t("verify_received_items")}
@@ -559,59 +537,61 @@ export default function ReceiveItem({
                   className="space-y-2"
                 >
                   <div className="bg-gray-50 rounded-md py-2 px-3 space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="condition"
-                      render={({ field }) => {
-                        const conditionOptions = [
-                          {
-                            value: SupplyDeliveryCondition.normal,
-                            label: "normal",
-                          },
-                          {
-                            value: SupplyDeliveryCondition.damaged,
-                            label: "damaged",
-                          },
-                        ];
+                    {receivingStatus !== SupplyDeliveryStatus.abandoned && (
+                      <FormField
+                        control={form.control}
+                        name="condition"
+                        render={({ field }) => {
+                          const conditionOptions = [
+                            {
+                              value: SupplyDeliveryCondition.normal,
+                              label: "normal",
+                            },
+                            {
+                              value: SupplyDeliveryCondition.damaged,
+                              label: "damaged",
+                            },
+                          ];
 
-                        return (
-                          <FormItem>
-                            <FormLabel>{t("item_condition")}</FormLabel>
-                            <FormControl>
-                              <RadioGroup
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                className="flex flex-wrap gap-3"
-                              >
-                                {conditionOptions.map((option) => (
-                                  <Label
-                                    key={option.value}
-                                    htmlFor={option.value}
-                                    className={cn(
-                                      "flex items-center justify-center px-4 py-3 rounded-md border-[1.5px] cursor-pointer transition-all text-gray-950",
-                                      field.value === option.value
-                                        ? "border-primary-600 bg-primary-100"
-                                        : "border-gray-300 bg-white hover:border-gray-400",
-                                    )}
-                                  >
-                                    <RadioGroupItem
-                                      value={option.value}
-                                      id={option.value}
-                                    />
-                                    <div className="flex items-center space-x-2">
-                                      <span className="font-medium">
-                                        {t(option.label)}
-                                      </span>
-                                    </div>
-                                  </Label>
-                                ))}
-                              </RadioGroup>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        );
-                      }}
-                    />
+                          return (
+                            <FormItem>
+                              <FormLabel>{t("item_condition")}</FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  value={field.value}
+                                  onValueChange={field.onChange}
+                                  className="flex flex-wrap gap-3"
+                                >
+                                  {conditionOptions.map((option) => (
+                                    <Label
+                                      key={option.value}
+                                      htmlFor={option.value}
+                                      className={cn(
+                                        "flex items-center justify-center px-4 py-3 rounded-md border-[1.5px] cursor-pointer transition-all text-gray-950",
+                                        field.value === option.value
+                                          ? "border-primary-600 bg-primary-100"
+                                          : "border-gray-300 bg-white hover:border-gray-400",
+                                      )}
+                                    >
+                                      <RadioGroupItem
+                                        value={option.value}
+                                        id={option.value}
+                                      />
+                                      <div className="flex items-center space-x-2">
+                                        <span className="font-medium">
+                                          {t(option.label)}
+                                        </span>
+                                      </div>
+                                    </Label>
+                                  ))}
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    )}
 
                     <FormField
                       control={form.control}
@@ -625,10 +605,6 @@ export default function ReceiveItem({
                           {
                             value: SupplyDeliveryStatus.abandoned,
                             label: "abandoned",
-                          },
-                          {
-                            value: SupplyDeliveryStatus.entered_in_error,
-                            label: "entered_in_error",
                           },
                         ];
 
@@ -670,43 +646,47 @@ export default function ReceiveItem({
                       }}
                     />
 
-                    {receivedQuantity}
+                    {receivingStatus === SupplyDeliveryStatus.completed &&
+                      receivedQuantity}
 
-                    {storageGuidelines}
+                    {receivingStatus === SupplyDeliveryStatus.completed &&
+                      storageGuidelines}
 
-                    <FormField
-                      control={form.control}
-                      name="markAsFullyReceived"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-center">
-                            <div className="flex items-center space-x-2">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  id="markAsFullyReceived"
-                                />
-                              </FormControl>
-                            </div>
-                            <div className="text-xs text-gray-600 flex flex-col">
-                              <Label
-                                className="text-sm font-medium"
-                                htmlFor="markAsFullyReceived"
-                              >
-                                {t("mark_as_fully_received")}
-                              </Label>
-                              <div className="text-xs text-gray-600">
-                                {t(
-                                  "tick_if_all_items_are_received_the_request_will_be_cleared_from_the_pending_list",
-                                )}
+                    {receivingStatus === SupplyDeliveryStatus.completed && (
+                      <FormField
+                        control={form.control}
+                        name="markAsFullyReceived"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center">
+                              <div className="flex items-center space-x-2">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    id="markAsFullyReceived"
+                                  />
+                                </FormControl>
+                              </div>
+                              <div className="text-xs text-gray-600 flex flex-col">
+                                <Label
+                                  className="text-sm font-medium"
+                                  htmlFor="markAsFullyReceived"
+                                >
+                                  {t("mark_as_fully_received")}
+                                </Label>
+                                <div className="text-xs text-gray-600">
+                                  {t(
+                                    "tick_if_all_items_are_received_the_request_will_be_cleared_from_the_pending_list",
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
 
                   <div className="flex justify-end gap-3 pt-6 border-t">
@@ -726,7 +706,8 @@ export default function ReceiveItem({
                 </form>
               </Form>
             </div>
-          ) : (
+          )}
+          {delivery.status === SupplyDeliveryStatus.completed && (
             <div className="bg-white rounded-lg border p-6 space-y-6 lg:col-span-2">
               <div className="flex justify-between">
                 {receivedQuantity}
@@ -738,24 +719,10 @@ export default function ReceiveItem({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {delivery.status === SupplyDeliveryStatus.abandoned ? (
-                      <DropdownMenuItem onClick={() => openDialog("error")}>
-                        {t("mark_as_entered_in_error")}
-                      </DropdownMenuItem>
-                    ) : delivery.status ===
-                      SupplyDeliveryStatus.entered_in_error ? (
+                    {delivery.status === SupplyDeliveryStatus.completed && (
                       <DropdownMenuItem onClick={() => openDialog("abandon")}>
                         {t("mark_as_abandoned")}
                       </DropdownMenuItem>
-                    ) : (
-                      <>
-                        <DropdownMenuItem onClick={() => openDialog("error")}>
-                          {t("mark_as_entered_in_error")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openDialog("abandon")}>
-                          {t("mark_as_abandoned")}
-                        </DropdownMenuItem>
-                      </>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
