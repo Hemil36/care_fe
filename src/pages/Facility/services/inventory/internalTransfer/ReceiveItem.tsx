@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
+import { t } from "i18next";
 import {
   AlertTriangleIcon,
   CheckIcon,
@@ -68,7 +69,17 @@ import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
 
 const receiveItemSchema = z.object({
   condition: z.nativeEnum(SupplyDeliveryCondition),
-  receivingStatus: z.nativeEnum(SupplyDeliveryStatus),
+  receivingStatus: z
+    .nativeEnum(SupplyDeliveryStatus)
+    .refine(
+      (status) =>
+        [
+          SupplyDeliveryStatus.completed,
+          SupplyDeliveryStatus.abandoned,
+          SupplyDeliveryStatus.entered_in_error,
+        ].includes(status),
+      { message: t("field_required") },
+    ),
   markAsFullyReceived: z.boolean(),
 });
 
@@ -765,7 +776,11 @@ export default function ReceiveItem({
                     <Button
                       variant={buttonVariant}
                       type="button"
-                      disabled={isUpdatingDelivery || isUpdatingRequest}
+                      disabled={
+                        isUpdatingDelivery ||
+                        isUpdatingRequest ||
+                        !form.formState.isValid
+                      }
                       onClick={() =>
                         setDialogState({ isOpen: true, type: "submit" })
                       }
