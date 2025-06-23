@@ -4,9 +4,11 @@ import { MoreVertical, PlusCircle, X } from "lucide-react";
 import { navigate, useQueryParams } from "raviger";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
+
+import { cn } from "@/lib/utils";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,6 +52,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+import ConfirmActionDialog from "@/components/Common/ConfirmActionDialog";
 
 import mutate from "@/Utils/request/mutate";
 import query from "@/Utils/request/query";
@@ -98,6 +102,7 @@ export default function SupplyRequestDispatch({
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(
     null,
   );
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
   const [dialogState, setDialogState] = useState<{
     open: boolean;
     data?: FormValues;
@@ -466,13 +471,27 @@ export default function SupplyRequestDispatch({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
-                        onClick={() => setSelectedDeliveryId(delivery.id)}
+                        onClick={() => {
+                          if (
+                            delivery.status === SupplyDeliveryStatus.completed
+                          ) {
+                            setShowInfoDialog(true);
+                          } else {
+                            setSelectedDeliveryId(delivery.id);
+                          }
+                        }}
                         disabled={
                           delivery.status ===
                           SupplyDeliveryStatus.entered_in_error
                         }
+                        className={cn(
+                          "hover:bg-gray-100",
+                          delivery.status ===
+                            SupplyDeliveryStatus.entered_in_error &&
+                            "opacity-50",
+                        )}
                       >
-                        Mark as entered in error
+                        {t("mark_as_entered_in_error")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -484,38 +503,45 @@ export default function SupplyRequestDispatch({
       )}
 
       {/* Confirmation Dialog */}
-      <Dialog
+      <ConfirmActionDialog
         open={Boolean(selectedDeliveryId)}
         onOpenChange={() => setSelectedDeliveryId(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Mark as Entered in Error</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to mark this delivery as entered in error?
-              This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setSelectedDeliveryId(null)}
-              disabled={isUpdatingDelivery}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() =>
-                selectedDeliveryId && handleMarkAsError(selectedDeliveryId)
-              }
-              disabled={isUpdatingDelivery}
-            >
-              {isUpdatingDelivery ? "Updating..." : "Confirm"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t("mark_as_entered_in_error")}
+        description={
+          <>
+            <Trans
+              i18nKey="confirm_action_description"
+              values={{
+                action: t("mark_as_entered_in_error").toLowerCase(),
+              }}
+              components={{
+                1: <strong className="text-gray-900" />,
+              }}
+            />
+            <p className="mt-2">{t("this_action_cannot_be_undone")}</p>
+          </>
+        }
+        onConfirm={() =>
+          selectedDeliveryId && handleMarkAsError(selectedDeliveryId)
+        }
+        variant="destructive"
+        confirmText={isUpdatingDelivery ? t("updating") : t("confirm")}
+        cancelText={t("cancel")}
+        disabled={isUpdatingDelivery}
+      />
+
+      <ConfirmActionDialog
+        open={showInfoDialog}
+        onOpenChange={setShowInfoDialog}
+        title={t("info")}
+        description={t(
+          "once_delivery_is_completed_you_can_not_change_the_status",
+        )}
+        onConfirm={() => setShowInfoDialog(false)}
+        variant="default"
+        confirmText={t("got_it")}
+        hideCancel
+      />
 
       <Dialog
         open={dialogState.open}

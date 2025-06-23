@@ -92,6 +92,7 @@ export default function ReceiveItem({
     onConfirm: () => void;
     variant: "primary" | "destructive" | "default";
     confirmText?: string;
+    hideCancel?: boolean;
   }>({
     open: false,
     title: "",
@@ -245,7 +246,8 @@ export default function ReceiveItem({
         ),
         onConfirm: () => setDialog({ ...dialog, open: false }),
         variant: "default",
-        confirmText: t("ok"),
+        confirmText: t("got_it"),
+        hideCancel: true,
       });
       return;
     }
@@ -884,6 +886,8 @@ export default function ReceiveItem({
           variant={dialog.variant}
           confirmText={dialog.confirmText || t("confirm")}
           cancelText={t("cancel")}
+          disabled={isPending}
+          hideCancel={dialog.hideCancel}
         />
       </div>
     </Page>
