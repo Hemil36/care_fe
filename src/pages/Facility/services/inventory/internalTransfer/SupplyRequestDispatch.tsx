@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreVertical, PlusCircle, X } from "lucide-react";
 import { navigate, useQueryParams } from "raviger";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -98,7 +98,28 @@ export default function SupplyRequestDispatch({
 }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [qParams] = useQueryParams();
+  const [qParams, setQueryParams] = useQueryParams();
+  const [highlightedDeliveryId, setHighlightedDeliveryId] = useState(
+    qParams.highlight_delivery,
+  );
+  const highlightedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (highlightedDeliveryId) {
+      highlightedRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      const timer = setTimeout(() => {
+        setHighlightedDeliveryId(undefined);
+        const newQParams = { ...qParams };
+        delete newQParams.highlight_delivery;
+        setQueryParams(newQParams, { replace: true });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedDeliveryId, qParams, setQueryParams]);
+
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(
     null,
   );
@@ -412,7 +433,13 @@ export default function SupplyRequestDispatch({
             {deliveries.map((delivery) => (
               <div
                 key={delivery.id}
-                className="p-4 flex items-center justify-between"
+                ref={
+                  delivery.id === highlightedDeliveryId ? highlightedRef : null
+                }
+                className={cn(
+                  "p-4 flex items-center justify-between transition-all duration-1000",
+                  delivery.id === highlightedDeliveryId && "bg-yellow-50",
+                )}
               >
                 <div className="flex items-center gap-8">
                   <div>

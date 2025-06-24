@@ -91,14 +91,13 @@ export default function SupplyDeliveryTable({
       query(supplyDeliveryApi.retrieveSupplyDelivery, {
         pathParams: { supplyDeliveryId: deliveryId },
       })({ signal: new AbortController().signal }),
-    onSuccess: (data) => {
+    onSuccess: (data, deliveryId) => {
       const supplyRequestId = data.supply_request?.id;
       if (mode === "dispatch" && supplyRequestId) {
-        const params = new URLSearchParams(
-          qParams as Record<string, string>,
-        ).toString();
+        const params = new URLSearchParams(qParams as Record<string, string>);
+        params.set("highlight_delivery", deliveryId);
         navigate(
-          `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch/${supplyRequestId}?${params}`,
+          `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_dispatch/${supplyRequestId}?${params.toString()}`,
         );
       } else {
         toast.error(t("no_supply_request_found_for_delivery"));
