@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreVertical, PlusCircle, X } from "lucide-react";
 import { navigate, useQueryParams } from "raviger";
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -120,10 +120,22 @@ export default function SupplyRequestDispatch({
     }
   }, [highlightedDeliveryId, qParams, setQueryParams]);
 
-  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(
-    null,
-  );
-  const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: ReactNode;
+    onConfirm: () => void;
+    variant?: "primary" | "destructive" | "default" | "outline_primary";
+    confirmText?: string;
+    cancelText?: string;
+    disabled?: boolean;
+    hideCancel?: boolean;
+  }>({
+    open: false,
+    title: "",
+    description: <></>,
+    onConfirm: () => {},
+  });
   const [dialogState, setDialogState] = useState<{
     open: boolean;
     data?: FormValues;
@@ -166,7 +178,8 @@ export default function SupplyRequestDispatch({
 
   const alreadyDispatchedQuantity = deliveries.reduce(
     (sum, delivery) =>
-      delivery.status !== SupplyDeliveryStatus.entered_in_error
+      delivery.status !== SupplyDeliveryStatus.entered_in_error &&
+      delivery.status !== SupplyDeliveryStatus.abandoned
         ? sum + delivery.supplied_item_quantity
         : sum,
     0,
@@ -210,10 +223,11 @@ export default function SupplyRequestDispatch({
       },
     });
 
-  const { mutate: updateRequest } = useMutation({
+  const { mutate: updateRequest, isPending: isUpdatingRequest } = useMutation({
     mutationFn: mutate(supplyRequestApi.upsertSupplyRequest),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["supplyRequest"] });
+      setConfirmDialog((d) => ({ ...d, open: false }));
     },
   });
 
@@ -230,7 +244,7 @@ export default function SupplyRequestDispatch({
         queryClient.invalidateQueries({
           queryKey: ["supplyDeliveries", supplyRequestId],
         });
-        setSelectedDeliveryId(null);
+        setConfirmDialog((d) => ({ ...d, open: false }));
       },
     },
   );
@@ -361,47 +375,98 @@ export default function SupplyRequestDispatch({
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-5 gap-4 rounded-lg shadow-sm bg-white p-4 mb-0">
-        <div>
-          <div className="text-xs font-medium">Item to dispatch</div>
-          <div className="text-sm font-semibold text-gray-950">
-            {supplyRequest.item.name}
+      <div className="flex items-center rounded-lg shadow-sm bg-white p-4 mb-0">
+        <div className="grid grid-cols-5 gap-4 grow">
+          <div>
+            <div className="text-xs font-medium">Item to dispatch</div>
+            <div className="text-sm font-semibold text-gray-950">
+              {supplyRequest.item.name}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium">Qty to Dispatch</div>
+            <div className="text-sm font-semibold text-gray-950">
+              {supplyRequest.quantity}{" "}
+              {supplyRequest.item.definitional?.dosage_form?.display ||
+                t("units")}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium">Deliver To</div>
+            <div className="text-sm font-semibold text-gray-950">
+              {supplyRequest.deliver_to.name}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium">Priority</div>
+            <Badge
+              variant="outline"
+              className={getSupplyRequestPriorityBadgeColor(
+                supplyRequest.priority,
+              )}
+            >
+              {t(supplyRequest.priority)}
+            </Badge>
+          </div>
+          <div>
+            <div className="text-xs font-medium">Status</div>
+            <Badge
+              variant="outline"
+              className={getSupplyRequestStatusBadgeColor(supplyRequest.status)}
+            >
+              {t(supplyRequest.status)}
+            </Badge>
           </div>
         </div>
-        <div>
-          <div className="text-xs font-medium">Qty to Dispatch</div>
-          <div className="text-sm font-semibold text-gray-950">
-            {supplyRequest.quantity}{" "}
-            {supplyRequest.item.definitional?.dosage_form?.display ||
-              t("units")}
-          </div>
-        </div>
-        <div>
-          <div className="text-xs font-medium">Deliver To</div>
-          <div className="text-sm font-semibold text-gray-950">
-            {supplyRequest.deliver_to.name}
-          </div>
-        </div>
-        <div>
-          <div className="text-xs font-medium">Priority</div>
-          <Badge
-            variant="outline"
-            className={getSupplyRequestPriorityBadgeColor(
-              supplyRequest.priority,
-            )}
-          >
-            {t(supplyRequest.priority)}
-          </Badge>
-        </div>
-        <div>
-          <div className="text-xs font-medium">Status</div>
-          <Badge
-            variant="outline"
-            className={getSupplyRequestStatusBadgeColor(supplyRequest.status)}
-          >
-            {t(supplyRequest.status)}
-          </Badge>
-        </div>
+        {deliveries.length > 0 &&
+          supplyRequest.status === SupplyRequestStatus.active && (
+            <div className="ml-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      setConfirmDialog({
+                        open: true,
+                        title: t("mark_as_fully_dispatched"),
+                        description: (
+                          <>
+                            <Trans
+                              i18nKey="confirm_action_description"
+                              values={{
+                                action: t(
+                                  "mark_as_fully_dispatched",
+                                ).toLowerCase(),
+                              }}
+                              components={{
+                                1: <strong className="text-gray-900" />,
+                              }}
+                            />
+                            <p className="mt-2">
+                              {t("this_action_cannot_be_undone")}
+                            </p>
+                          </>
+                        ),
+                        onConfirm: markRequestAsFulfilled,
+                        variant: "primary",
+                        confirmText: isUpdatingRequest
+                          ? t("updating")
+                          : t("confirm"),
+                        cancelText: t("cancel"),
+                        disabled: isUpdatingRequest,
+                      })
+                    }
+                  >
+                    {t("mark_as_fully_dispatched")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
       </div>
       <div className="grid grid-cols-5 gap-4 rounded-b-lg mx-4 p-3 bg-gray-100 border border-t-0 border-gray-200 mt-0.5">
         <div>
@@ -502,9 +567,52 @@ export default function SupplyRequestDispatch({
                           if (
                             delivery.status === SupplyDeliveryStatus.completed
                           ) {
-                            setShowInfoDialog(true);
+                            setConfirmDialog({
+                              open: true,
+                              title: t("info"),
+                              description: t(
+                                "once_delivery_is_completed_you_can_not_change_the_status",
+                              ),
+                              onConfirm: () =>
+                                setConfirmDialog({
+                                  ...confirmDialog,
+                                  open: false,
+                                }),
+                              variant: "outline_primary",
+                              confirmText: t("got_it"),
+                              hideCancel: true,
+                              disabled: false,
+                            });
                           } else {
-                            setSelectedDeliveryId(delivery.id);
+                            setConfirmDialog({
+                              open: true,
+                              title: t("mark_as_entered_in_error"),
+                              description: (
+                                <>
+                                  <Trans
+                                    i18nKey="confirm_action_description"
+                                    values={{
+                                      action: t(
+                                        "mark_as_entered_in_error",
+                                      ).toLowerCase(),
+                                    }}
+                                    components={{
+                                      1: <strong className="text-gray-900" />,
+                                    }}
+                                  />
+                                  <p className="mt-2">
+                                    {t("this_action_cannot_be_undone")}
+                                  </p>
+                                </>
+                              ),
+                              onConfirm: () => handleMarkAsError(delivery.id),
+                              variant: "destructive",
+                              confirmText: isUpdatingDelivery
+                                ? t("updating")
+                                : t("confirm"),
+                              cancelText: t("cancel"),
+                              disabled: isUpdatingDelivery,
+                            });
                           }
                         }}
                         disabled={
@@ -531,43 +639,16 @@ export default function SupplyRequestDispatch({
 
       {/* Confirmation Dialog */}
       <ConfirmActionDialog
-        open={Boolean(selectedDeliveryId)}
-        onOpenChange={() => setSelectedDeliveryId(null)}
-        title={t("mark_as_entered_in_error")}
-        description={
-          <>
-            <Trans
-              i18nKey="confirm_action_description"
-              values={{
-                action: t("mark_as_entered_in_error").toLowerCase(),
-              }}
-              components={{
-                1: <strong className="text-gray-900" />,
-              }}
-            />
-            <p className="mt-2">{t("this_action_cannot_be_undone")}</p>
-          </>
-        }
-        onConfirm={() =>
-          selectedDeliveryId && handleMarkAsError(selectedDeliveryId)
-        }
-        variant="destructive"
-        confirmText={isUpdatingDelivery ? t("updating") : t("confirm")}
-        cancelText={t("cancel")}
-        disabled={isUpdatingDelivery}
-      />
-
-      <ConfirmActionDialog
-        open={showInfoDialog}
-        onOpenChange={setShowInfoDialog}
-        title={t("info")}
-        description={t(
-          "once_delivery_is_completed_you_can_not_change_the_status",
-        )}
-        onConfirm={() => setShowInfoDialog(false)}
-        variant="default"
-        confirmText={t("got_it")}
-        hideCancel
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        onConfirm={confirmDialog.onConfirm}
+        variant={confirmDialog.variant}
+        confirmText={confirmDialog.confirmText || t("confirm")}
+        cancelText={confirmDialog.cancelText || t("cancel")}
+        disabled={confirmDialog.disabled}
+        hideCancel={confirmDialog.hideCancel}
       />
 
       <Dialog

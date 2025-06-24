@@ -22,7 +22,7 @@ interface ConfirmActionDialogProps {
   onConfirm: () => void;
   cancelText?: string;
   confirmText: string;
-  variant?: "primary" | "destructive" | "default";
+  variant?: "primary" | "destructive" | "default" | "outline_primary";
   disabled?: boolean;
   hideCancel?: boolean;
 }
