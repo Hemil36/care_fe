@@ -357,7 +357,7 @@ export default function SupplyRequestDispatch({
     <div className="space-y-2 container mx-auto max-w-5xl">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">Dispatch Items</h2>
+        <h2 className="text-lg font-medium">{t("SRD__page_title")}</h2>
         <Button
           variant="outline"
           size="sm"
@@ -369,22 +369,44 @@ export default function SupplyRequestDispatch({
       </div>
 
       <div className="text-sm text-gray-500">
-        Send items from {supplyRequest.deliver_from?.name} to{" "}
-        {supplyRequest.deliver_to.name} as per the request. Review and fill in
-        the dispatch details below.
+        <Trans
+          i18nKey="SRD__page_description_template"
+          values={{
+            action: t(
+              {
+                [SupplyRequestStatus.active]: "SRD__action_send",
+                [SupplyRequestStatus.processed]: "SRD__action_sent",
+                [SupplyRequestStatus.completed]: "SRD__action_delivered",
+                [SupplyRequestStatus.entered_in_error]:
+                  "SRD__action_entered_in_error",
+                [SupplyRequestStatus.cancelled]: "SRD__action_cancelled",
+                [SupplyRequestStatus.draft]: "SRD__action_draft",
+                [SupplyRequestStatus.suspended]: "SRD__action_suspended",
+              }[supplyRequest.status],
+            ),
+            from: supplyRequest.deliver_from?.name,
+            to: supplyRequest.deliver_to.name,
+          }}
+        />
+        {supplyRequest.status === SupplyRequestStatus.active &&
+          ` ${t("SRD__page_description_end")}`}
       </div>
 
       {/* Summary */}
       <div className="flex items-center rounded-lg shadow-sm bg-white p-4 mb-0">
         <div className="grid grid-cols-5 gap-4 grow">
           <div>
-            <div className="text-xs font-medium">Item to dispatch</div>
+            <div className="text-xs font-medium">
+              {t("SRD__item_to_dispatch")}
+            </div>
             <div className="text-sm font-semibold text-gray-950">
               {supplyRequest.item.name}
             </div>
           </div>
           <div>
-            <div className="text-xs font-medium">Qty to Dispatch</div>
+            <div className="text-xs font-medium">
+              {t("SRD__qty_to_dispatch")}
+            </div>
             <div className="text-sm font-semibold text-gray-950">
               {supplyRequest.quantity}{" "}
               {supplyRequest.item.definitional?.dosage_form?.display ||
@@ -392,13 +414,13 @@ export default function SupplyRequestDispatch({
             </div>
           </div>
           <div>
-            <div className="text-xs font-medium">Deliver To</div>
+            <div className="text-xs font-medium">{t("deliver_to")}</div>
             <div className="text-sm font-semibold text-gray-950">
               {supplyRequest.deliver_to.name}
             </div>
           </div>
           <div>
-            <div className="text-xs font-medium">Priority</div>
+            <div className="text-xs font-medium">{t("priority")}</div>
             <Badge
               variant="outline"
               className={getSupplyRequestPriorityBadgeColor(
@@ -409,7 +431,7 @@ export default function SupplyRequestDispatch({
             </Badge>
           </div>
           <div>
-            <div className="text-xs font-medium">Status</div>
+            <div className="text-xs font-medium">{t("status")}</div>
             <Badge
               variant="outline"
               className={getSupplyRequestStatusBadgeColor(supplyRequest.status)}
@@ -470,19 +492,19 @@ export default function SupplyRequestDispatch({
       </div>
       <div className="grid grid-cols-5 gap-4 rounded-b-lg mx-4 p-3 bg-gray-100 border border-t-0 border-gray-200 mt-0.5">
         <div>
-          <div className="text-xs font-medium">Category</div>
+          <div className="text-xs font-medium">{t("category")}</div>
           <div className="text-sm font-semibold text-gray-950">
             {t(supplyRequest.category)}
           </div>
         </div>
         <div>
-          <div className="text-xs font-medium">Intent</div>
+          <div className="text-xs font-medium">{t("intent")}</div>
           <div className="text-sm font-semibold text-gray-950">
             {t(supplyRequest.intent)}
           </div>
         </div>
         <div>
-          <div className="text-xs font-medium">Reason</div>
+          <div className="text-xs font-medium">{t("reason")}</div>
           <div className="text-sm font-semibold text-gray-950">
             {t(supplyRequest.reason)}
           </div>
@@ -492,7 +514,9 @@ export default function SupplyRequestDispatch({
       {deliveries.length > 0 && (
         <div className="rounded-lg border bg-white mx-4 mb-4">
           <div className="p-4 border-b">
-            <div className="text-sm font-semibold">Dispatched Items</div>
+            <div className="text-sm font-semibold">
+              {t("SRD__dispatched_items")}
+            </div>
           </div>
           <div className="divide-y">
             {deliveries.map((delivery) => (
@@ -509,7 +533,7 @@ export default function SupplyRequestDispatch({
                 <div className="flex items-center gap-8">
                   <div>
                     <div className="text-xs font-medium text-gray-500">
-                      Dispatch Item
+                      {t("SRD__dispatch_item")}
                     </div>
                     <div className="text-sm font-semibold">
                       {
@@ -520,18 +544,22 @@ export default function SupplyRequestDispatch({
                   </div>
                   <div>
                     <div className="text-xs font-medium text-gray-500">
-                      Dispatch Quantity
+                      {t("SRD__dispatch_quantity")}
                     </div>
                     <div className="text-sm font-semibold">
                       {delivery.supplied_item_quantity}{" "}
                       {delivery.supplied_inventory_item?.product.batch
                         ?.lot_number &&
-                        `(${delivery.supplied_inventory_item.product.batch.lot_number})`}
+                        t("SRD__lot_template", {
+                          lotNumber:
+                            delivery.supplied_inventory_item.product.batch
+                              .lot_number,
+                        })}
                     </div>
                   </div>
                   <div>
                     <div className="text-xs font-medium text-gray-500">
-                      Dispatched To
+                      {t("SRD__dispatched_to")}
                     </div>
                     <div className="text-sm font-semibold">
                       {delivery.destination?.name}
@@ -539,7 +567,7 @@ export default function SupplyRequestDispatch({
                   </div>
                   <div>
                     <div className="text-xs font-medium text-gray-500">
-                      Condition
+                      {t("condition")}
                     </div>
                     <div className="text-sm font-semibold">
                       {t(delivery.supplied_item_condition || "")}
@@ -657,20 +685,14 @@ export default function SupplyRequestDispatch({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("fulfill_request_title")}</DialogTitle>
+            <DialogTitle>{t("SRD__fulfill_request_title")}</DialogTitle>
             <DialogDescription>
-              {t("fulfill_request_confirmation_message")}
+              {t("SRD__fulfill_request_confirmation_message")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
-              onClick={() => setDialogState({ open: false })}
-            >
-              {t("cancel")}
-            </Button>
-            <Button
-              variant="outline_primary"
               onClick={() => {
                 if (dialogState.data) {
                   executeDispatch({
@@ -681,7 +703,7 @@ export default function SupplyRequestDispatch({
                 setDialogState({ open: false });
               }}
             >
-              {t("proceed")}
+              {t("SRD__proceed_without_marking")}
             </Button>
             <Button
               variant="primary"
@@ -695,7 +717,7 @@ export default function SupplyRequestDispatch({
                 setDialogState({ open: false });
               }}
             >
-              {t("mark") + " " + t("&") + " " + t("proceed")}
+              {t("SRD__mark_and_proceed")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -710,13 +732,13 @@ export default function SupplyRequestDispatch({
               className="space-y-2 p-2"
             >
               <div className="text-gray-950 font-semibold">
-                Dispatch Details
+                {t("SRD__dispatch_details")}
               </div>
               <div className="space-y-4 bg-gray-50 p-4 rounded-md shadow-sm">
                 {/* Dispatch Status */}
                 {/* Item Type */}
                 <div className="space-y-3">
-                  <Label>Item Type:</Label>
+                  <Label>{t("SRD__item_type")}</Label>
                   <FormField
                     control={form.control}
                     name="item_type"
@@ -733,14 +755,16 @@ export default function SupplyRequestDispatch({
                                 value={SupplyDeliveryType.product}
                                 id="product"
                               />
-                              <Label htmlFor="product">Product</Label>
+                              <Label htmlFor="product">
+                                {t("SRD__product")}
+                              </Label>
                             </div>
                             <div className="flex flex-row gap-1 items-center justify-between rounded-md border border-gray-200 bg-white p-2 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary-100 shadow-sm">
                               <RadioGroupItem
                                 value={SupplyDeliveryType.device}
                                 id="device"
                               />
-                              <Label htmlFor="device">Device</Label>
+                              <Label htmlFor="device">{t("SRD__device")}</Label>
                             </div>
                           </RadioGroup>
                         </FormControl>
@@ -755,16 +779,16 @@ export default function SupplyRequestDispatch({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-semibold">
-                    Select and Dispatch Items
+                    {t("SRD__select_and_dispatch_items")}
                   </div>
                 </div>
 
-                <Table className="bg-white shadow-sm rounded-md border border-gray-200 rounded-md">
+                <Table className="bg-white shadow-sm rounded-md border border-gray-200">
                   <TableHeader className="bg-gray-200 border-gray-200">
                     <TableRow className="divide-x">
-                      <TableHead>Select Item from Lot</TableHead>
-                      <TableHead>Qty to Dispatch</TableHead>
-                      <TableHead>Action</TableHead>
+                      <TableHead>{t("SRD__select_item_from_lot")}</TableHead>
+                      <TableHead>{t("SRD__qty_to_dispatch")}</TableHead>
+                      <TableHead>{t("SRD__action")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -782,14 +806,17 @@ export default function SupplyRequestDispatch({
                                 >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Select product" />
+                                      <SelectValue
+                                        placeholder={t("select_product")}
+                                      />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
                                     {inventoryItems?.results.map((item) => (
                                       <SelectItem key={item.id} value={item.id}>
-                                        {item.product.product_knowledge.name}{" "}
-                                        (Lot #{item.product.batch?.lot_number})
+                                        {item.product.product_knowledge.name} (
+                                        {t("lot")} #
+                                        {item.product.batch?.lot_number})
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -848,7 +875,7 @@ export default function SupplyRequestDispatch({
                   }
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Item
+                  {t("SRD__add_item")}
                 </Button>
               </div>
 
@@ -865,11 +892,9 @@ export default function SupplyRequestDispatch({
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <Label>Marked as Fully Dispatched</Label>
+                      <Label>{t("SRD__marked_as_fully_dispatched")}</Label>
                       <p className="text-sm text-gray-500">
-                        Tick if all items have been dispatched. This delivery
-                        will be marked fulfilled and removed from the pending
-                        dispatch list.
+                        {t("SRD__marked_as_fully_dispatched_description")}
                       </p>
                     </div>
                   </FormItem>
@@ -883,10 +908,10 @@ export default function SupplyRequestDispatch({
                   variant="outline"
                   onClick={() => navigate(backUrl)}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" disabled={isCreatingDelivery}>
-                  Confirm Dispatch
+                  {t("SRD__confirm_dispatch")}
                 </Button>
               </div>
             </form>
