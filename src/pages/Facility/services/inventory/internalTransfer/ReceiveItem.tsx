@@ -90,7 +90,7 @@ export default function ReceiveItem({
     title: string;
     description: ReactNode;
     onConfirm: () => void;
-    variant: "primary" | "destructive" | "default";
+    variant: "primary" | "destructive" | "outline_primary";
     confirmText?: string;
     hideCancel?: boolean;
   }>({
@@ -245,7 +245,7 @@ export default function ReceiveItem({
           "once_delivery_is_completed_you_can_not_change_the_status",
         ),
         onConfirm: () => setDialog({ ...dialog, open: false }),
-        variant: "default",
+        variant: "outline_primary",
         confirmText: t("got_it"),
         hideCancel: true,
       });
@@ -574,62 +574,6 @@ export default function ReceiveItem({
                   className="space-y-2"
                 >
                   <div className="bg-gray-50 rounded-md py-2 px-3 space-y-6">
-                    {receivingStatus !== SupplyDeliveryStatus.abandoned && (
-                      <FormField
-                        control={form.control}
-                        name="condition"
-                        render={({ field }) => {
-                          const conditionOptions = [
-                            {
-                              value: SupplyDeliveryCondition.normal,
-                              label: "normal",
-                            },
-                            {
-                              value: SupplyDeliveryCondition.damaged,
-                              label: "damaged",
-                            },
-                          ];
-
-                          return (
-                            <FormItem>
-                              <FormLabel>{t("item_condition")}</FormLabel>
-                              <FormControl>
-                                <RadioGroup
-                                  value={field.value}
-                                  onValueChange={field.onChange}
-                                  className="flex flex-wrap gap-3"
-                                >
-                                  {conditionOptions.map((option) => (
-                                    <Label
-                                      key={option.value}
-                                      htmlFor={option.value}
-                                      className={cn(
-                                        "flex items-center justify-center px-4 py-3 rounded-md border-[1.5px] cursor-pointer transition-all text-gray-950",
-                                        field.value === option.value
-                                          ? "border-primary-600 bg-primary-100"
-                                          : "border-gray-300 bg-white hover:border-gray-400",
-                                      )}
-                                    >
-                                      <RadioGroupItem
-                                        value={option.value}
-                                        id={option.value}
-                                      />
-                                      <div className="flex items-center space-x-2">
-                                        <span className="font-medium">
-                                          {t(option.label)}
-                                        </span>
-                                      </div>
-                                    </Label>
-                                  ))}
-                                </RadioGroup>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    )}
-
                     <FormField
                       control={form.control}
                       name="receivingStatus"
@@ -688,6 +632,62 @@ export default function ReceiveItem({
                         );
                       }}
                     />
+
+                    {receivingStatus !== SupplyDeliveryStatus.abandoned && (
+                      <FormField
+                        control={form.control}
+                        name="condition"
+                        render={({ field }) => {
+                          const conditionOptions = [
+                            {
+                              value: SupplyDeliveryCondition.normal,
+                              label: "normal",
+                            },
+                            {
+                              value: SupplyDeliveryCondition.damaged,
+                              label: "damaged",
+                            },
+                          ];
+
+                          return (
+                            <FormItem>
+                              <FormLabel>{t("item_condition")}</FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  value={field.value}
+                                  onValueChange={field.onChange}
+                                  className="flex flex-wrap gap-3"
+                                >
+                                  {conditionOptions.map((option) => (
+                                    <Label
+                                      key={option.value}
+                                      htmlFor={option.value}
+                                      className={cn(
+                                        "flex items-center justify-center px-4 py-3 rounded-md border-[1.5px] cursor-pointer transition-all text-gray-950",
+                                        field.value === option.value
+                                          ? "border-primary-600 bg-primary-100"
+                                          : "border-gray-300 bg-white hover:border-gray-400",
+                                      )}
+                                    >
+                                      <RadioGroupItem
+                                        value={option.value}
+                                        id={option.value}
+                                      />
+                                      <div className="flex items-center space-x-2">
+                                        <span className="font-medium">
+                                          {t(option.label)}
+                                        </span>
+                                      </div>
+                                    </Label>
+                                  ))}
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    )}
 
                     {receivingStatus === SupplyDeliveryStatus.completed &&
                       receivedQuantity}
