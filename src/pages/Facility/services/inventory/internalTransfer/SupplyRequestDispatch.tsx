@@ -213,6 +213,12 @@ export default function SupplyRequestDispatch({
     name: "items",
   });
 
+  const items = form.watch("items");
+  const isDispatchDisabled = items.some(
+    (item) =>
+      !item.inventory_item_id || isNaN(item.quantity) || item.quantity < 1,
+  );
+
   const { mutateAsync: createDelivery, isPending: isCreatingDelivery } =
     useMutation({
       mutationFn: mutate(supplyDeliveryApi.createSupplyDelivery),
@@ -570,7 +576,7 @@ export default function SupplyRequestDispatch({
                       {t("condition")}
                     </div>
                     <div className="text-sm font-semibold">
-                      {t(delivery.supplied_item_condition || "")}
+                      {t(delivery.supplied_item_condition || "-")}
                     </div>
                   </div>
                 </div>
@@ -910,7 +916,10 @@ export default function SupplyRequestDispatch({
                 >
                   {t("cancel")}
                 </Button>
-                <Button type="submit" disabled={isCreatingDelivery}>
+                <Button
+                  type="submit"
+                  disabled={isCreatingDelivery || isDispatchDisabled}
+                >
                   {t("SRD__confirm_dispatch")}
                 </Button>
               </div>
