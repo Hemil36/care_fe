@@ -122,7 +122,8 @@ export default function SupplyDeliveryTable({
         limit: resultsPerPage,
         offset: ((qParams.page ?? 1) - 1) * resultsPerPage,
         status: effectiveStatus,
-        supplied_item_product_knowledge: qParams.item,
+        supplied_inventory_item_product_knowledge: qParams.item,
+        origin_isnull: false,
       },
     }),
   });
