@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "raviger";
+import { Link, navigate } from "raviger";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ import routes from "@/Utils/request/api";
 import query from "@/Utils/request/query";
 import { formatDateTime, keysOf } from "@/Utils/utils";
 import { usePermissions } from "@/context/PermissionContext";
+import EncounterHistorySelector from "@/pages/Encounters/EncounterHistorySelector";
 import { EncounterConsentsTab } from "@/pages/Encounters/tabs/EncounterConsentsTab";
 import { EncounterDevicesTab } from "@/pages/Encounters/tabs/EncounterDevicesTab";
 import { EncounterFilesTab } from "@/pages/Encounters/tabs/EncounterFilesTab";
@@ -159,43 +160,7 @@ export const EncounterShow = (props: Props) => {
 
   return (
     <Page title={t("encounter")} className="block">
-      <nav className="relative flex flex-wrap items-start justify-between mt-4">
-        <div
-          className="flex w-full flex-col min-[1150px]:w-min min-[1150px]:flex-row min-[1150px]:items-center"
-          id="consultationpage-header"
-        >
-          {/* {!consultationData.discharge_date && (
-            <>
-              <button
-                id="doctor-connect-button"
-                onClick={() => {
-                  triggerGoal("Doctor Connect Clicked", {
-                    consultationId,
-                    facilityId: patientData.facility,
-                    userId: authUser.id,
-                    page: "ConsultationDetails",
-                  });
-                  setShowDoctors(true);
-                }}
-                className="btn btn-primary m-1 w-full hover:text-white"
-              >
-                Doctor Connect
-              </button>
-              {patientData.last_consultation?.id &&
-                isCameraAttached &&
-                CameraFeedPermittedUserTypes.includes(authUser.user_type) && (
-                  <Link
-                    href={`/facility/${patientData.facility}/patient/${patientData.id}/consultation/${patientData.last_consultation?.id}/feed`}
-                    className="btn btn-primary m-1 w-full hover:text-white"
-                  >
-                    Camera Feed
-                  </Link>
-                )}
-            </>
-          )} */}
-        </div>
-      </nav>
-      <div className="mt-4 xl:mt-0 w-full border-b-2 border-secondary-200">
+      <div className="mt-4 w-full">
         <div className="mt-2 xl:mt-0 flex w-full flex-col md:flex-row">
           <div className="size-full rounded-lg border border-gray-200 bg-white text-black shadow-sm">
             <PatientInfoCard
@@ -218,30 +183,43 @@ export const EncounterShow = (props: Props) => {
             </div>
           </div>
         </div>
-        <div className="mt-4 w-full border-b-2 border-secondary-200">
-          <div className="overflow-x-auto sm:flex sm:items-baseline">
-            <div className="mt-4 sm:mt-0">
-              <nav
-                className="flex space-x-6 overflow-x-auto pb-2 pl-2"
-                id="encounter_tab_nav"
-              >
-                {keysOf(tabs).map((tab) => (
-                  <Link
-                    key={tab}
-                    data-cy={`tab-${tab}`}
-                    className={tabButtonClasses(props.tab === tab)}
-                    href={`${tab}`}
+        <div className="flex gap-6 mt-4">
+          <EncounterHistorySelector
+            patientId={patientId}
+            selectedEncounterId={encounterId}
+            onSelectEncounter={(encounterId) => {
+              navigate(
+                `/facility/${facilityId}/patient/${patientId}/encounter/${encounterId}/${props.tab}`,
+              );
+            }}
+          />
+          <div className="w-full">
+            <div className="w-full border-b-2 border-secondary-200">
+              <div className="overflow-x-auto sm:flex sm:items-baseline">
+                <div className="mt-4 sm:mt-0">
+                  <nav
+                    className="flex space-x-6 overflow-x-auto pb-2 pl-2"
+                    id="encounter_tab_nav"
                   >
-                    {t(`ENCOUNTER_TAB__${tab}`)}
-                  </Link>
-                ))}
-              </nav>
+                    {keysOf(tabs).map((tab) => (
+                      <Link
+                        key={tab}
+                        data-cy={`tab-${tab}`}
+                        className={tabButtonClasses(props.tab === tab)}
+                        href={`${tab}`}
+                      >
+                        {t(`ENCOUNTER_TAB__${tab}`)}
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4">
+              <PageHeadTitle title={t(`ENCOUNTER_TAB__${props.tab}`)} />
+              <SelectedTab {...encounterTabProps} />
             </div>
           </div>
-        </div>
-        <div className="mt-4">
-          <PageHeadTitle title={t(`ENCOUNTER_TAB__${props.tab}`)} />
-          <SelectedTab {...encounterTabProps} />
         </div>
       </div>
     </Page>
