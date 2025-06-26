@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 
 import { ProductKnowledgeBase } from "@/types/inventory/productKnowledge/productKnowledge";
 import { LocationDetail } from "@/types/location/location";
+import { Organization } from "@/types/organization/organization";
 
 export enum SupplyRequestStatus {
   draft = "draft",
@@ -75,6 +76,7 @@ export interface SupplyRequestCreate extends Omit<SupplyRequestBase, "id"> {
   deliver_from?: string; // Location ID
   deliver_to: string; // Location ID
   item: string; // ProductKnowledge ID
+  supplier?: string; // Organization ID
 }
 
 export interface SupplyRequestUpsert extends Omit<SupplyRequestBase, "id"> {
@@ -88,6 +90,7 @@ export interface SupplyRequestRead extends SupplyRequestBase {
   item: ProductKnowledgeBase;
   deliver_from?: LocationDetail;
   deliver_to: LocationDetail;
+  supplier?: Organization;
 }
 
 export const getSupplyRequestStatusBadgeColor = (

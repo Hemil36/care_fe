@@ -87,7 +87,7 @@ export function ReceiveStock({
     onSuccess: () => {
       toast.success(t("stock_received"));
       form.reset();
-      navigate("/external_supply/incoming_deliveries/approve");
+      navigate("/external_supply/inward_entry/approve");
     },
     onError: () => {
       toast.error(t("error_receiving_stock"));

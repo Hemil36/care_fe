@@ -108,7 +108,7 @@ export function ApproveExternalSupplyDelivery({
     mutationFn: mutate(routes.batchRequest),
     onSuccess: () => {
       toast.success(t("deliveries_approved"));
-      navigate("/external_supply/incoming_deliveries");
+      navigate("/external_supply/inward_entry");
     },
     onError: () => {
       toast.error(t("error_approving_deliveries"));

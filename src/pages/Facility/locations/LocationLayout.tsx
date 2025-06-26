@@ -216,13 +216,13 @@ const getRoutes = (facilityId: string, locationId: string) => ({
       productOrderId={id}
     />
   ),
-  "/external_supply/incoming_deliveries": () => (
+  "/external_supply/inward_entry": () => (
     <IncomingDeliveries facilityId={facilityId} locationId={locationId} />
   ),
   "/external_supply/receive": () => (
     <ReceiveStock facilityId={facilityId} locationId={locationId} />
   ),
-  "/external_supply/incoming_deliveries/approve": () => (
+  "/external_supply/inward_entry/approve": () => (
     <ApproveExternalSupplyDelivery
       facilityId={facilityId}
       locationId={locationId}

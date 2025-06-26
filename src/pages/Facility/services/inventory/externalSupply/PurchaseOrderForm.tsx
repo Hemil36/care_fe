@@ -152,7 +152,7 @@ export default function PurchaseOrderForm({
           deliver_to: locationId,
         },
       ],
-      supplier: "",
+      supplier: undefined,
     },
   });
 
@@ -172,7 +172,7 @@ export default function PurchaseOrderForm({
             item: existingData.item.id,
           },
         ],
-        //supplier: existingData.supplier?.id,
+        supplier: existingData.supplier?.id,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
