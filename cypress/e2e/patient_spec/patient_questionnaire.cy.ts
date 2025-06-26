@@ -10,10 +10,100 @@ const facilityCreation = new FacilityCreation();
 const patientEncounter = new PatientEncounter();
 const patientPrescription = new PatientPrescription();
 
-describe("All combination of encounter types", () => {
+describe("All combination of questionnaire submissions", () => {
   beforeEach(() => {
     cy.loginByApi("superadmin");
     cy.visit("/");
+  });
+
+  it("verify the enable questionnaire with boolean and normal text with and without encounter", () => {
+    const questionnaireName = "Enable When Questionnaire with Choice Rendering";
+    // Navigate to admin dashboard and create questionnaire
+    cy.loginByApi("doctor");
+    cy.visit("/");
+    facilityCreation.selectFirstRandomFacility();
+    cy.getFacilityIdAndNavigate("encounters/patients");
+    cy.get("button").contains("View Encounter").first().click();
+    cy.get("button").contains("Add Questionnaire").click();
+    cy.typeAndSelectOption(
+      "input[placeholder='Search Questionnaires']",
+      questionnaireName,
+      false,
+    );
+    // access the questionnaire
+    // Click "No" radio button - using label text to find the question container
+    cy.get("label")
+      .contains("Does the patient take any medications?")
+      .closest("[data-question-id]")
+      .within(() => {
+        cy.get('button[value="false"]').click();
+      });
+
+    // Verify the medication name field is not present when "No" is selected
+    cy.get("label").contains("Name of the medicine taken").should("not.exist");
+
+    // Click "Yes" radio button
+    cy.get("label")
+      .contains("Does the patient take any medications?")
+      .closest("[data-question-id]")
+      .within(() => {
+        cy.get('button[value="true"]').click();
+      });
+
+    // Click Vitamin D radio button
+    cy.get("label")
+      .contains("Which vitamin supplement do you take?")
+      .parent()
+      .parent()
+      .parent()
+      .parent()
+      .within(() => {
+        cy.get('[data-slot="radio-group"]').within(() => {
+          cy.get('button[value="Vitamin D"]').click();
+        });
+      });
+
+    cy.get("label").contains("why do you take Vitamin C?").should("not.exist");
+
+    // Click Vitamin A radio button
+    cy.get("label")
+      .contains("Which vitamin supplement do you take?")
+      .parent()
+      .parent()
+      .parent()
+      .parent()
+      .within(() => {
+        cy.get('[data-slot="radio-group"]').within(() => {
+          cy.get('button[value="Vitamin A"]').click();
+        });
+      });
+
+    cy.get("label").contains("why do you take Vitamin C?").should("not.exist");
+
+    // Click Vitamin C radio button
+    cy.get("label")
+      .contains("Which vitamin supplement do you take?")
+      .parent()
+      .parent()
+      .parent()
+      .parent()
+      .within(() => {
+        cy.get('[data-slot="radio-group"]').within(() => {
+          cy.get('button[value="Vitamin C"]').click();
+        });
+      });
+
+    // Type in the Vitamin C question field
+    cy.get("label")
+      .contains("why do you take Vitamin C?")
+      .parent()
+      .parent()
+      .parent()
+      .parent()
+      .parent()
+      .within(() => {
+        cy.get("input").type("Vitamin C");
+      });
   });
 
   it("Verify the non-supported questionnaire are not accessible in patient update", () => {
