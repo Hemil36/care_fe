@@ -60,7 +60,7 @@ function EncounterCard({
               <span className="whitespace-nowrap">
                 {format(new Date(encounter.period.start!), "dd MMM")}
               </span>
-              {encounter.period.end && <span>-</span>}
+              {encounter.period.end && <span>{" - "}</span>}
               {encounter.period.end ? (
                 <span>{format(new Date(encounter.period.end), "dd MMM")}</span>
               ) : (
@@ -92,17 +92,17 @@ export default function EncounterHistorySelector({
   const { t } = useTranslation();
 
   const { data: currentEncounters } = useQuery({
-    queryKey: ["encounters", { patientId, live: true }],
+    queryKey: ["encounters", "live", patientId],
     queryFn: query(routes.encounter.list, {
-      queryParams: { patient: patientId, live: true },
+      queryParams: { patient: patientId, live: false },
     }),
     select: (data: PaginatedResponse<Encounter>) => data.results,
   });
 
   const { data: pastEncounters } = useQuery({
-    queryKey: ["encounters", { patientId, live: false }],
+    queryKey: ["encounters", "closed", patientId],
     queryFn: query(routes.encounter.list, {
-      queryParams: { patient: patientId, live: false },
+      queryParams: { patient: patientId, live: true },
     }),
     select: (data: PaginatedResponse<Encounter>) => data.results,
   });
