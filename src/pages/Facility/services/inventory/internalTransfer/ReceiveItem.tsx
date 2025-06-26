@@ -42,18 +42,20 @@ import Page from "@/components/Common/Page";
 import mutate from "@/Utils/request/mutate";
 import query from "@/Utils/request/query";
 import {
+  SUPPLY_DELIVERY_CONDITION_COLORS,
+  SUPPLY_DELIVERY_STATUS_COLORS,
   SupplyDeliveryCondition,
   SupplyDeliveryStatus,
   SupplyDeliveryUpdate,
-  getSupplyDeliveryConditionBadgeColor,
-  getSupplyDeliveryStatusBadgeColor,
 } from "@/types/inventory/supplyDelivery/supplyDelivery";
 import supplyDeliveryApi from "@/types/inventory/supplyDelivery/supplyDeliveryApi";
 import {
+  SUPPLY_REQUEST_PRIORITY_COLORS,
+  SUPPLY_REQUEST_STATUS_COLORS,
+} from "@/types/inventory/supplyRequest/supplyRequest";
+import {
   SupplyRequestCreate,
   SupplyRequestStatus,
-  getSupplyRequestPriorityBadgeColor,
-  getSupplyRequestStatusBadgeColor,
 } from "@/types/inventory/supplyRequest/supplyRequest";
 import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
 
@@ -531,10 +533,11 @@ export default function ReceiveItem({
                   </Label>
                   {delivery.supplied_item_condition && (
                     <Badge
-                      variant="outline"
-                      className={getSupplyDeliveryConditionBadgeColor(
-                        delivery.supplied_item_condition,
-                      )}
+                      variant={
+                        SUPPLY_DELIVERY_CONDITION_COLORS[
+                          delivery.supplied_item_condition
+                        ]
+                      }
                     >
                       {t(delivery.supplied_item_condition)}
                     </Badge>
@@ -545,10 +548,7 @@ export default function ReceiveItem({
                     {t("status")}:
                   </Label>
                   <Badge
-                    variant="outline"
-                    className={getSupplyDeliveryStatusBadgeColor(
-                      delivery.status,
-                    )}
+                    variant={SUPPLY_DELIVERY_STATUS_COLORS[delivery.status]}
                   >
                     {t(delivery.status)}
                   </Badge>
@@ -823,10 +823,11 @@ export default function ReceiveItem({
                 </Label>
                 <div className="font-semibold text-gray-950 text-normal mt-0.5">
                   <Badge
-                    variant="outline"
-                    className={getSupplyRequestPriorityBadgeColor(
-                      delivery.supply_request.priority,
-                    )}
+                    variant={
+                      SUPPLY_REQUEST_PRIORITY_COLORS[
+                        delivery.supply_request.priority
+                      ]
+                    }
                   >
                     {t(delivery.supply_request.priority)}
                   </Badge>
@@ -838,10 +839,11 @@ export default function ReceiveItem({
                 </Label>
                 <div className="font-semibold text-gray-950 text-normal mt-0.5">
                   <Badge
-                    variant="outline"
-                    className={getSupplyRequestStatusBadgeColor(
-                      delivery.supply_request.status,
-                    )}
+                    variant={
+                      SUPPLY_REQUEST_STATUS_COLORS[
+                        delivery.supply_request.status
+                      ]
+                    }
                   >
                     {t(delivery.supply_request.status)}
                   </Badge>

@@ -17,10 +17,10 @@ import {
 import { TableSkeleton } from "@/components/Common/SkeletonLoading";
 
 import {
-  PRIORITY_COLORS,
-  STATUS_COLORS,
-} from "@/pages/Facility/services/inventory/externalSupply/utils";
-import { SupplyRequestRead } from "@/types/inventory/supplyRequest/supplyRequest";
+  SUPPLY_REQUEST_PRIORITY_COLORS,
+  SUPPLY_REQUEST_STATUS_COLORS,
+  SupplyRequestRead,
+} from "@/types/inventory/supplyRequest/supplyRequest";
 
 interface Props {
   requests: SupplyRequestRead[];
@@ -89,17 +89,13 @@ export default function PurchaseOrderTable({
                 {request.deliver_to.name}
               </TableCell>
               <TableCell>
-                <Badge
-                  className={STATUS_COLORS[request.status]}
-                  variant="outline"
-                >
+                <Badge variant={SUPPLY_REQUEST_STATUS_COLORS[request.status]}>
                   {t(request.status)}
                 </Badge>
               </TableCell>
               <TableCell>
                 <Badge
-                  className={PRIORITY_COLORS[request.priority]}
-                  variant="outline"
+                  variant={SUPPLY_REQUEST_PRIORITY_COLORS[request.priority]}
                 >
                   {t(request.priority)}
                 </Badge>

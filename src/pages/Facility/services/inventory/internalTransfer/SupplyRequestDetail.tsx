@@ -32,13 +32,13 @@ import { TableSkeleton } from "@/components/Common/SkeletonLoading";
 import mutate from "@/Utils/request/mutate";
 import query from "@/Utils/request/query";
 import {
+  SUPPLY_DELIVERY_STATUS_COLORS,
   SupplyDeliveryRead,
-  getSupplyDeliveryStatusBadgeColor,
 } from "@/types/inventory/supplyDelivery/supplyDelivery";
 import supplyDeliveryApi from "@/types/inventory/supplyDelivery/supplyDeliveryApi";
 import {
-  getSupplyRequestPriorityBadgeColor,
-  getSupplyRequestStatusBadgeColor,
+  SUPPLY_REQUEST_PRIORITY_COLORS,
+  SUPPLY_REQUEST_STATUS_COLORS,
 } from "@/types/inventory/supplyRequest/supplyRequest";
 import {
   SupplyRequestCreate,
@@ -325,10 +325,7 @@ export default function SupplyRequestDetail({
                 {t("priority")}
               </p>
               <Badge
-                variant="outline"
-                className={getSupplyRequestPriorityBadgeColor(
-                  supplyRequest.priority,
-                )}
+                variant={SUPPLY_REQUEST_PRIORITY_COLORS[supplyRequest.priority]}
               >
                 {t(supplyRequest.priority)}
               </Badge>
@@ -336,10 +333,7 @@ export default function SupplyRequestDetail({
             <div>
               <p className="text-sm text-gray-700 font-medium">{t("status")}</p>
               <Badge
-                variant="outline"
-                className={getSupplyRequestStatusBadgeColor(
-                  supplyRequest.status,
-                )}
+                variant={SUPPLY_REQUEST_STATUS_COLORS[supplyRequest.status]}
               >
                 {t(supplyRequest.status)}
               </Badge>
@@ -429,10 +423,7 @@ export default function SupplyRequestDetail({
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant="outline"
-                        className={getSupplyDeliveryStatusBadgeColor(
-                          delivery.status,
-                        )}
+                        variant={SUPPLY_DELIVERY_STATUS_COLORS[delivery.status]}
                       >
                         {t(delivery.status)}
                       </Badge>

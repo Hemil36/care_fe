@@ -92,35 +92,3 @@ export interface SupplyRequestRead extends SupplyRequestBase {
   deliver_to: LocationDetail;
   supplier?: Organization;
 }
-
-export const getSupplyRequestStatusBadgeColor = (
-  status: SupplyRequestStatus,
-) => {
-  switch (status) {
-    case SupplyRequestStatus.active:
-      return "bg-green-100 text-green-800";
-    case SupplyRequestStatus.completed:
-      return "bg-blue-100 text-blue-800";
-    case SupplyRequestStatus.cancelled:
-      return "bg-red-100 text-red-800";
-    case SupplyRequestStatus.processed:
-      return "bg-orange-100 text-orange-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
-
-export const getSupplyRequestPriorityBadgeColor = (
-  priority: SupplyRequestPriority,
-) => {
-  switch (priority) {
-    case SupplyRequestPriority.urgent:
-      return "bg-red-100 text-red-800";
-    case SupplyRequestPriority.asap:
-      return "bg-orange-100 text-orange-800";
-    case SupplyRequestPriority.stat:
-      return "bg-purple-100 text-purple-800";
-    default:
-      return "bg-blue-100 text-blue-800";
-  }
-};

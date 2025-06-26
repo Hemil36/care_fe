@@ -18,11 +18,13 @@ import Page from "@/components/Common/Page";
 import { TableSkeleton } from "@/components/Common/SkeletonLoading";
 
 import query from "@/Utils/request/query";
-import { SupplyRequestRead } from "@/types/inventory/supplyRequest/supplyRequest";
+import {
+  SUPPLY_REQUEST_PRIORITY_COLORS,
+  SUPPLY_REQUEST_STATUS_COLORS,
+  SupplyRequestRead,
+} from "@/types/inventory/supplyRequest/supplyRequest";
 import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
 import organizationApi from "@/types/organization/organizationApi";
-
-import { PRIORITY_COLORS, STATUS_COLORS } from "./utils";
 
 interface Props {
   facilityId: string;
@@ -107,8 +109,7 @@ export default function PurchaseOrdersBySupplier({
               <div className="text-right">
                 <p className="text-sm text-gray-500">{t("status")}</p>
                 <Badge
-                  className={STATUS_COLORS[firstOrder.status]}
-                  variant="outline"
+                  variant={SUPPLY_REQUEST_STATUS_COLORS[firstOrder.status]}
                 >
                   {t(firstOrder.status)}
                 </Badge>
@@ -116,8 +117,7 @@ export default function PurchaseOrdersBySupplier({
               <div className="text-right">
                 <p className="text-sm text-gray-500">{t("priority")}</p>
                 <Badge
-                  className={PRIORITY_COLORS[firstOrder.priority]}
-                  variant="outline"
+                  variant={SUPPLY_REQUEST_PRIORITY_COLORS[firstOrder.priority]}
                 >
                   {t(firstOrder.priority)}
                 </Badge>

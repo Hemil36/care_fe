@@ -59,15 +59,15 @@ import mutate from "@/Utils/request/mutate";
 import query from "@/Utils/request/query";
 import inventoryApi from "@/types/inventory/product/inventoryApi";
 import {
+  SUPPLY_DELIVERY_STATUS_COLORS,
   SupplyDeliveryStatus,
   SupplyDeliveryType,
-  getSupplyDeliveryStatusBadgeColor,
 } from "@/types/inventory/supplyDelivery/supplyDelivery";
 import supplyDeliveryApi from "@/types/inventory/supplyDelivery/supplyDeliveryApi";
 import {
+  SUPPLY_REQUEST_PRIORITY_COLORS,
+  SUPPLY_REQUEST_STATUS_COLORS,
   SupplyRequestStatus,
-  getSupplyRequestPriorityBadgeColor,
-  getSupplyRequestStatusBadgeColor,
 } from "@/types/inventory/supplyRequest/supplyRequest";
 import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
 
@@ -428,20 +428,14 @@ export default function SupplyRequestDispatch({
           <div>
             <div className="text-xs font-medium">{t("priority")}</div>
             <Badge
-              variant="outline"
-              className={getSupplyRequestPriorityBadgeColor(
-                supplyRequest.priority,
-              )}
+              variant={SUPPLY_REQUEST_PRIORITY_COLORS[supplyRequest.priority]}
             >
               {t(supplyRequest.priority)}
             </Badge>
           </div>
           <div>
             <div className="text-xs font-medium">{t("status")}</div>
-            <Badge
-              variant="outline"
-              className={getSupplyRequestStatusBadgeColor(supplyRequest.status)}
-            >
+            <Badge variant={SUPPLY_REQUEST_STATUS_COLORS[supplyRequest.status]}>
               {t(supplyRequest.status)}
             </Badge>
           </div>
@@ -582,10 +576,7 @@ export default function SupplyRequestDispatch({
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge
-                    variant="outline"
-                    className={getSupplyDeliveryStatusBadgeColor(
-                      delivery.status,
-                    )}
+                    variant={SUPPLY_DELIVERY_STATUS_COLORS[delivery.status]}
                   >
                     {t(delivery.status)}
                   </Badge>

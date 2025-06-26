@@ -33,8 +33,8 @@ import PurchaseOrderTable from "@/pages/Facility/services/inventory/externalSupp
 import { ProductKnowledgeStatus } from "@/types/inventory/productKnowledge/productKnowledge";
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
 import {
+  SUPPLY_REQUEST_PRIORITY_COLORS,
   SupplyRequestPriority,
-  getSupplyRequestPriorityBadgeColor,
 } from "@/types/inventory/supplyRequest/supplyRequest";
 import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
 import locationApi from "@/types/location/locationApi";
@@ -191,11 +191,12 @@ export function PurchaseOrders({ facilityId, locationId }: Props) {
             <span>{t("filter_by_priority")}</span>
             {qParams.priority && (
               <Badge
-                variant="outline"
-                className={cn(
-                  "ml-2",
-                  getSupplyRequestPriorityBadgeColor(qParams.priority),
-                )}
+                variant={
+                  SUPPLY_REQUEST_PRIORITY_COLORS[
+                    qParams.priority as SupplyRequestPriority
+                  ]
+                }
+                className="ml-2"
               >
                 {t(qParams.priority)}
               </Badge>

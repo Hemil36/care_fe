@@ -9,9 +9,11 @@ import {
   DefinitionListItem,
 } from "@/components/ui/definition-list";
 
-import { SupplyRequestRead } from "@/types/inventory/supplyRequest/supplyRequest";
-
-import { PRIORITY_COLORS, STATUS_COLORS } from "./utils";
+import {
+  SUPPLY_REQUEST_PRIORITY_COLORS,
+  SUPPLY_REQUEST_STATUS_COLORS,
+  SupplyRequestRead,
+} from "@/types/inventory/supplyRequest/supplyRequest";
 
 interface Props {
   request: SupplyRequestRead;
@@ -78,10 +80,7 @@ export default function PurchaseOrderDetails({
           <DefinitionListItem
             term={t("status")}
             description={
-              <Badge
-                className={STATUS_COLORS[request.status]}
-                variant="secondary"
-              >
+              <Badge variant={SUPPLY_REQUEST_STATUS_COLORS[request.status]}>
                 {t(request.status)}
               </Badge>
             }
@@ -89,10 +88,7 @@ export default function PurchaseOrderDetails({
           <DefinitionListItem
             term={t("priority")}
             description={
-              <Badge
-                className={PRIORITY_COLORS[request.priority]}
-                variant="secondary"
-              >
+              <Badge variant={SUPPLY_REQUEST_PRIORITY_COLORS[request.priority]}>
                 {t(request.priority)}
               </Badge>
             }

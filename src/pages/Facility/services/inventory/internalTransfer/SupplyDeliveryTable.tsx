@@ -39,10 +39,10 @@ import query from "@/Utils/request/query";
 import { ProductKnowledgeStatus } from "@/types/inventory/productKnowledge/productKnowledge";
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
 import {
+  SUPPLY_DELIVERY_STATUS_COLORS,
   SupplyDeliveryRead,
   SupplyDeliveryRetrieve,
   SupplyDeliveryStatus,
-  getSupplyDeliveryStatusBadgeColor,
 } from "@/types/inventory/supplyDelivery/supplyDelivery";
 import supplyDeliveryApi from "@/types/inventory/supplyDelivery/supplyDeliveryApi";
 
@@ -275,10 +275,7 @@ export default function SupplyDeliveryTable({
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant="outline"
-                      className={getSupplyDeliveryStatusBadgeColor(
-                        delivery.status,
-                      )}
+                      variant={SUPPLY_DELIVERY_STATUS_COLORS[delivery.status]}
                     >
                       {t(delivery.status)}
                     </Badge>

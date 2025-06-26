@@ -43,11 +43,11 @@ import query from "@/Utils/request/query";
 import { ProductKnowledgeStatus } from "@/types/inventory/productKnowledge/productKnowledge";
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
 import {
+  SUPPLY_REQUEST_PRIORITY_COLORS,
+  SUPPLY_REQUEST_STATUS_COLORS,
   SupplyRequestPriority,
   SupplyRequestRead,
   SupplyRequestStatus,
-  getSupplyRequestPriorityBadgeColor,
-  getSupplyRequestStatusBadgeColor,
 } from "@/types/inventory/supplyRequest/supplyRequest";
 import supplyRequestApi from "@/types/inventory/supplyRequest/supplyRequestApi";
 
@@ -180,11 +180,12 @@ export default function ToDispatchSupplyRequestTable({
               <span>{t("filter_by_status")}</span>
               {effectiveStatus && (
                 <Badge
-                  variant="outline"
-                  className={cn(
-                    "ml-2",
-                    getSupplyRequestStatusBadgeColor(effectiveStatus),
-                  )}
+                  variant={
+                    SUPPLY_REQUEST_STATUS_COLORS[
+                      effectiveStatus as SupplyRequestStatus
+                    ]
+                  }
+                  className="ml-2"
                 >
                   {t(effectiveStatus)}
                 </Badge>
@@ -234,11 +235,12 @@ export default function ToDispatchSupplyRequestTable({
               <span>{t("filter_by_priority")}</span>
               {qParams.priority && (
                 <Badge
-                  variant="outline"
-                  className={cn(
-                    "ml-2",
-                    getSupplyRequestPriorityBadgeColor(qParams.priority),
-                  )}
+                  variant={
+                    SUPPLY_REQUEST_PRIORITY_COLORS[
+                      qParams.priority as SupplyRequestPriority
+                    ]
+                  }
+                  className="ml-2"
                 >
                   {t(qParams.priority)}
                 </Badge>
@@ -319,20 +321,14 @@ export default function ToDispatchSupplyRequestTable({
                   <TableCell>{request.deliver_to.name}</TableCell>
                   <TableCell>
                     <Badge
-                      variant="outline"
-                      className={getSupplyRequestStatusBadgeColor(
-                        request.status,
-                      )}
+                      variant={SUPPLY_REQUEST_STATUS_COLORS[request.status]}
                     >
                       {t(request.status)}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant="outline"
-                      className={getSupplyRequestPriorityBadgeColor(
-                        request.priority,
-                      )}
+                      variant={SUPPLY_REQUEST_PRIORITY_COLORS[request.priority]}
                     >
                       {t(request.priority)}
                     </Badge>
