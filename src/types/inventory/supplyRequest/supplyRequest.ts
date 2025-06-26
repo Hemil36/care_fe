@@ -1,3 +1,5 @@
+import { Badge } from "@/components/ui/badge";
+
 import { ProductKnowledgeBase } from "@/types/inventory/productKnowledge/productKnowledge";
 import { LocationDetail } from "@/types/location/location";
 
@@ -18,7 +20,11 @@ export const SUPPLY_REQUEST_STATUS_COLORS = {
   cancelled: "destructive",
   completed: "green",
   entered_in_error: "destructive",
-} as const satisfies Record<SupplyRequestStatus, string>;
+  processed: "orange",
+} as const satisfies Record<
+  SupplyRequestStatus,
+  React.ComponentProps<typeof Badge>["variant"]
+>;
 
 export enum SupplyRequestIntent {
   proposal = "proposal",
