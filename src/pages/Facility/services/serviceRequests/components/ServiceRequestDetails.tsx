@@ -7,8 +7,8 @@ import { formatName } from "@/Utils/utils";
 import { ActivityDefinitionReadSpec } from "@/types/emr/activityDefinition/activityDefinition";
 import { ObservationDefinitionReadSpec } from "@/types/emr/observationDefinition/observationDefinition";
 import {
-  SPECIMEN_PRIORITY_STYLES,
-  SPECIMEN_STATUS_STYLES,
+  SERVICE_REQUEST_PRIORITY_COLORS,
+  SERVICE_REQUEST_STATUS_COLORS,
   ServiceRequestReadSpec,
 } from "@/types/emr/serviceRequest/serviceRequest";
 import { SpecimenDefinitionRead } from "@/types/emr/specimenDefinition/specimenDefinition";
@@ -89,8 +89,7 @@ export function ServiceRequestDetails({
                 </div>
                 <div className="flex gap-2">
                   <Badge
-                    variant="primary"
-                    className={SPECIMEN_PRIORITY_STYLES[request.priority]}
+                    variant={SERVICE_REQUEST_PRIORITY_COLORS[request.priority]}
                   >
                     {t(request.priority)}
                   </Badge>
@@ -99,7 +98,9 @@ export function ServiceRequestDetails({
               <div className="gap-2">
                 <div className="text-sm text-gray-600 mb-1">{t("status")}</div>
                 <div className="flex gap-2">
-                  <Badge className={SPECIMEN_STATUS_STYLES[request.status]}>
+                  <Badge
+                    variant={SERVICE_REQUEST_STATUS_COLORS[request.status]}
+                  >
                     {t(request.status)}
                   </Badge>
                 </div>
@@ -113,11 +114,7 @@ export function ServiceRequestDetails({
               <div className="font-sm font-normal flex flex-wrap gap-1">
                 {observationRequirements.map(
                   (test: ObservationDefinitionReadSpec) => (
-                    <Badge
-                      key={test.id}
-                      variant="outline"
-                      className="bg-gray-100 text-gray-800 border-none font-normal text-sm"
-                    >
+                    <Badge key={test.id} variant="secondary">
                       {test.title}
                     </Badge>
                   ),

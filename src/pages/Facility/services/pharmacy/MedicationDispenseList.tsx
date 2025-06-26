@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 
 import { TableSkeleton } from "@/components/Common/SkeletonLoading";
+import { formatTotalUnits } from "@/components/Medicine/utils";
 import { PrescriptionPreview } from "@/components/Prescription/PrescriptionPreview";
 
 import useFilters from "@/hooks/useFilters";
@@ -53,6 +54,9 @@ function MedicationTable({ medications }: MedicationTableProps) {
             <TableHead className="text-gray-700">{t("dosage")}</TableHead>
             <TableHead className="text-gray-700">{t("frequency")}</TableHead>
             <TableHead className="text-gray-700">{t("duration")}</TableHead>
+            <TableHead className="text-gray-700">
+              {t("total") + " " + t("units")}
+            </TableHead>
             <TableHead className="text-gray-700">{t("priority")}</TableHead>
             <TableHead className="text-gray-700">{t("status")}</TableHead>
           </TableRow>
@@ -87,10 +91,12 @@ function MedicationTable({ medications }: MedicationTableProps) {
                 <TableCell className="text-gray-950 font-medium">
                   {duration ? `${duration.value} ${duration.unit}` : "-"}
                 </TableCell>
+                <TableCell className="text-gray-950 font-medium">
+                  {formatTotalUnits(medication.dosage_instruction, t("units"))}
+                </TableCell>
                 <TableCell>
                   <Badge
-                    variant="outline"
-                    className={
+                    variant={
                       MEDICATION_REQUEST_PRIORITY_COLORS[medication.priority]
                     }
                   >
@@ -99,8 +105,7 @@ function MedicationTable({ medications }: MedicationTableProps) {
                 </TableCell>
                 <TableCell>
                   <Badge
-                    variant="outline"
-                    className={
+                    variant={
                       MEDICATION_REQUEST_STATUS_COLORS[medication.status]
                     }
                   >
@@ -210,17 +215,19 @@ export default function MedicationDispenseList({
                 )}
               </DialogContent>
             </Dialog>
-            <Button
-              onClick={() =>
-                navigate(
-                  `/facility/${facilityId}/locations/${locationId}/medication_requests/patient/${patientId}/bill`,
-                )
-              }
-              className="w-full sm:w-auto"
-            >
-              {t("start_billing")}
-              <ArrowRightIcon className="size-4" />
-            </Button>
+            {medicationsWithProduct.length > 0 && (
+              <Button
+                onClick={() =>
+                  navigate(
+                    `/facility/${facilityId}/locations/${locationId}/medication_requests/patient/${patientId}/bill`,
+                  )
+                }
+                className="w-full sm:w-auto"
+              >
+                {t("start_billing")}
+                <ArrowRightIcon className="size-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

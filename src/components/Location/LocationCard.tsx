@@ -79,13 +79,7 @@ export function LocationCard({ locationHistory, status }: LocationCardProps) {
           </div>
         </div>
         <div className="flex flex-col items-end">
-          <Badge
-            variant="outline"
-            className={cn(
-              "text-xs",
-              status === "active" ? "bg-green-100" : "bg-blue-100",
-            )}
-          >
+          <Badge variant={status === "active" ? "primary" : "secondary"}>
             {t(status)}
           </Badge>
           <div className="mt-4 flex justify-center sm:justify-end">

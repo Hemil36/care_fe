@@ -65,7 +65,7 @@ import Page from "@/components/Common/Page";
 import { TableSkeleton } from "@/components/Common/SkeletonLoading";
 import { SubstitutionSheet } from "@/components/Medication/SubstitutionSheet";
 import InstructionsPopover from "@/components/Medicine/InstructionsPopover";
-import { formatDoseRange } from "@/components/Medicine/utils";
+import { formatDoseRange, formatTotalUnits } from "@/components/Medicine/utils";
 import { reverseFrequencyOption } from "@/components/Questionnaire/QuestionTypes/MedicationRequestQuestion";
 import ValueSetSelect from "@/components/Questionnaire/ValueSetSelect";
 
@@ -816,24 +816,75 @@ export default function MedicationBillForm({ patientId }: Props) {
 
   function computeInitialQuantity(medication: MedicationRequestRead) {
     const instruction = medication.dosage_instruction[0];
-    if (!instruction) return 0;
+    if (!instruction) {
+      return 0;
+    }
 
-    const dosage = instruction.dose_and_rate?.dose_quantity?.value || 0;
-    const duration = instruction.timing?.repeat?.bounds_duration?.value || 0;
-    const frequency = instruction.timing?.code?.code || "";
+    if (instruction.as_needed_boolean) {
+      return 0;
+    }
 
-    let dosesPerDay = 1;
-    if (frequency.includes("BID")) dosesPerDay = 2;
-    if (frequency.includes("TID")) dosesPerDay = 3;
-    if (frequency.includes("QID")) dosesPerDay = 4;
+    const doseValue = instruction.dose_and_rate?.dose_quantity?.value;
+    if (!doseValue) {
+      return 0;
+    }
 
-    return dosage * dosesPerDay * duration;
+    const repeat = instruction.timing?.repeat;
+    if (!repeat?.bounds_duration || !repeat.period_unit) {
+      return doseValue;
+    }
+
+    const convertToHours = (value: number, unit: string) => {
+      switch (unit) {
+        case "h":
+          return value;
+        case "d":
+          return value * 24;
+        case "wk":
+          return value * 24 * 7;
+        case "mo":
+          return value * 24 * 30;
+        case "a":
+          return value * 24 * 365;
+        default:
+          return 0;
+      }
+    };
+
+    const { frequency = 1, period = 1, period_unit, bounds_duration } = repeat;
+
+    const totalDurationInHours = convertToHours(
+      bounds_duration.value,
+      bounds_duration.unit,
+    );
+    const periodInHours = convertToHours(period, period_unit);
+
+    if (periodInHours === 0) {
+      return doseValue;
+    }
+
+    const doseIntervalInHours = periodInHours / frequency;
+
+    if (doseIntervalInHours === 0) {
+      return doseValue;
+    }
+
+    const numberOfDoses = Math.ceil(totalDurationInHours / doseIntervalInHours);
+
+    if (instruction.dose_and_rate?.dose_range) {
+      const lowDose = instruction.dose_and_rate.dose_range.low.value || 0;
+      const highDose = instruction.dose_and_rate.dose_range.high.value || 0;
+      const avgDose = (lowDose + highDose) / 2;
+      return Number((avgDose * numberOfDoses).toFixed(2));
+    }
+
+    return Number((doseValue * numberOfDoses).toFixed(2));
   }
 
   const { mutate: dispense, isPending } = useMutation({
     mutationFn: mutate(routes.batchRequest),
     onSuccess: (response) => {
-      toast.success(t("medications_dispensed_successfully"));
+      toast.success(t("medications_billed_successfully"));
       queryClient.invalidateQueries({ queryKey: ["medications"] });
 
       // Extract charge items and open invoice sheet
@@ -1252,19 +1303,13 @@ export default function MedicationBillForm({ patientId }: Props) {
                                       </Popover>
                                     )}
                                     {substitution && (
-                                      <Badge
-                                        variant="outline"
-                                        className="border-orange-300 text-orange-800 bg-orange-100 text-xs -ml-1"
-                                      >
+                                      <Badge variant="orange">
                                         {t("substituted")}
                                       </Badge>
                                     )}
                                     {field.medication?.dispense_status ===
                                       MedicationRequestDispenseStatus.partial && (
-                                      <Badge
-                                        variant="outline"
-                                        className="border-yellow-300 text-yellow-800 bg-yellow-100 text-xs"
-                                      >
+                                      <Badge variant="yellow">
                                         {t("partially_dispensed")}
                                       </Badge>
                                     )}
@@ -1301,29 +1346,10 @@ export default function MedicationBillForm({ patientId }: Props) {
                                   }{" "}
                                   ={" "}
                                   <div className="text-gray-700 font-semibold text-sm">
-                                    {(() => {
-                                      const dosage =
-                                        field.dosageInstructions?.[0]
-                                          ?.dose_and_rate?.dose_quantity
-                                          ?.value || 0;
-                                      const duration =
-                                        field.dosageInstructions?.[0]?.timing
-                                          ?.repeat?.bounds_duration?.value || 0;
-                                      const frequency =
-                                        field.dosageInstructions?.[0]?.timing
-                                          ?.code?.code || "";
-
-                                      let dosesPerDay = 1;
-                                      if (frequency.includes("BID"))
-                                        dosesPerDay = 2;
-                                      if (frequency.includes("TID"))
-                                        dosesPerDay = 3;
-                                      if (frequency.includes("QID"))
-                                        dosesPerDay = 4;
-
-                                      return dosage * dosesPerDay * duration;
-                                    })()}{" "}
-                                    {t("units")}
+                                    {formatTotalUnits(
+                                      field.dosageInstructions,
+                                      t("units"),
+                                    )}
                                   </div>
                                 </div>
                               ) : (
@@ -1346,7 +1372,7 @@ export default function MedicationBillForm({ patientId }: Props) {
                                         ?.dose_quantity
                                     ) {
                                       return (
-                                        <div>
+                                        <div className="text-sm text-gray-700 font-medium flex items-center gap-1">
                                           {
                                             currentDosageInstructions
                                               .dose_and_rate.dose_quantity.value
@@ -1370,32 +1396,12 @@ export default function MedicationBillForm({ patientId }: Props) {
                                               ?.repeat?.bounds_duration?.unit
                                           }{" "}
                                           ={" "}
-                                          {(() => {
-                                            const dosage =
-                                              currentDosageInstructions
-                                                .dose_and_rate.dose_quantity
-                                                .value || 0;
-                                            const duration =
-                                              currentDosageInstructions.timing
-                                                ?.repeat?.bounds_duration
-                                                ?.value || 0;
-                                            const frequency =
-                                              currentDosageInstructions.timing
-                                                ?.code?.code || "";
-
-                                            let dosesPerDay = 1;
-                                            if (frequency.includes("BID"))
-                                              dosesPerDay = 2;
-                                            if (frequency.includes("TID"))
-                                              dosesPerDay = 3;
-                                            if (frequency.includes("QID"))
-                                              dosesPerDay = 4;
-
-                                            return (
-                                              dosage * dosesPerDay * duration
-                                            );
-                                          })()}{" "}
-                                          {t("units")}
+                                          <div className="text-gray-700 font-semibold text-sm">
+                                            {formatTotalUnits(
+                                              [currentDosageInstructions],
+                                              t("units"),
+                                            )}
+                                          </div>
                                         </div>
                                       );
                                     }
@@ -1475,16 +1481,14 @@ export default function MedicationBillForm({ patientId }: Props) {
                                                     .batch?.lot_number}
                                               </span>
                                               <Badge
-                                                className={cn(
-                                                  "text-sm font-medium my-0.5",
+                                                variant={
                                                   selectedInventory?.status ===
                                                     "active" &&
-                                                    selectedInventory?.net_content >
-                                                      0
-                                                    ? "bg-green-100 text-green-800"
-                                                    : "bg-red-100 text-red-800",
-                                                )}
-                                                variant="outline"
+                                                  selectedInventory?.net_content >
+                                                    0
+                                                    ? "primary"
+                                                    : "destructive"
+                                                }
                                               >
                                                 {selectedInventory?.net_content}{" "}
                                                 {t("units")}
@@ -1567,14 +1571,13 @@ export default function MedicationBillForm({ patientId }: Props) {
                                                   inv.product.batch?.lot_number}
                                               </span>
                                               <Badge
-                                                className={cn(
-                                                  "ml-2",
+                                                variant={
                                                   inv.status === "active" &&
-                                                    inv.net_content > 0
-                                                    ? "bg-green-100 text-green-800"
-                                                    : "bg-red-100 text-red-800",
-                                                )}
-                                                variant="outline"
+                                                  inv.net_content > 0
+                                                    ? "primary"
+                                                    : "destructive"
+                                                }
+                                                className="ml-2"
                                               >
                                                 {inv.net_content} {t("units")}
                                               </Badge>
@@ -1592,12 +1595,7 @@ export default function MedicationBillForm({ patientId }: Props) {
                               </Popover>
                             </div>
                           ) : (
-                            <Badge
-                              variant="outline"
-                              className="bg-red-100 text-red-800"
-                            >
-                              {t("no_stock")}
-                            </Badge>
+                            <Badge variant="destructive">{t("no_stock")}</Badge>
                           )}
                         </TableCell>
                         <TableCell className={tableCellClass}>
