@@ -254,7 +254,7 @@ export default function VerifyPatient(props: { facilityId: string }) {
               <CardContent className="flex flex-col gap-3 pt-2">
                 {encounters?.results && encounters.results.length > 0 ? (
                   <>
-                    {encounters.results.map((encounter: Encounter) => (
+                    {encounters.results.map((encounter) => (
                       <EncounterCard
                         encounter={encounter}
                         key={encounter.id}

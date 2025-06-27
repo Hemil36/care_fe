@@ -14,6 +14,7 @@ import { QuestionnaireSearch } from "@/components/Questionnaire/QuestionnaireSea
 import { getPermissions } from "@/common/Permissions";
 
 import { usePermissions } from "@/context/PermissionContext";
+import EncounterProperties from "@/pages/Encounters/EncounterProperties";
 import { EncounterTabProps } from "@/pages/Encounters/EncounterShow";
 import EncounterOverviewDevices from "@/pages/Facility/settings/devices/components/EncounterOverviewDevices";
 import { inactiveEncounterStatus } from "@/types/emr/encounter";
@@ -133,8 +134,9 @@ export const EncounterOverviewTab = ({
           </div>
         </div>
 
-        {/* Right Column - Observations */}
-        <div className="xl:w-1/4 p-1 bg-white rounded-md shadow-md h-full">
+        {/* Right Column */}
+        <div className="w-full max-w-[18rem] flex flex-col gap-4">
+          <EncounterProperties encounter={encounter} />
           <SideOverview
             encounter={encounter}
             canAccess={canAccess}
