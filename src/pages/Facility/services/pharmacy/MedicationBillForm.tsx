@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
-import { ChevronDownIcon, Info, PlusIcon } from "lucide-react";
+import { ChevronDownIcon, Info, PlusIcon, Shuffle, Trash2 } from "lucide-react";
 import { navigate } from "raviger";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -89,6 +89,7 @@ import {
 } from "@/types/billing/chargeItem/chargeItem";
 import { ChargeItemRead } from "@/types/billing/chargeItem/chargeItem";
 import {
+  MEDICATION_DISPENSE_STATUS_COLORS,
   MedicationDispenseCategory,
   MedicationDispenseCreate,
   MedicationDispenseRead,
@@ -207,7 +208,7 @@ const AddMedicationSheet = ({
   useEffect(() => {
     if (open && existingDosageInstructions) {
       setLocalDosageInstruction(existingDosageInstructions);
-    } else if (!open) {
+    } else {
       resetForm();
     }
   }, [open, existingDosageInstructions]);
@@ -687,7 +688,7 @@ export default function MedicationBillForm({ patientId }: Props) {
     },
   });
 
-  const { fields, append } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "items",
   });
@@ -1440,7 +1441,7 @@ export default function MedicationBillForm({ patientId }: Props) {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-gray-400 border text-gray-950"
+                                className="border-gray-400 border text-gray-950 hover:bg-gray-50"
                                 type="button"
                                 onClick={() => {
                                   setSubstitutingItemIndex(index);
@@ -1450,7 +1451,20 @@ export default function MedicationBillForm({ patientId }: Props) {
                                   setIsSubstitutionSheetOpen(true);
                                 }}
                               >
+                                <Shuffle className="size-5" />
                                 {t("substitute")}
+                              </Button>
+                            )}
+                            {!field.medication && (
+                              <Button
+                                variant="outline"
+                                className="hover:bg-red-50 hover:text-red-700"
+                                size="sm"
+                                type="button"
+                                onClick={() => remove(index)}
+                              >
+                                <Trash2 className="size-5" />
+                                <span className="">{t("remove")}</span>
                               </Button>
                             )}
                           </div>
@@ -1926,7 +1940,13 @@ export default function MedicationBillForm({ patientId }: Props) {
 
         <AddMedicationSheet
           open={isAddMedicationSheetOpen}
-          onOpenChange={setIsAddMedicationSheetOpen}
+          onOpenChange={(isOpen) => {
+            setIsAddMedicationSheetOpen(isOpen);
+            if (!isOpen) {
+              setEditingItemIndex(null);
+              setSelectedProduct(undefined);
+            }
+          }}
           selectedProduct={selectedProduct}
           existingDosageInstructions={
             editingItemIndex !== null
@@ -2233,6 +2253,8 @@ const DispensedItemsSheet = ({
                   <TableHead>{t("quantity")}</TableHead>
                   <TableHead>{t("lot_number")}</TableHead>
                   <TableHead>{t("dispensed_on")}</TableHead>
+                  <TableHead>{t("status")}</TableHead>
+                  <TableHead>{t("total") + " " + t("price")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -2241,7 +2263,13 @@ const DispensedItemsSheet = ({
                     <TableCell>
                       {item.item.product.product_knowledge.name}
                     </TableCell>
-                    <TableCell>{item.charge_item.quantity} </TableCell>
+                    <TableCell>
+                      {item.charge_item.quantity}{" "}
+                      {
+                        item.dosage_instruction?.[0]?.dose_and_rate
+                          ?.dose_quantity?.unit?.display
+                      }
+                    </TableCell>
                     <TableCell>
                       {item.item.product.batch?.lot_number || "-"}
                     </TableCell>
@@ -2250,6 +2278,16 @@ const DispensedItemsSheet = ({
                         new Date(item.when_prepared),
                         "dd/MM/yyyy hh:mm a",
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={MEDICATION_DISPENSE_STATUS_COLORS[item.status]}
+                      >
+                        {t(item.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <MonetaryDisplay amount={item.charge_item.total_price} />
                     </TableCell>
                   </TableRow>
                 ))}

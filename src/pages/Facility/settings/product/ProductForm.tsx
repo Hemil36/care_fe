@@ -48,6 +48,7 @@ import { FormSkeleton } from "@/components/Common/SkeletonLoading";
 import mutate from "@/Utils/request/mutate";
 import query from "@/Utils/request/query";
 import { mergeAutocompleteOptions } from "@/Utils/utils";
+import { ProductKnowledgeSelect } from "@/pages/Facility/services/inventory/ProductKnowledgeSelect";
 import { ChargeItemDefinitionForm } from "@/pages/Facility/settings/chargeItemDefinitions/ChargeItemDefinitionForm";
 import {
   ChargeItemDefinitionRead,
@@ -72,8 +73,8 @@ const formSchema = z.object({
     .object({
       lot_number: z.string().optional(),
     })
-    .optional(),
-  expiration_date: z.date().optional(),
+    .required(),
+  expiration_date: z.date(),
 });
 
 export default function ProductForm({
@@ -190,7 +191,6 @@ export function ProductFormContent({
       ),
     });
 
-  const productKnowledgeOptions = productKnowledgeResponse?.results || [];
   const chargeItemDefinitionOptions =
     chargeItemDefinitionResponse?.results || [];
 
@@ -242,7 +242,6 @@ export function ProductFormContent({
   });
 
   const isPending = isCreating || isUpdating;
-
   function onSubmit(data: z.infer<typeof formSchema>) {
     // Format the data for API submission
     const formattedData = {
@@ -314,25 +313,15 @@ export function ProductFormContent({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("product_knowledge")}</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={t("select_product_knowledge")}
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {productKnowledgeOptions.map((pk) => (
-                          <SelectItem key={pk.id} value={pk.id}>
-                            {pk.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <ProductKnowledgeSelect
+                        value={productKnowledgeResponse?.results.find(
+                          (pk) => pk.id === field.value,
+                        )}
+                        onChange={(selected) => field.onChange(selected.id)}
+                        className="border-gray-200 font-normal text-gray-700"
+                      />
+                    </FormControl>
                     <FormDescription>
                       {t("product_knowledge_selection_description")}
                     </FormDescription>
