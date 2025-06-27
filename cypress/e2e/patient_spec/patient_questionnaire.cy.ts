@@ -32,78 +32,110 @@ describe("All combination of questionnaire submissions", () => {
     );
     // access the questionnaire
     // Click "No" radio button - using label text to find the question container
-    cy.get("label")
-      .contains("Does the patient take any medications?")
-      .closest("[data-question-id]")
-      .within(() => {
-        cy.get('button[value="false"]').click();
-      });
+    cy.get(
+      "[data-cy='question-does-the-patient-take-any-medications?']",
+    ).within(() => {
+      cy.get('button[value="false"]').click();
+    });
 
     // Verify the medication name field is not present when "No" is selected
     cy.get("label").contains("Name of the medicine taken").should("not.exist");
 
     // Click "Yes" radio button
+    cy.get(
+      "[data-cy='question-does-the-patient-take-any-medications?']",
+    ).within(() => {
+      cy.get('button[value="true"]').click();
+    });
+
+    cy.get("[data-cy='question-name-of-the-medicine-taken']").within(() => {
+      cy.get("input").type("Vitamin C");
+    });
+
+    cy.get("[data-cy='question-which-vitamin-supplement-do-you-take?']").within(
+      () => {
+        cy.get('button[value="Vitamin D"]').click();
+      },
+    );
+
+    cy.get("label").contains("Why do you take Vitamin C?").should("not.exist");
+
+    cy.get("[data-cy='question-which-vitamin-supplement-do-you-take?']").within(
+      () => {
+        cy.get('button[value="Vitamin A"]').click();
+      },
+    );
+
+    cy.get("label").contains("Why do you take Vitamin C?").should("not.exist");
+
+    cy.get("[data-cy='question-which-vitamin-supplement-do-you-take?']").within(
+      () => {
+        cy.get('button[value="Vitamin C"]').click();
+      },
+    );
+
+    cy.get("[data-cy='question-why-do-you-take-vitamin-c?']").within(() => {
+      cy.get("input").type("To improve my immune system");
+    });
+
+    cy.get("[data-cy='question-select-your-known-allergies']").within(() => {
+      cy.get("button").contains("Select an option").click();
+    });
+
+    cy.get("[data-slot='command-list']").contains("Pollen").click();
+
+    cy.get("[data-slot='command-list']").contains("Close").click();
+
     cy.get("label")
-      .contains("Does the patient take any medications?")
-      .closest("[data-question-id]")
-      .within(() => {
+      .contains("Describe your reaction to nuts / Dust")
+      .should("not.exist");
+
+    cy.get("[data-cy='question-select-your-known-allergies']").within(() => {
+      cy.get("button").contains("Pollen").click();
+    });
+
+    cy.get("[data-slot='command-list']").contains("Clear").click();
+
+    cy.get("[data-slot='command-list']").contains("Nuts").click();
+    cy.get("[data-slot='command-list']").contains("Dust").click();
+
+    cy.get("[data-cy='question-describe-your-reaction-to-nuts-/-dust']").within(
+      () => {
+        cy.get("input").type("I have a reaction to nuts and dust");
+      },
+    );
+
+    cy.get("[data-cy='question-additional-notes']").within(() => {
+      cy.get("input").type("There is no additional notes");
+    });
+
+    cy.get("[data-cy='question-have-you-been-prescribed-antibiotics']").within(
+      () => {
         cy.get('button[value="true"]').click();
-      });
+      },
+    );
 
-    // Click Vitamin D radio button
-    cy.get("label")
-      .contains("Which vitamin supplement do you take?")
-      .parent()
-      .parent()
-      .parent()
-      .parent()
-      .within(() => {
-        cy.get('[data-slot="radio-group"]').within(() => {
-          cy.get('button[value="Vitamin D"]').click();
-        });
-      });
+    cy.get(
+      "[data-cy='question-which-antibiotic-have-you-taken-recently?']",
+    ).within(() => {
+      cy.get('button[value="Azithromycin"]').click();
+    });
 
-    cy.get("label").contains("why do you take Vitamin C?").should("not.exist");
+    cy.get(
+      "[data-cy='question-which-over-the-counter-meds-do-you-have?']",
+    ).within(() => {
+      cy.get("button").contains("Select an option").click();
+      cy.typeAndSelectOption(
+        "input[placeholder='Serach Option...']",
+        "Cough Syrup",
+      );
+    });
 
-    // Click Vitamin A radio button
-    cy.get("label")
-      .contains("Which vitamin supplement do you take?")
-      .parent()
-      .parent()
-      .parent()
-      .parent()
-      .within(() => {
-        cy.get('[data-slot="radio-group"]').within(() => {
-          cy.get('button[value="Vitamin A"]').click();
-        });
-      });
-
-    cy.get("label").contains("why do you take Vitamin C?").should("not.exist");
-
-    // Click Vitamin C radio button
-    cy.get("label")
-      .contains("Which vitamin supplement do you take?")
-      .parent()
-      .parent()
-      .parent()
-      .parent()
-      .within(() => {
-        cy.get('[data-slot="radio-group"]').within(() => {
-          cy.get('button[value="Vitamin C"]').click();
-        });
-      });
-
-    // Type in the Vitamin C question field
-    cy.get("label")
-      .contains("why do you take Vitamin C?")
-      .parent()
-      .parent()
-      .parent()
-      .parent()
-      .parent()
-      .within(() => {
-        cy.get("input").type("Vitamin C");
-      });
+    cy.get(
+      "[data-cy='question-select-all-medications-you-have-a-reaction-to']",
+    ).within(() => {
+      cy.get('button[value="Iodine"]').click();
+    });
   });
 
   it("Verify the non-supported questionnaire are not accessible in patient update", () => {
