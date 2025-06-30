@@ -123,7 +123,7 @@ export function IncomingDeliveries({ facilityId, locationId }: Props) {
             <div className="flex flex-row gap-2">
               <Button variant="outline" size="sm" asChild>
                 <Link
-                  href="/external_supply/receive"
+                  href="/external_supply/inward_entry/receive"
                   className="flex items-center gap-2"
                 >
                   <TruckIcon />

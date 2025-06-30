@@ -85,10 +85,6 @@ export function LocationNav() {
               name: t("inward_entry"),
               url: `${baseUrl}/external_supply/inward_entry`,
             },
-            {
-              name: t("receive_stock"),
-              url: `${baseUrl}/external_supply/receive`,
-            },
           ],
         },
       ]}

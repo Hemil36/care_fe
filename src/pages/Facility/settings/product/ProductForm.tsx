@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { navigate } from "raviger";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -137,6 +137,7 @@ export default function ProductForm({
           productId={productId}
           existingData={existingData}
           onSuccess={onSuccess}
+          containerClassName="rounded-lg border border-gray-200 bg-white p-6"
         />
       </div>
     </Page>
@@ -148,13 +149,21 @@ export function ProductFormContent({
   productId,
   existingData,
   productKnowledgeId,
+  containerClassName,
   onSuccess = () => navigate(`/facility/${facilityId}/settings/product`),
+  onCancel = () => navigate(`/facility/${facilityId}/settings/product`),
+  disableButtons = false,
+  externalSubmitRef,
 }: {
   facilityId: string;
   productId?: string;
   existingData?: ProductRead;
   productKnowledgeId?: string;
+  containerClassName?: string;
   onSuccess?: (product: ProductRead) => void;
+  onCancel?: () => void;
+  disableButtons?: boolean;
+  externalSubmitRef?: React.RefObject<(() => void) | null>;
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -273,10 +282,19 @@ export function ProductFormContent({
     }
   }
 
+  useEffect(() => {
+    if (externalSubmitRef) {
+      externalSubmitRef.current = () => {
+        form.handleSubmit(onSubmit)();
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalSubmitRef]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className={containerClassName}>
           <div className="space-y-4">
             <FormField
               control={form.control}
@@ -475,18 +493,16 @@ export function ProductFormContent({
           </div>
         </div>
 
-        <div className="flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate(`/facility/${facilityId}/settings/product`)}
-          >
-            {t("cancel")}
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? t("saving") : isEditMode ? t("update") : t("create")}
-          </Button>
-        </div>
+        {!disableButtons && (
+          <div className="flex justify-end gap-4">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              {t("cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? t("saving") : isEditMode ? t("update") : t("create")}
+            </Button>
+          </div>
+        )}
       </form>
     </Form>
   );

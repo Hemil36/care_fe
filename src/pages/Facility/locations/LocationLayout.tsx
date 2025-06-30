@@ -219,7 +219,7 @@ const getRoutes = (facilityId: string, locationId: string) => ({
   "/external_supply/inward_entry": () => (
     <IncomingDeliveries facilityId={facilityId} locationId={locationId} />
   ),
-  "/external_supply/receive": () => (
+  "/external_supply/inward_entry/receive": () => (
     <ReceiveStock facilityId={facilityId} locationId={locationId} />
   ),
   "/external_supply/inward_entry/approve": () => (
