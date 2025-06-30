@@ -141,6 +141,11 @@ const EncounterLocation = ({
   encounter: Encounter;
 }) => {
   const { t } = useTranslation();
+
+  if (!encounter.current_location) {
+    return null;
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center">

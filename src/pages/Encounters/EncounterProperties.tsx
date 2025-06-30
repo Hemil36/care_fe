@@ -55,15 +55,17 @@ export default function EncounterProperties({ encounter }: Props) {
           </Badge>
         </div>
       </div>
-      <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium">{t("location")}: </span>
-        <div>
-          <Badge variant="secondary" size="sm">
-            <MapPinIcon className="size-3" />
-            {encounter.current_location?.name}
-          </Badge>
+      {encounter.current_location && (
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium">{t("location")}: </span>
+          <div>
+            <Badge variant="secondary" size="sm">
+              <MapPinIcon className="size-3" />
+              {encounter.current_location?.name}
+            </Badge>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
