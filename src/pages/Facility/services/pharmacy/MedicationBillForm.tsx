@@ -1,11 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
-import { ChevronDownIcon, Info, PlusIcon, Shuffle, Trash2 } from "lucide-react";
+import {
+  ChevronDownIcon,
+  Eye,
+  Info,
+  MoreVertical,
+  PlusIcon,
+  Shuffle,
+  Trash2,
+} from "lucide-react";
 import { navigate } from "raviger";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -22,6 +30,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Form,
   FormControl,
@@ -59,8 +73,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import ComboboxQuantityInput from "@/components/Common/ComboboxQuantityInput";
+import ConfirmActionDialog from "@/components/Common/ConfirmActionDialog";
 import Page from "@/components/Common/Page";
 import { TableSkeleton } from "@/components/Common/SkeletonLoading";
 import { SubstitutionSheet } from "@/components/Medication/SubstitutionSheet";
@@ -676,6 +696,25 @@ export default function MedicationBillForm({ patientId }: Props) {
     useState<ProductKnowledgeBase | undefined>();
   const [viewingDispensedMedicationId, setViewingDispensedMedicationId] =
     useState<string | null>(null);
+  const [medicationToMarkComplete, setMedicationToMarkComplete] =
+    useState<MedicationRequestRead | null>(null);
+
+  const { mutate: updateMedicationRequest } = useMutation({
+    mutationFn: (medication: MedicationRequestRead) => {
+      return mutate(medicationRequestApi.update, {
+        pathParams: { patientId, id: medication.id },
+      })(medication);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["medication_requests", patientId, "dispense"],
+      });
+      toast.success(t("medication_request_status_updated_successfully"));
+    },
+    onError: () => {
+      toast.error(t("something_went_wrong"));
+    },
+  });
 
   const tableHeaderClass =
     "px-4 py-3 border-r font-medium border-y-1 border-r-none border-gray-200 rounded-b-none border-b-0";
@@ -890,7 +929,15 @@ export default function MedicationBillForm({ patientId }: Props) {
     mutationFn: mutate(routes.batchRequest),
     onSuccess: (response) => {
       toast.success(t("medications_billed_successfully"));
-      queryClient.invalidateQueries({ queryKey: ["medications"] });
+      queryClient.invalidateQueries({
+        queryKey: ["medication_requests", patientId, "dispense"],
+      });
+
+      if (!account?.results[0]) {
+        queryClient.invalidateQueries({
+          queryKey: ["accounts", patientId],
+        });
+      }
 
       // Extract charge items and open invoice sheet
       const chargeItems = extractChargeItemsFromBatchResponse(
@@ -1170,8 +1217,11 @@ export default function MedicationBillForm({ patientId }: Props) {
                     <TableHead className={tableHeaderClass}>
                       {t("discount")}
                     </TableHead>
-                    <TableHead className={cn(tableHeaderClass, "rounded-r-lg")}>
+                    <TableHead className={tableHeaderClass}>
                       {t("all_dispensed")}?
+                    </TableHead>
+                    <TableHead className={cn(tableHeaderClass, "rounded-r-lg")}>
+                      {t("actions")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1316,6 +1366,26 @@ export default function MedicationBillForm({ patientId }: Props) {
                                       MedicationRequestDispenseStatus.partial && (
                                       <Badge variant="yellow">
                                         {t("partially_dispensed")}
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="outline"
+                                              size="icon"
+                                              className="p-0 h-auto text-yellow-900 underline font-normal rounded-md w-6"
+                                              type="button"
+                                              onClick={() => {
+                                                setViewingDispensedMedicationId(
+                                                  field.medication.id,
+                                                );
+                                              }}
+                                            >
+                                              <Eye className="size-5" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            {t("view_dispensed")}
+                                          </TooltipContent>
+                                        </Tooltip>
                                       </Badge>
                                     )}
                                   </div>
@@ -1359,22 +1429,6 @@ export default function MedicationBillForm({ patientId }: Props) {
                                       )}
                                     </div>
                                   </div>
-                                  {field.medication?.dispense_status ===
-                                    MedicationRequestDispenseStatus.partial && (
-                                    <Button
-                                      variant="link"
-                                      size="sm"
-                                      className="p-0 h-auto text-secondary-700 underline font-normal"
-                                      type="button"
-                                      onClick={() => {
-                                        setViewingDispensedMedicationId(
-                                          field.medication.id,
-                                        );
-                                      }}
-                                    >
-                                      {t("view_dispensed")}
-                                    </Button>
-                                  )}
                                 </div>
                               ) : (
                                 <div
@@ -1841,18 +1895,59 @@ export default function MedicationBillForm({ patientId }: Props) {
                             "-"
                           )}
                         </TableCell>
+                        <TableCell
+                          className={cn(tableCellClass, "rounded-r-lg")}
+                        >
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="icon">
+                                <MoreVertical className="size-5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              {field.medication?.dispense_status !==
+                              MedicationRequestDispenseStatus.partial ? (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <div className="w-full">
+                                      <DropdownMenuItem
+                                        disabled
+                                        className="w-full"
+                                      >
+                                        {t("mark_as_all_given")}
+                                      </DropdownMenuItem>
+                                    </div>
+                                  </PopoverTrigger>
+                                  <PopoverContent>
+                                    {t("enabled_only_for_partially_dispensed")}
+                                  </PopoverContent>
+                                </Popover>
+                              ) : (
+                                <DropdownMenuItem
+                                  onSelect={() => {
+                                    setMedicationToMarkComplete(
+                                      field.medication as MedicationRequestRead,
+                                    );
+                                  }}
+                                >
+                                  {t("mark_as_all_given")}
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
                   <TableRow className="bg-white rounded-lg shadow-sm">
-                    <TableCell colSpan={11} className="p-0 rounded-lg">
+                    <TableCell colSpan={12} className="p-0 rounded-lg">
                       {isSearchOpen ? (
                         <Command className="w-full rounded-none border-none">
                           <CommandInput
                             placeholder={t("search_products")}
                             onValueChange={setSearch}
                             value={search}
-                            className="h-12 border-none"
+                            className="h-12 border-none ring-0"
                             onKeyDown={(e) => {
                               if (e.key === "Escape") {
                                 setIsSearchOpen(false);
@@ -2129,6 +2224,46 @@ export default function MedicationBillForm({ patientId }: Props) {
             facilityId={facilityId}
           />
         )}
+
+        <ConfirmActionDialog
+          open={medicationToMarkComplete !== null}
+          onOpenChange={(open) => {
+            if (!open) setMedicationToMarkComplete(null);
+          }}
+          title={t("mark_as_all_given")}
+          description={
+            <>
+              <Trans
+                i18nKey="confirm_action_description"
+                values={{
+                  action: t("mark_as_all_given").toLowerCase(),
+                }}
+                components={{
+                  1: <strong className="text-gray-900" />,
+                }}
+              />{" "}
+              {t("you_cannot_change_once_submitted")}
+              <p className="mt-2">
+                {t("medication")}:{" "}
+                <strong>
+                  {medicationToMarkComplete?.requested_product?.name}
+                </strong>
+              </p>
+            </>
+          }
+          onConfirm={() => {
+            if (medicationToMarkComplete) {
+              updateMedicationRequest({
+                ...medicationToMarkComplete,
+                dispense_status: MedicationRequestDispenseStatus.complete,
+              });
+            }
+            setMedicationToMarkComplete(null);
+          }}
+          confirmText={t("mark_as_all_given")}
+          cancelText={t("cancel")}
+          variant="primary"
+        />
       </div>
     </Page>
   );

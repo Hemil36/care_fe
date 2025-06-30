@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRightSquare, ChevronDown, ScanQrCode, X } from "lucide-react";
+import { ChevronDown, ScanQrCode, X } from "lucide-react";
 import { navigate } from "raviger";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -29,15 +29,8 @@ import {
   CardGridSkeleton,
   TableSkeleton,
 } from "@/components/Common/SkeletonLoading";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/Common/Table";
 import SpecimenIDScanDialog from "@/components/Scan/SpecimenIDScanDialog";
+import ServiceRequestTable from "@/components/ServiceRequest/ServiceRequestTable";
 
 import useFilters from "@/hooks/useFilters";
 
@@ -129,73 +122,6 @@ function ServiceRequestCard({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function ServiceRequestTable({
-  requests,
-  facilityId,
-  locationId,
-}: {
-  requests: ServiceRequestReadSpec[];
-  facilityId: string;
-  locationId: string;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("patient_name")}</TableHead>
-            <TableHead>{t("service_type")}</TableHead>
-            <TableHead>{t("status")}</TableHead>
-            <TableHead>{t("priority")}</TableHead>
-            <TableHead>{t("actions")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {requests.map((request) => (
-            <TableRow key={request.id}>
-              <TableCell className="font-semibold">
-                <div>{request.encounter.patient.name}</div>
-                <div className="text-xs text-gray-500">
-                  {request.encounter.patient.id}
-                </div>
-              </TableCell>
-              <TableCell>{request.title}</TableCell>
-              <TableCell>
-                <Badge variant={SERVICE_REQUEST_STATUS_COLORS[request.status]}>
-                  {t(request.status)}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={SERVICE_REQUEST_PRIORITY_COLORS[request.priority]}
-                >
-                  {t(request.priority)}
-                </Badge>
-              </TableCell>
-              <TableCell className="w-10">
-                <Button
-                  variant="outline"
-                  className="font-semibold"
-                  onClick={() =>
-                    navigate(
-                      `/facility/${facilityId}/locations/${locationId}/service_requests/${request.id}`,
-                    )
-                  }
-                >
-                  <ArrowUpRightSquare strokeWidth={1.5} />
-                  {t("see_details")}
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
   );
 }
 
