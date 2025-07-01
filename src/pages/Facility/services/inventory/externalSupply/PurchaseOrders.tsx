@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { OrgSelect } from "@/components/Common/OrgSelect";
 import Page from "@/components/Common/Page";
 
 import useFilters from "@/hooks/useFilters";
@@ -104,6 +105,7 @@ export function PurchaseOrders({ facilityId, locationId }: Props) {
         deliver_to: locationId,
         deliver_from_isnull: true,
         item: qParams.item,
+        supplier: qParams.supplier,
       },
     }),
   });
@@ -119,6 +121,16 @@ export function PurchaseOrders({ facilityId, locationId }: Props) {
         onChange={(product) => updateQuery({ item: product?.id })}
         placeholder={t("search_by_item")}
         className="placeholder:font-semibold"
+      />
+
+      <OrgSelect
+        value={qParams.supplier}
+        onChange={(supplier) => updateQuery({ supplier: supplier?.id })}
+        orgType="product_supplier"
+        placeholder={t("search_by_supplier")}
+        inputPlaceholder={t("search_vendor")}
+        noOptionsMessage={t("no_vendor_found")}
+        className="w-[250px]"
       />
 
       <Popover open={priorityPopoverOpen} onOpenChange={setPriorityPopoverOpen}>

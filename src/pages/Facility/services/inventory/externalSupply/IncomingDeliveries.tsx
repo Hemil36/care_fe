@@ -1,27 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircleIcon, TruckIcon } from "lucide-react";
-import { Check, ChevronsUpDown, X } from "lucide-react";
 import { Link } from "raviger";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { cn } from "@/lib/utils";
-
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { OrgSelect } from "@/components/Common/OrgSelect";
 import Page from "@/components/Common/Page";
 
 import useFilters from "@/hooks/useFilters";
@@ -30,7 +15,6 @@ import query from "@/Utils/request/query";
 import SupplyDeliveryTable from "@/pages/Facility/services/supply/components/SupplyDeliveryTable";
 import { SupplyDeliveryStatus } from "@/types/inventory/supplyDelivery/supplyDelivery";
 import supplyDeliveryApi from "@/types/inventory/supplyDelivery/supplyDeliveryApi";
-import organizationApi from "@/types/organization/organizationApi";
 
 interface Props {
   facilityId: string;
@@ -43,8 +27,6 @@ export function IncomingDeliveries({ facilityId, locationId }: Props) {
     limit: 14,
     disableCache: true,
   });
-  const [supplierSearchQuery, setSupplierSearchQuery] = useState("");
-  const [supplierPopoverOpen, setSupplierPopoverOpen] = useState(false);
 
   const TABS_CONFIG = [
     {
@@ -95,21 +77,7 @@ export function IncomingDeliveries({ facilityId, locationId }: Props) {
     }),
   });
 
-  const { data: availableSuppliers } = useQuery({
-    queryKey: ["organizations", supplierSearchQuery],
-    queryFn: query.debounced(organizationApi.list, {
-      queryParams: {
-        org_type: "product_supplier",
-        name: supplierSearchQuery || undefined,
-      },
-    }),
-  });
-
   const deliveries = response?.results || [];
-  const supplierOptions = availableSuppliers?.results || [];
-  const selectedSupplier = supplierOptions.find(
-    (s) => s.id === qParams.supplier,
-  );
 
   return (
     <Page title={t("inward_entry")} hideTitleOnPage>
@@ -159,74 +127,14 @@ export function IncomingDeliveries({ facilityId, locationId }: Props) {
           </Tabs>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex-1">
-              <Popover
-                open={supplierPopoverOpen}
-                onOpenChange={setSupplierPopoverOpen}
-              >
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full justify-between"
-                  >
-                    <span className="truncate">
-                      {selectedSupplier
-                        ? selectedSupplier.name
-                        : t("search_vendor")}
-                    </span>
-                    {selectedSupplier ? (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-4 p-0 hover:bg-transparent"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          updateQuery({ supplier: undefined });
-                        }}
-                      >
-                        <X className="size-3" />
-                        <span className="sr-only">{t("clear")}</span>
-                      </Button>
-                    ) : (
-                      <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                  <Command>
-                    <CommandInput
-                      className="border-none focus-visible:ring-0"
-                      placeholder={t("search_supplier")}
-                      value={supplierSearchQuery}
-                      onValueChange={setSupplierSearchQuery}
-                    />
-                    <CommandEmpty>{t("no_vendor_found")}</CommandEmpty>
-                    <CommandGroup>
-                      {supplierOptions.map((supplier) => (
-                        <CommandItem
-                          key={supplier.id}
-                          value={supplier.name}
-                          onSelect={() => {
-                            updateQuery({ supplier: supplier.id });
-                            setSupplierPopoverOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              qParams.supplier === supplier.id
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
-                          {supplier.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <OrgSelect
+                value={qParams.supplier}
+                onChange={(supplier) => updateQuery({ supplier: supplier?.id })}
+                orgType="product_supplier"
+                placeholder={t("search_vendor")}
+                inputPlaceholder={t("search_vendor")}
+                noOptionsMessage={t("no_vendor_found")}
+              />
             </div>
           </div>
         </div>

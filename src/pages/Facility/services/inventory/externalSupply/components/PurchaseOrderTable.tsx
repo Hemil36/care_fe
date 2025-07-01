@@ -64,7 +64,7 @@ export default function PurchaseOrderTable({
           <TableRow className="divide-x">
             <TableHead className="text-gray-700">{t("item")}</TableHead>
             <TableHead className="text-gray-700">{t("quantity")}</TableHead>
-            <TableHead className="text-gray-700">{t("deliver_from")}</TableHead>
+            <TableHead className="text-gray-700">{t("supplier")}</TableHead>
             <TableHead className="text-gray-700">{t("deliver_to")}</TableHead>
             <TableHead className="text-gray-700">{t("status")}</TableHead>
             <TableHead className="text-gray-700">{t("priority")}</TableHead>
@@ -83,7 +83,7 @@ export default function PurchaseOrderTable({
                 {request.quantity}
               </TableCell>
               <TableCell className="font-medium text-gray-950">
-                {request.deliver_from?.name || t("not_specified")}
+                {request.supplier?.name || t("not_specified")}
               </TableCell>
               <TableCell className="font-medium text-gray-950">
                 {request.deliver_to.name}
