@@ -139,7 +139,7 @@ export function ReceiveStock({
   const entries = form.watch("entries");
   const supplier = form.watch("supplier");
 
-  const _removeEntry = (index: number) => {
+  const handleDeleteItem = (index: number) => {
     form.setValue(
       "entries",
       entries.filter((_, i) => i !== index),
@@ -157,6 +157,7 @@ export function ReceiveStock({
             lot_number: "",
           },
           expiration_date: "",
+          charge_item_definition: null,
         },
         supplied_item_quantity: 1,
         _checked: false,
@@ -245,6 +246,7 @@ export function ReceiveStock({
           form={form}
           setEditingItem={setEditingItem}
           handleAddItem={handleAddItem}
+          handleDeleteItem={handleDeleteItem}
         />
       </div>
       {editingItem && (
@@ -393,6 +395,7 @@ function AddItemForm({
                       lot_number: product.batch?.lot_number || "",
                     },
                     expiration_date: product.expiration_date || "",
+                    charge_item_definition: product.charge_item_definition,
                   },
                 }));
                 // Clear the submit function and creation state since product is now selected
