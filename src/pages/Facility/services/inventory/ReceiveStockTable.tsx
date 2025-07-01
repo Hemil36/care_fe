@@ -101,7 +101,8 @@ export function ReceiveStockTable({
                     </TableCell>
                     {/* Requested Item/Qty */}
                     <TableCell>
-                      {entry.supply_request?.item?.name || t("not_selected")}
+                      {entry.supply_request?.item?.name ||
+                        t("additional_item", { count: 1 })}
                       <div className="text-xs text-gray-500">
                         {entry.supplied_item_quantity}{" "}
                         {entry.supply_request?.item?.unit || ""}

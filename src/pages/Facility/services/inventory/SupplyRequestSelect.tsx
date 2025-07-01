@@ -18,6 +18,7 @@ interface SupplyRequestSelectProps {
   inputPlaceholder?: string;
   noOptionsMessage?: string;
   supplier?: string;
+  enabled?: boolean;
 }
 
 export function SupplyRequestSelect({
@@ -30,6 +31,7 @@ export function SupplyRequestSelect({
   inputPlaceholder,
   noOptionsMessage,
   supplier,
+  enabled = true,
 }: SupplyRequestSelectProps) {
   const { t } = useTranslation();
 
@@ -42,6 +44,7 @@ export function SupplyRequestSelect({
         supplier: supplier,
       },
     }),
+    enabled,
   });
 
   const options = mergeAutocompleteOptions(
@@ -66,6 +69,8 @@ export function SupplyRequestSelect({
         );
         if (selectedRequest) {
           onChange(selectedRequest);
+        } else {
+          onChange({} as SupplyRequestRead);
         }
       }}
       options={options}

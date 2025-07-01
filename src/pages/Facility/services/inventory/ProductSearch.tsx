@@ -20,6 +20,8 @@ interface ProductSelectProps {
   disabled?: boolean;
   className?: string;
   onProductSubmit?: (submitFn: () => void) => void;
+  productKnowledgeId?: string;
+  enabled?: boolean;
 }
 
 export function ProductSearch({
@@ -28,6 +30,8 @@ export function ProductSearch({
   onChange,
   disabled,
   onProductSubmit,
+  productKnowledgeId,
+  enabled = true,
 }: ProductSelectProps) {
   const { t } = useTranslation();
 
@@ -39,13 +43,15 @@ export function ProductSearch({
   const hasSetSubmitFunction = useRef(false);
 
   const { data: products, isFetching: isProductsFetching } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", productKnowledgeId],
     queryFn: query(productApi.listProduct, {
       pathParams: { facilityId },
       queryParams: {
         status: ProductStatusOptions.active,
+        product_knowledge: productKnowledgeId,
       },
     }),
+    enabled,
   });
 
   useEffect(() => {
@@ -58,6 +64,10 @@ export function ProductSearch({
   useEffect(() => {
     if (value) {
       setSelectedProduct(value);
+    } else {
+      setSelectedProduct(undefined);
+      setIsCreatingProduct(false);
+      hasSetSubmitFunction.current = false;
     }
   }, [value]);
 
@@ -118,6 +128,9 @@ export function ProductSearch({
           if (selectedProductObj) {
             onChange(selectedProductObj);
             setSelectedProduct(selectedProductObj);
+          } else {
+            onChange({} as ProductRead);
+            setSelectedProduct(undefined);
           }
         }}
         options={options}

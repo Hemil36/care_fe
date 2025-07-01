@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import Page from "@/components/Common/Page";
 
@@ -31,6 +32,7 @@ import mutate from "@/Utils/request/mutate";
 import { ProductSearch } from "@/pages/Facility/services/inventory/ProductSearch";
 import { SupplierSelect } from "@/pages/Facility/services/inventory/SupplierSelect";
 import { ProductRead } from "@/types/inventory/product/product";
+import { ProductKnowledgeBase } from "@/types/inventory/productKnowledge/productKnowledge";
 import {
   SupplyDeliveryCreate,
   SupplyDeliveryStatus,
@@ -40,6 +42,7 @@ import supplyDeliveryApi from "@/types/inventory/supplyDelivery/supplyDeliveryAp
 import { SupplyRequestRead } from "@/types/inventory/supplyRequest/supplyRequest";
 import { Organization } from "@/types/organization/organization";
 
+import { ProductKnowledgeSelect } from "./ProductKnowledgeSelect";
 import { ReceiveStockTable } from "./ReceiveStockTable";
 import { SupplyRequestSelect } from "./SupplyRequestSelect";
 
@@ -57,24 +60,29 @@ const supplyRequestReference = z.object({
 
 const objectReference = z.object({ id: z.string(), name: z.string() });
 
+interface ReceiveStockEntry {
+  supply_request: SupplyRequestRead | null;
+  supplied_item: ProductRead | null;
+  supplied_item_quantity: number;
+  _checked?: boolean;
+  _product_knowledge: ProductKnowledgeBase | null;
+}
+
+interface EditingItem {
+  entry: ReceiveStockEntry;
+  index: number | null;
+}
+
 const receiveStockSchema = z.object({
   supplier: objectReference.nullable(),
   entries: z
     .array(
       z.object({
         supply_request: supplyRequestReference.nullable(),
-        supplied_item: z
-          .object({
-            id: z.string(),
-            name: z.string(),
-            batch: z.object({
-              lot_number: z.string(),
-            }),
-            expiration_date: z.string(),
-          })
-          .nullable(),
+        supplied_item: z.any().nullable(),
         supplied_item_quantity: z.number().min(0),
         _checked: z.boolean().optional(),
+        _product_knowledge: objectReference.nullable(),
       }),
     )
     .min(1),
@@ -90,10 +98,7 @@ export function ReceiveStock({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { goBack } = useAppHistory();
-  const [editingItem, setEditingItem] = useState<{
-    entry: any;
-    index: number | null;
-  } | null>(null);
+  const [editingItem, setEditingItem] = useState<EditingItem | null>(null);
 
   const form = useForm({
     resolver: zodResolver(receiveStockSchema),
@@ -150,17 +155,10 @@ export function ReceiveStock({
     setEditingItem({
       entry: {
         supply_request: null,
-        supplied_item: {
-          id: "",
-          name: "",
-          batch: {
-            lot_number: "",
-          },
-          expiration_date: "",
-          charge_item_definition: null,
-        },
+        supplied_item: null,
         supplied_item_quantity: 1,
         _checked: false,
+        _product_knowledge: null,
       },
       index: null,
     });
@@ -286,14 +284,14 @@ function AddItemForm({
   setOpen,
   onSuccess,
 }: {
-  entry: any;
+  entry: ReceiveStockEntry;
   supplier: string;
   facilityId: string;
   locationId: string;
   index: number | null;
   open: boolean;
   setOpen: (open: boolean) => void;
-  onSuccess: (newEntry: any, idx: number | null) => void;
+  onSuccess: (newEntry: ReceiveStockEntry, idx: number | null) => void;
 }) {
   const { t } = useTranslation();
   const [currentEntry, setCurrentEntry] = useState(entry);
@@ -302,6 +300,7 @@ function AddItemForm({
   >(null);
   const [isProductCreationInProgress, setIsProductCreationInProgress] =
     useState(false);
+  const [activeTab, setActiveTab] = useState("requested");
 
   useEffect(() => {
     setCurrentEntry(entry);
@@ -329,75 +328,120 @@ function AddItemForm({
       <SheetContent className="w-full sm:max-w-2xl p-3">
         <ScrollArea className="h-[calc(100vh-8rem)] mt-6 p-3">
           <div className="flex flex-col gap-2">
-            <div className="bg-gray-100 p-3 rounded flex flex-col gap-2">
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">
-                  {t("received_item")}
-                </label>
-                <SupplyRequestSelect
-                  value={
-                    currentEntry.supply_request
-                      ? (currentEntry.supply_request as SupplyRequestRead)
-                      : undefined
-                  }
-                  onChange={(value) => {
-                    if (value) {
-                      setCurrentEntry((prev: any) => ({
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => {
+                setActiveTab(value);
+                setCurrentEntry((prev) => ({
+                  ...prev,
+                  supplied_item: null,
+                  supply_request: null,
+                  _product_knowledge: null,
+                }));
+              }}
+            >
+              <TabsList className="w-full flex flex-row">
+                <TabsTrigger value="requested" className="w-full">
+                  {t("requested_items")}
+                </TabsTrigger>
+                <TabsTrigger value="additional" className="w-full">
+                  {t("additional_item", { count: 2 })}
+                </TabsTrigger>
+              </TabsList>
+
+              <div className="bg-gray-100 p-3 rounded flex flex-col gap-2">
+                <TabsContent value="requested">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">
+                      {t("received_item")}
+                    </label>
+                    <SupplyRequestSelect
+                      value={
+                        currentEntry.supply_request
+                          ? (currentEntry.supply_request as SupplyRequestRead)
+                          : undefined
+                      }
+                      onChange={(value) => {
+                        if (value && value.quantity) {
+                          setCurrentEntry((prev) => ({
+                            ...prev,
+                            supply_request: value,
+                            supplied_item_quantity: value.quantity,
+                            _product_knowledge: value.item,
+                            supplied_item: null,
+                          }));
+                        } else {
+                          setCurrentEntry((prev) => ({
+                            ...prev,
+                            supply_request: null,
+                            _product_knowledge: null,
+                            supplied_item: null,
+                          }));
+                        }
+                      }}
+                      locationId={locationId}
+                      placeholder={t("select_item")}
+                      inputPlaceholder={t("search_items")}
+                      noOptionsMessage={t("no_items_found")}
+                      supplier={supplier}
+                      enabled={open}
+                    />
+                  </div>
+                </TabsContent>
+                <TabsContent value="additional">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">
+                      {t("received_item")}
+                    </label>
+                    <ProductKnowledgeSelect
+                      value={
+                        currentEntry._product_knowledge
+                          ? (currentEntry._product_knowledge as ProductKnowledgeBase)
+                          : undefined
+                      }
+                      onChange={(productKnowledge) => {
+                        setCurrentEntry((prev) => ({
+                          ...prev,
+                          _product_knowledge: productKnowledge,
+                          supplied_item: null,
+                        }));
+                      }}
+                    />
+                  </div>
+                </TabsContent>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium">
+                    {t("received_quantity")}
+                  </label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={currentEntry.supplied_item_quantity || 0}
+                    onChange={(e) =>
+                      setCurrentEntry((prev) => ({
                         ...prev,
-                        supply_request: value,
-                        supplied_item_quantity: value.quantity,
-                      }));
-                    } else {
-                      setCurrentEntry((prev: any) => ({
-                        ...prev,
-                        supply_request: null,
-                      }));
+                        supplied_item_quantity: Number(e.target.value),
+                      }))
                     }
-                  }}
-                  locationId={locationId}
-                  placeholder={t("select_item")}
-                  inputPlaceholder={t("search_items")}
-                  noOptionsMessage={t("no_items_found")}
-                  supplier={supplier}
-                />
+                  />
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">
-                  {t("received_quantity")}
-                </label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={currentEntry.supplied_item_quantity || 0}
-                  onChange={(e) =>
-                    setCurrentEntry((prev: any) => ({
-                      ...prev,
-                      supplied_item_quantity: Number(e.target.value),
-                    }))
-                  }
-                />
-              </div>
-            </div>
+            </Tabs>
             <ProductSearch
               facilityId={facilityId}
-              value={
-                currentEntry.supplied_item?.id
-                  ? (currentEntry.supplied_item as ProductRead)
-                  : undefined
-              }
+              value={currentEntry.supplied_item || undefined}
               onChange={(product: ProductRead) => {
-                setCurrentEntry((prev: any) => ({
-                  ...prev,
-                  supplied_item: {
-                    id: product.id,
-                    name: product.product_knowledge.name,
-                    batch: {
-                      lot_number: product.batch?.lot_number || "",
-                    },
-                    expiration_date: product.expiration_date || "",
-                    charge_item_definition: product.charge_item_definition,
-                  },
-                }));
+                if (product && product.id) {
+                  setCurrentEntry((prev) => ({
+                    ...prev,
+                    supplied_item: product,
+                  }));
+                } else {
+                  setCurrentEntry((prev) => ({
+                    ...prev,
+                    supplied_item: null,
+                  }));
+                }
                 // Clear the submit function and creation state since product is now selected
                 setProductFormSubmit(null);
                 setIsProductCreationInProgress(false);
@@ -406,6 +450,8 @@ function AddItemForm({
                 setProductFormSubmit(() => submitFn);
                 setIsProductCreationInProgress(true);
               }}
+              enabled={open}
+              productKnowledgeId={currentEntry._product_knowledge?.id || ""}
             />
           </div>
         </ScrollArea>
@@ -417,7 +463,8 @@ function AddItemForm({
             variant="primary"
             onClick={handleSave}
             disabled={
-              !currentEntry.supply_request ||
+              (!currentEntry.supply_request &&
+                !currentEntry._product_knowledge) ||
               !currentEntry.supplied_item_quantity ||
               (isProductCreationInProgress && !productFormSubmit)
             }
