@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -11,9 +10,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { CardListSkeleton } from "@/components/Common/SkeletonLoading";
 
-import routes from "@/Utils/request/api";
-import query from "@/Utils/request/query";
-import { PaginatedResponse } from "@/Utils/request/types";
+import { useEncounter } from "@/pages/Encounters/utils/EncounterProvider";
 import { ENCOUNTER_STATUS_COLORS, Encounter } from "@/types/emr/encounter";
 
 interface EncounterCardProps {
@@ -78,68 +75,47 @@ function EncounterCard({
   );
 }
 
-interface Props {
-  patientId: string;
-  selectedEncounterId: string;
-  onSelectEncounter: (encounterId: string) => void;
-}
-
-export default function EncounterHistorySelector({
-  patientId,
-  selectedEncounterId,
-  onSelectEncounter,
-}: Props) {
+export default function EncounterHistorySelector() {
   const { t } = useTranslation();
 
-  const { data: currentEncounters } = useQuery({
-    queryKey: ["encounters", "live", patientId],
-    queryFn: query(routes.encounter.list, {
-      queryParams: { patient: patientId, live: false },
-    }),
-    select: (data: PaginatedResponse<Encounter>) => data.results,
-  });
-
-  const { data: pastEncounters } = useQuery({
-    queryKey: ["encounters", "closed", patientId],
-    queryFn: query(routes.encounter.list, {
-      queryParams: { patient: patientId, live: true },
-    }),
-    select: (data: PaginatedResponse<Encounter>) => data.results,
-  });
+  const {
+    currentEncounter,
+    currentEncounterId,
+    selectedEncounterId,
+    setSelectedEncounter,
+    pastEncounters,
+  } = useEncounter();
 
   return (
     <div className="space-y-4 pt-2">
-      {!currentEncounters ? (
+      {!currentEncounter ? (
         <CardListSkeleton count={1} />
-      ) : currentEncounters.length > 0 ? (
+      ) : (
         <div>
           <h2 className="px-4 mb-2 text-xs font-medium text-gray-600 uppercase">
             {t("current_encounter")}
           </h2>
           <div className="space-y-2">
-            {currentEncounters.map((encounter) => (
-              <EncounterCard
-                key={encounter.id}
-                encounter={encounter}
-                isSelected={encounter.id === selectedEncounterId}
-                onSelect={onSelectEncounter}
-              />
-            ))}
+            <EncounterCard
+              encounter={currentEncounter}
+              isSelected={currentEncounterId === selectedEncounterId}
+              onSelect={() => setSelectedEncounter(null)}
+            />
           </div>
         </div>
-      ) : null}
+      )}
 
       <Separator className="my-4" />
 
       {!pastEncounters ? (
         <CardListSkeleton count={5} />
-      ) : pastEncounters.length > 0 ? (
+      ) : pastEncounters.results.length > 0 ? (
         <div>
           <h2 className="px-4 mb-2 text-xs font-medium text-gray-600 uppercase">
             {t("past_encounters")}
           </h2>
           <div>
-            {pastEncounters.reduce<React.ReactNode[]>(
+            {pastEncounters.results.reduce<React.ReactNode[]>(
               (acc, encounter, index) => {
                 const currentYear = new Date(
                   encounter.period.start!,
@@ -147,7 +123,7 @@ export default function EncounterHistorySelector({
                 const prevYear =
                   index > 0
                     ? new Date(
-                        pastEncounters[index - 1].period.start!,
+                        pastEncounters.results[index - 1].period.start!,
                       ).getFullYear()
                     : null;
 
@@ -167,7 +143,7 @@ export default function EncounterHistorySelector({
                     key={encounter.id}
                     encounter={encounter}
                     isSelected={encounter.id === selectedEncounterId}
-                    onSelect={onSelectEncounter}
+                    onSelect={setSelectedEncounter}
                   />,
                 );
                 return acc;

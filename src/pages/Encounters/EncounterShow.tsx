@@ -1,24 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link, navigate } from "raviger";
+import { Link } from "raviger";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+
+import { cn } from "@/lib/utils";
 
 import Loading from "@/components/Common/Loading";
 import Page from "@/components/Common/Page";
 import PageHeadTitle from "@/components/Common/PageHeadTitle";
 import ErrorPage from "@/components/ErrorPages/DefaultErrorPage";
-import PatientInfoCard from "@/components/Patient/PatientInfoCard";
 
 import useAppHistory from "@/hooks/useAppHistory";
 import { useCareAppEncounterTabs } from "@/hooks/useCareApps";
 
 import { getPermissions } from "@/common/Permissions";
 
-import routes from "@/Utils/request/api";
-import query from "@/Utils/request/query";
-import { formatDateTime, keysOf } from "@/Utils/utils";
+import { keysOf } from "@/Utils/utils";
 import { usePermissions } from "@/context/PermissionContext";
+import { EncounterHeader } from "@/pages/Encounters/EncounterHeader";
 import EncounterHistorySelector from "@/pages/Encounters/EncounterHistorySelector";
 import { EncounterConsentsTab } from "@/pages/Encounters/tabs/EncounterConsentsTab";
 import { EncounterDevicesTab } from "@/pages/Encounters/tabs/EncounterDevicesTab";
@@ -26,7 +25,8 @@ import { EncounterFilesTab } from "@/pages/Encounters/tabs/EncounterFilesTab";
 import { EncounterMedicinesTab } from "@/pages/Encounters/tabs/EncounterMedicinesTab";
 import { EncounterOverviewTab } from "@/pages/Encounters/tabs/EncounterOverviewTab";
 import { EncounterPlotsTab } from "@/pages/Encounters/tabs/EncounterPlotsTab";
-import { Encounter, inactiveEncounterStatus } from "@/types/emr/encounter";
+import { useEncounter } from "@/pages/Encounters/utils/EncounterProvider";
+import { Encounter } from "@/types/emr/encounter";
 import { Patient } from "@/types/emr/patient";
 
 import { EncounterNotesTab } from "./tabs/EncounterNotesTab";
@@ -50,14 +50,21 @@ const defaultTabs = {
 } as Record<string, React.FC<EncounterTabProps>>;
 
 interface Props {
-  patientId: string;
-  encounterId: string;
-  facilityId?: string;
   tab?: string;
 }
 
 export const EncounterShow = (props: Props) => {
-  const { encounterId, patientId, facilityId: facilityIdFromProps } = props;
+  const {
+    facilityId,
+    currentEncounter,
+    selectedEncounter,
+    currentEncounterId,
+    selectedEncounterId,
+    isCurrentEncounterLoading,
+    patient,
+    isPatientLoading,
+  } = useEncounter();
+
   const { t } = useTranslation();
   const { hasPermission } = usePermissions();
   const pluginTabs = useCareAppEncounterTabs();
@@ -68,44 +75,17 @@ export const EncounterShow = (props: Props) => {
     ...pluginTabs,
   };
 
-  const { data: encounterData, isLoading } = useQuery({
-    queryKey: ["encounter", encounterId],
-    queryFn: query(routes.encounter.get, {
-      pathParams: { id: encounterId },
-      queryParams: facilityIdFromProps
-        ? {
-            facility: facilityIdFromProps,
-          }
-        : {
-            patient: patientId,
-          },
-    }),
-    enabled: !!encounterId,
-  });
-
-  const { data: patient, isLoading: isPatientLoading } = useQuery({
-    queryKey: ["patient", patientId],
-    queryFn: query(routes.patient.getPatient, {
-      pathParams: {
-        id: patientId,
-      },
-    }),
-    enabled: !facilityIdFromProps && !!patientId,
-  });
-
-  const facilityId = facilityIdFromProps ?? encounterData?.facility.id;
-
-  const { data: facilityData } = useQuery({
-    queryKey: ["facility", facilityId],
-    queryFn: query(routes.getPermittedFacility, {
-      pathParams: { id: facilityId ?? "" },
-    }),
-    enabled: !!facilityId,
-  });
+  // const { data: facilityData } = useQuery({
+  //   queryKey: ["facility", facilityId],
+  //   queryFn: query(routes.getPermittedFacility, {
+  //     pathParams: { id: facilityId ?? "" },
+  //   }),
+  //   enabled: !!facilityId,
+  // });
 
   const { canViewEncounter } = getPermissions(
     hasPermission,
-    encounterData?.permissions ?? [],
+    currentEncounter?.permissions ?? [],
   );
 
   const { canViewClinicalData } = getPermissions(
@@ -113,86 +93,49 @@ export const EncounterShow = (props: Props) => {
     patient?.permissions ?? [],
   );
 
-  const { canWriteEncounter } = getPermissions(
-    hasPermission,
-    facilityData?.permissions ?? [],
-  );
+  // const { canWriteEncounter } = getPermissions(
+  //   hasPermission,
+  //   facilityData?.permissions ?? [],
+  // );
 
   const canAccess = canViewClinicalData || canViewEncounter;
 
-  const canWrite =
-    canWriteEncounter &&
-    !inactiveEncounterStatus.includes(encounterData?.status ?? "");
+  // const canWrite =
+  //   canWriteEncounter &&
+  //   !inactiveEncounterStatus.includes(currentEncounter?.status ?? "");
 
   useEffect(() => {
-    if (!isLoading && !isPatientLoading && !canAccess) {
+    if (!isCurrentEncounterLoading && !isPatientLoading && !canAccess) {
       toast.error(t("permission_denied_encounter"));
       goBack("/");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, isPatientLoading]);
+  }, [isCurrentEncounterLoading, isPatientLoading]);
 
-  if (isLoading || !encounterData || (!facilityIdFromProps && !patient)) {
+  if (
+    isCurrentEncounterLoading ||
+    !currentEncounter ||
+    (!facilityId && !patient)
+  ) {
     return <Loading />;
   }
-
-  const encounterTabProps: EncounterTabProps = {
-    encounter: encounterData,
-    patient: patient ?? encounterData.patient,
-  };
 
   if (!props.tab) {
     return <ErrorPage />;
   }
 
-  if (!encounterData) {
+  if (!selectedEncounter || !patient) {
     return <ErrorPage />;
   }
 
   const SelectedTab = tabs[props.tab];
 
-  const tabButtonClasses = (selected: boolean) =>
-    `capitalize min-w-max-content cursor-pointer font-bold whitespace-nowrap ${
-      selected === true
-        ? "border-primary-500 hover:border-secondary-300 text-primary-600 border-b-2"
-        : "text-secondary-700 hover:text-secondary-700"
-    }`;
-
   return (
     <Page title={t("encounter")} className="block">
       <div className="mt-4 w-full">
-        <div className="mt-2 xl:mt-0 flex w-full flex-col md:flex-row">
-          <div className="size-full rounded-lg border border-gray-200 bg-white text-black shadow-sm">
-            <PatientInfoCard
-              patient={encounterData.patient}
-              encounter={encounterData}
-              fetchPatientData={() => {}}
-              canWrite={canWrite}
-            />
-
-            <div className="flex flex-col justify-between gap-2 px-4 py-1 md:flex-row">
-              <div className="font-base flex flex-col text-xs leading-relaxed text-secondary-700 md:text-right">
-                <div className="flex items-center">
-                  <span className="text-secondary-900">
-                    {t("last_modified")}:{" "}
-                  </span>
-                  &nbsp;
-                  {formatDateTime(encounterData.modified_date)}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <EncounterHeader encounter={currentEncounter} />
         <div className="flex gap-6 mt-4">
-          <EncounterHistorySelector
-            patientId={patientId}
-            selectedEncounterId={encounterId}
-            onSelectEncounter={(encounterId) => {
-              navigate(
-                `/facility/${facilityId}/patient/${patientId}/encounter/${encounterId}/${props.tab}`,
-              );
-            }}
-          />
+          <EncounterHistorySelector />
           <div className="w-full">
             <div className="w-full border-b-2 border-secondary-200">
               <div className="overflow-x-auto sm:flex sm:items-baseline">
@@ -205,8 +148,18 @@ export const EncounterShow = (props: Props) => {
                       <Link
                         key={tab}
                         data-cy={`tab-${tab}`}
-                        className={tabButtonClasses(props.tab === tab)}
-                        href={`${tab}`}
+                        data-tab-selected={props.tab === tab}
+                        className={cn(
+                          "capitalize min-w-max-content cursor-pointer font-bold whitespace-nowrap",
+                          props.tab === tab
+                            ? "border-primary-500 hover:border-secondary-300 text-primary-600 border-b-2"
+                            : "text-secondary-700 hover:text-secondary-700",
+                        )}
+                        href={
+                          currentEncounterId === selectedEncounterId
+                            ? `${tab}`
+                            : `${tab}?selectedEncounter=${selectedEncounterId}`
+                        }
                       >
                         {t(`ENCOUNTER_TAB__${tab}`)}
                       </Link>
@@ -217,7 +170,7 @@ export const EncounterShow = (props: Props) => {
             </div>
             <div className="mt-4">
               <PageHeadTitle title={t(`ENCOUNTER_TAB__${props.tab}`)} />
-              <SelectedTab {...encounterTabProps} />
+              <SelectedTab encounter={selectedEncounter} patient={patient} />
             </div>
           </div>
         </div>
