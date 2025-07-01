@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3, Check, ChevronsUpDown, X } from "lucide-react";
+import { BarChart3, Check } from "lucide-react";
 import { navigate, useQueryParams } from "raviger";
 import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
@@ -10,13 +10,7 @@ import CareIcon from "@/CAREUI/icons/CareIcon";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
+import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
@@ -29,6 +23,7 @@ import Page from "@/components/Common/Page";
 import useFilters from "@/hooks/useFilters";
 
 import query from "@/Utils/request/query";
+import { ProductKnowledgeSelect } from "@/pages/Facility/services/inventory/ProductKnowledgeSelect";
 import PurchaseOrderTable from "@/pages/Facility/services/inventory/externalSupply/components/PurchaseOrderTable";
 import { ProductKnowledgeStatus } from "@/types/inventory/productKnowledge/productKnowledge";
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
@@ -67,7 +62,6 @@ export function PurchaseOrders({ facilityId, locationId }: Props) {
     limit: 14,
     disableCache: true,
   });
-  const [itemPopoverOpen, setItemPopoverOpen] = useState(false);
   const [priorityPopoverOpen, setPriorityPopoverOpen] = useState(false);
 
   const { data: location } = useQuery({
@@ -120,65 +114,12 @@ export function PurchaseOrders({ facilityId, locationId }: Props) {
 
   const renderFilters = () => (
     <div className="flex items-center gap-4">
-      <Popover open={itemPopoverOpen} onOpenChange={setItemPopoverOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            className="w-full justify-between"
-          >
-            <span className="truncate">
-              {selectedProduct ? selectedProduct.name : t("search_by_item")}
-            </span>
-            {selectedProduct ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-4 p-0 hover:bg-transparent"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  updateQuery({ item: undefined });
-                }}
-              >
-                <X className="size-3" />
-                <span className="sr-only">{t("clear")}</span>
-              </Button>
-            ) : (
-              <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-          <Command>
-            <CommandInput
-              className="border-none focus-visible:ring-0"
-              placeholder={t("search_product_knowledge")}
-            />
-            <CommandEmpty>{t("no_product_knowledge_found")}</CommandEmpty>
-            <CommandGroup>
-              {productKnowledges.map((product) => (
-                <CommandItem
-                  key={product.id}
-                  value={product.name}
-                  onSelect={() => {
-                    updateQuery({ item: product.id });
-                    setItemPopoverOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      qParams.item === product.id ? "opacity-100" : "opacity-0",
-                    )}
-                  />
-                  {product.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </Command>
-        </PopoverContent>
-      </Popover>
+      <ProductKnowledgeSelect
+        value={selectedProduct}
+        onChange={(product) => updateQuery({ item: product?.id })}
+        placeholder={t("search_by_item")}
+        className="placeholder:font-semibold"
+      />
 
       <Popover open={priorityPopoverOpen} onOpenChange={setPriorityPopoverOpen}>
         <PopoverTrigger asChild>
