@@ -32,6 +32,7 @@ import { TableSkeleton } from "@/components/Common/SkeletonLoading";
 
 import mutate from "@/Utils/request/mutate";
 import query from "@/Utils/request/query";
+import { makeUrl } from "@/Utils/request/utils";
 import {
   SUPPLY_DELIVERY_STATUS_COLORS,
   SupplyDeliveryRead,
@@ -242,9 +243,15 @@ export default function SupplyRequestDetail({
     );
   }
 
-  const backUrl = `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive?${new URLSearchParams(
-    qParams as Record<string, string>,
-  ).toString()}`;
+  const backUrl =
+    qParams.from === "receive_item"
+      ? makeUrl(
+          `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive/${qParams.deliveryId}`,
+        )
+      : makeUrl(
+          `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive`,
+          qParams,
+        );
 
   const actions = getActions(supplyRequest.status);
 

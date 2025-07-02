@@ -3,11 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
 import {
   AlertTriangleIcon,
+  ArrowRightIcon,
   CheckIcon,
   MoreVertical,
   XIcon,
 } from "lucide-react";
-import { navigate } from "raviger";
+import { navigate, useQueryParams } from "raviger";
 import { ReactNode, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Trans, useTranslation } from "react-i18next";
@@ -41,6 +42,7 @@ import Page from "@/components/Common/Page";
 
 import mutate from "@/Utils/request/mutate";
 import query from "@/Utils/request/query";
+import { makeUrl } from "@/Utils/request/utils";
 import {
   SUPPLY_DELIVERY_CONDITION_COLORS,
   SUPPLY_DELIVERY_STATUS_COLORS,
@@ -102,6 +104,8 @@ export default function ReceiveItem({
     onConfirm: () => {},
     variant: "primary",
   });
+
+  const [qParams] = useQueryParams();
 
   const form = useForm<ReceiveItemForm>({
     resolver: zodResolver(receiveItemSchema),
@@ -198,9 +202,8 @@ export default function ReceiveItem({
   };
 
   const handleCancel = () => {
-    navigate(
-      `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive?tab=receive_items&page=1`,
-    );
+    const path = `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive?tab=receive_items&page=1`;
+    navigate(makeUrl(path, qParams));
   };
 
   const openDialog = (action: ActionType) => {
@@ -389,11 +392,7 @@ export default function ReceiveItem({
               variant="outline"
               size="sm"
               className="size-8 p-0 border-gray-400 shadow-sm text-gray-700"
-              onClick={() =>
-                window.history.length > 2
-                  ? window.history.back()
-                  : handleCancel()
-              }
+              onClick={() => handleCancel()}
             >
               <XIcon className="size-5" />
             </Button>
@@ -850,31 +849,46 @@ export default function ReceiveItem({
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-6 text-sm p-2 space-x-6">
-              <div className="flex flex-col items-start justify-start">
-                <Label className="text-gray-700 text-sm font-medium">
-                  {t("category")}
-                </Label>
-                <div className="font-semibold text-gray-950 text-normal">
-                  {t(delivery.supply_request.category)}
+            <div className="flex flex-wrap gap-6 text-sm p-2 space-x-6 items-end justify-between">
+              <div className="flex gap-6">
+                <div className="flex flex-col items-start justify-start">
+                  <Label className="text-gray-700 text-sm font-medium">
+                    {t("category")}
+                  </Label>
+                  <div className="font-semibold text-gray-950 text-normal">
+                    {t(delivery.supply_request.category)}
+                  </div>
+                </div>
+                <div className="flex flex-col items-start justify-start">
+                  <Label className="text-gray-700 text-sm font-medium">
+                    {t("intent")}
+                  </Label>
+                  <div className="font-semibold text-gray-950 text-normal">
+                    {t(delivery.supply_request.intent)}
+                  </div>
+                </div>
+                <div className="flex flex-col items-start justify-start">
+                  <Label className="text-gray-700 text-sm font-medium">
+                    {t("reason")}
+                  </Label>
+                  <div className="font-semibold text-gray-950 text-normal">
+                    {t(delivery.supply_request.reason)}
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col items-start justify-start">
-                <Label className="text-gray-700 text-sm font-medium">
-                  {t("intent")}
-                </Label>
-                <div className="font-semibold text-gray-950 text-normal">
-                  {t(delivery.supply_request.intent)}
-                </div>
-              </div>
-              <div className="flex flex-col items-start justify-start">
-                <Label className="text-gray-700 text-sm font-medium">
-                  {t("reason")}
-                </Label>
-                <div className="font-semibold text-gray-950 text-normal">
-                  {t(delivery.supply_request.reason)}
-                </div>
-              </div>
+              <Button
+                variant="link"
+                size="sm"
+                className="gap-1 underline hover:text-primary-700"
+                onClick={() =>
+                  navigate(
+                    `/facility/${facilityId}/locations/${locationId}/internal_transfers/requests/${delivery.supply_request?.id}?from=receive_item&deliveryId=${deliveryId}`,
+                  )
+                }
+              >
+                {t("view") + " " + t("request")}{" "}
+                <ArrowRightIcon className="size-4" />
+              </Button>
             </div>
           </div>
         )}

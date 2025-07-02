@@ -21,6 +21,7 @@ import {
 import useFilters from "@/hooks/useFilters";
 
 import query from "@/Utils/request/query";
+import { makeUrl } from "@/Utils/request/utils";
 import { ProductKnowledgeSelect } from "@/pages/Facility/services/inventory/ProductKnowledgeSelect";
 import { ProductKnowledgeStatus } from "@/types/inventory/productKnowledge/productKnowledge";
 import productKnowledgeApi from "@/types/inventory/productKnowledge/productKnowledgeApi";
@@ -121,9 +122,8 @@ export default function SupplyDeliveryTable({
 
   const handleSeeDetails = (deliveryId: string) => {
     if (mode === "receive") {
-      navigate(
-        `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive/${deliveryId}`,
-      );
+      const path = `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive/${deliveryId}`;
+      navigate(makeUrl(path, qParams));
     } else {
       retrieveDelivery(deliveryId);
     }
