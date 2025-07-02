@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { MoreVertical, PlusIcon, X } from "lucide-react";
 import { useNavigate } from "raviger";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import React from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -50,6 +50,7 @@ import {
   SupplyRequestCategory,
   SupplyRequestIntent,
   SupplyRequestPriority,
+  SupplyRequestRead,
   SupplyRequestReason,
   SupplyRequestStatus,
 } from "@/types/inventory/supplyRequest/supplyRequest";
@@ -60,6 +61,7 @@ import locationApi from "@/types/location/locationApi";
 interface Props {
   facilityId: string;
   locationId: string;
+  supplyRequestId?: string;
 }
 
 const supplyRequestItemSchema = z.object({
@@ -80,7 +82,11 @@ const formSchema = z.object({
     .min(1, "At least one request is required"),
 });
 
-export default function RaiseStockRequest({ facilityId, locationId }: Props) {
+export default function RaiseStockRequest({
+  facilityId,
+  locationId,
+  supplyRequestId,
+}: Props) {
   const { t } = useTranslation();
   const { goBack } = useAppHistory();
   const navigate = useNavigate();
@@ -116,6 +122,15 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
     }),
   });
 
+  // Fetch existing supply request data if editing
+  const { data: existingSupplyRequest } = useQuery({
+    queryKey: ["supplyRequest", supplyRequestId],
+    queryFn: query(supplyRequestApi.retrieveSupplyRequest, {
+      pathParams: { supplyRequestId: supplyRequestId! },
+    }),
+    enabled: !!supplyRequestId,
+  });
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -129,6 +144,33 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
       requests: [{ quantity: null as unknown as number, item: "" }],
     },
   });
+
+  // Update form with existing data when fetched
+  useEffect(() => {
+    if (existingSupplyRequest) {
+      const supplyRequest = existingSupplyRequest as SupplyRequestRead;
+      form.reset({
+        status: supplyRequest.status,
+        intent: supplyRequest.intent,
+        category: supplyRequest.category,
+        priority: supplyRequest.priority,
+        reason: supplyRequest.reason,
+        deliver_to: supplyRequest.deliver_to.id,
+        deliver_from: supplyRequest.deliver_from?.id || "",
+        requests: [
+          {
+            item: supplyRequest.item.id,
+            quantity: supplyRequest.quantity,
+          },
+        ],
+      });
+
+      // Set selected products for display
+      const productsMap: Record<string, ProductKnowledgeBase> = {};
+      productsMap[supplyRequest.item.id] = supplyRequest.item;
+      setSelectedProducts(productsMap);
+    }
+  }, [existingSupplyRequest, form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -148,6 +190,7 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
     const datapoints = requests.map((request) => ({
       ...commonData,
       ...request,
+      ...(supplyRequestId ? { id: supplyRequestId } : {}),
     }));
     upsertSupplyRequest({ datapoints });
   }
@@ -164,8 +207,16 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
       value: product.id,
     })) || [];
 
+  const isEditing = !!supplyRequestId;
+  const pageTitle = isEditing
+    ? t("edit_stock_request")
+    : t("raise_stock_request");
+  const pageDescription = t(
+    "request_stock_from_another_store_or_pharmacy_within_the_facility",
+  );
+
   return (
-    <Page title={t("raise_stock_request")} hideTitleOnPage>
+    <Page title={pageTitle} hideTitleOnPage>
       <div className="container mx-auto max-w-3xl">
         <div className="mb-6 relative">
           <Button
@@ -177,14 +228,8 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
             <X className="size-5" />
             <span className="sr-only">{t("close")}</span>
           </Button>
-          <h1 className="text-xl font-semibold text-gray-900">
-            {t("raise_stock_request")}
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            {t(
-              "request_stock_from_another_store_or_pharmacy_within_the_facility",
-            )}
-          </p>
+          <h1 className="text-xl font-semibold text-gray-900">{pageTitle}</h1>
+          <p className="mt-1 text-sm text-gray-600">{pageDescription}</p>
         </div>
 
         <Form {...form}>
@@ -552,7 +597,11 @@ export default function RaiseStockRequest({ facilityId, locationId }: Props) {
                 disabled={isPending}
                 className="rounded-md bg-primary-700 text-white hover:bg-primary-800"
               >
-                {isPending ? t("submitting") : t("submit_request")}
+                {isPending
+                  ? t("submitting")
+                  : isEditing
+                    ? t("update_request")
+                    : t("submit_request")}
               </Button>
             </div>
           </form>

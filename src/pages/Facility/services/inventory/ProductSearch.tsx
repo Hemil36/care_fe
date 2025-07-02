@@ -20,6 +20,7 @@ interface ProductSelectProps {
   disabled?: boolean;
   className?: string;
   onProductSubmit?: (submitFn: () => void) => void;
+  onProductCreate?: (product: ProductRead) => void;
   productKnowledgeId?: string;
   enabled?: boolean;
 }
@@ -30,6 +31,7 @@ export function ProductSearch({
   onChange,
   disabled,
   onProductSubmit,
+  onProductCreate,
   productKnowledgeId,
   enabled = true,
 }: ProductSelectProps) {
@@ -150,6 +152,7 @@ export function ProductSearch({
             hasSetSubmitFunction.current = false;
             onChange(product);
             setSelectedProduct(product);
+            onProductCreate?.(product);
           }}
           onCancel={() => {
             setIsCreatingProduct(false);

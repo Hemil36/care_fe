@@ -131,30 +131,32 @@ export default function ToDispatchSupplyRequestTable({
           <PopoverContent className="w-[200px] p-0" align="start">
             <Command>
               <CommandGroup>
-                {Object.values(SupplyRequestStatus).map((status) => (
-                  <CommandItem
-                    key={status}
-                    value={status}
-                    onSelect={() =>
-                      updateQuery({
-                        status:
+                {Object.values(SupplyRequestStatus)
+                  .filter((status) => status !== SupplyRequestStatus.draft)
+                  .map((status) => (
+                    <CommandItem
+                      key={status}
+                      value={status}
+                      onSelect={() =>
+                        updateQuery({
+                          status:
+                            effectiveStatus === status
+                              ? SupplyRequestStatus.active
+                              : status,
+                        })
+                      }
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
                           effectiveStatus === status
-                            ? SupplyRequestStatus.active
-                            : status,
-                      })
-                    }
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        effectiveStatus === status
-                          ? "opacity-100"
-                          : "opacity-0",
-                      )}
-                    />
-                    {t(status)}
-                  </CommandItem>
-                ))}
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                      {t(status)}
+                    </CommandItem>
+                  ))}
               </CommandGroup>
             </Command>
           </PopoverContent>

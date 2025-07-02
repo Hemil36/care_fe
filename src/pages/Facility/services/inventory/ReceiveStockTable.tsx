@@ -1,8 +1,9 @@
-import { formatDate } from "date-fns";
+import { formatDate, isValid } from "date-fns";
 import { EllipsisVerticalIcon, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,8 +24,10 @@ import {
   MonetaryComponentType,
 } from "@/types/base/monetaryComponent/monetaryComponent";
 
+import { ReceiveStockEntry } from "./utils";
+
 export interface ReceiveStockTableProps {
-  entries: any[];
+  entries: ReceiveStockEntry[];
   form: any;
   setEditingItem: (item: any) => void;
   handleAddItem: () => void;
@@ -68,7 +71,20 @@ export function ReceiveStockTable({
           <Table>
             <TableHeader className="bg-gray-100">
               <TableRow className="divide-x">
-                <TableHead className="w-8"></TableHead>
+                <TableHead className="w-8">
+                  <Checkbox
+                    checked={entries.every((entry) => !!entry._checked)}
+                    onCheckedChange={(checked) => {
+                      form.setValue(
+                        "entries",
+                        entries.map((entry) => ({
+                          ...entry,
+                          _checked: checked,
+                        })),
+                      );
+                    }}
+                  />
+                </TableHead>
                 <TableHead>{t("requested_item")}</TableHead>
                 <TableHead>{t("received_item")}</TableHead>
                 <TableHead>{t("received_quantity")}</TableHead>
@@ -88,14 +104,10 @@ export function ReceiveStockTable({
                   <TableRow key={idx} className="divide-x">
                     {/* Checkbox */}
                     <TableCell>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={!!entry._checked}
-                        onChange={(e) => {
-                          form.setValue(
-                            `entries.${idx}._checked`,
-                            e.target.checked,
-                          );
+                        onCheckedChange={(checked) => {
+                          form.setValue(`entries.${idx}._checked`, checked);
                         }}
                       />
                     </TableCell>
@@ -105,13 +117,15 @@ export function ReceiveStockTable({
                         t("additional_item", { count: 1 })}
                       <div className="text-xs text-gray-500">
                         {entry.supplied_item_quantity}{" "}
-                        {entry.supply_request?.item?.unit || ""}
+                        {entry.supply_request?.item?.code?.display || ""}
                       </div>
                     </TableCell>
                     {/* Received Item */}
                     <TableCell>
                       {entry.supplied_item?.id ? (
-                        <span>{entry.supplied_item.name}</span>
+                        <span>
+                          {entry.supplied_item.product_knowledge.name}
+                        </span>
                       ) : (
                         <Button
                           variant="outline"
@@ -133,30 +147,37 @@ export function ReceiveStockTable({
                     </TableCell>
                     {/* Expiry Date */}
                     <TableCell>
-                      {formatDate(
-                        new Date(entry.supplied_item?.expiration_date),
-                        "dd/MM/yy",
-                      ) || "-"}
+                      {entry.supplied_item?.expiration_date &&
+                      isValid(new Date(entry.supplied_item?.expiration_date))
+                        ? formatDate(
+                            new Date(entry.supplied_item?.expiration_date),
+                            "dd/MM/yy",
+                          )
+                        : "-"}
                     </TableCell>
                     {/* Tax */}
                     <TableCell>{tax}%</TableCell>
                     {/* Discount */}
-                    <TableCell className="flex flex-col gap-1">
-                      {discountComponents && discountComponents.length > 0 ? (
-                        discountComponents.map((component) => (
-                          <div
-                            key={component.code?.code}
-                            className="flex flex-row gap-1 text-xs"
-                          >
-                            <span>{component.code?.display || "Discount"}</span>
-                            <span>
-                              - {component.amount || `${component.factor}%`}
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        <span className="text-xs text-gray-500">-</span>
-                      )}
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        {discountComponents && discountComponents.length > 0 ? (
+                          discountComponents.map((component) => (
+                            <div
+                              key={component.code?.code}
+                              className="flex flex-row gap-1 text-xs"
+                            >
+                              <span>
+                                {component.code?.display || "Discount"}
+                              </span>
+                              <span>
+                                - {component.amount || `${component.factor}%`}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <span className="text-xs text-gray-500">-</span>
+                        )}
+                      </div>
                     </TableCell>
                     {/* Amount */}
                     <TableCell>{amount}</TableCell>

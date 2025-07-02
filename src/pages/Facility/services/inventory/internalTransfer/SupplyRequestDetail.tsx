@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
 import { MoreVertical } from "lucide-react";
+import { Link } from "raviger";
 import { useQueryParams } from "raviger";
 import { ReactNode, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
@@ -254,33 +255,43 @@ export default function SupplyRequestDetail({
           <BackButton to={backUrl} />
         </div>
 
-        {actions.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="border-gray-400 shadow-sm"
-              >
-                <MoreVertical className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {actions.map(
-                (action) =>
-                  action && (
-                    <DropdownMenuItem
-                      key={action.label}
-                      onClick={action.action}
-                      className="cursor-pointer hover:bg-gray-100 focus:bg-gray-200 capitalize"
-                    >
-                      {action.label}
-                    </DropdownMenuItem>
-                  ),
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <div className="flex justify-between items-center gap-1">
+          {supplyRequest.status === SupplyRequestStatus.draft && (
+            <Button variant="outline" asChild className="w-full">
+              <Link href={`/internal_transfers/requests/${id}/edit`}>
+                {t("edit")}
+              </Link>
+            </Button>
+          )}
+
+          {actions.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border-gray-400 shadow-sm"
+                >
+                  <MoreVertical className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {actions.map(
+                  (action) =>
+                    action && (
+                      <DropdownMenuItem
+                        key={action.label}
+                        onClick={action.action}
+                        className="cursor-pointer hover:bg-gray-100 focus:bg-gray-200 capitalize"
+                      >
+                        {action.label}
+                      </DropdownMenuItem>
+                    ),
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
 
       <div>

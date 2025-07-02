@@ -182,6 +182,13 @@ const getRoutes = (facilityId: string, locationId: string) => ({
       id={id}
     />
   ),
+  "/internal_transfers/requests/:id/edit": ({ id }: { id: string }) => (
+    <RaiseStockRequest
+      facilityId={facilityId}
+      locationId={locationId}
+      supplyRequestId={id}
+    />
+  ),
 
   // Inventory - External Supply
   "/external_supply/purchase_orders": () => (

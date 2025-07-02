@@ -45,6 +45,7 @@ import { Organization } from "@/types/organization/organization";
 import { ProductKnowledgeSelect } from "./ProductKnowledgeSelect";
 import { ReceiveStockTable } from "./ReceiveStockTable";
 import { SupplyRequestSelect } from "./SupplyRequestSelect";
+import { EditingItem, ReceiveStockEntry } from "./utils";
 
 const itemReference = z.object({
   id: z.string(),
@@ -59,19 +60,6 @@ const supplyRequestReference = z.object({
 });
 
 const objectReference = z.object({ id: z.string(), name: z.string() });
-
-interface ReceiveStockEntry {
-  supply_request: SupplyRequestRead | null;
-  supplied_item: ProductRead | null;
-  supplied_item_quantity: number;
-  _checked?: boolean;
-  _product_knowledge: ProductKnowledgeBase | null;
-}
-
-interface EditingItem {
-  entry: ReceiveStockEntry;
-  index: number | null;
-}
 
 const receiveStockSchema = z.object({
   supplier: objectReference.nullable(),
@@ -240,7 +228,7 @@ export function ReceiveStock({
       </Form>
       <div className="mt-2">
         <ReceiveStockTable
-          entries={entries}
+          entries={entries as ReceiveStockEntry[]}
           form={form}
           setEditingItem={setEditingItem}
           handleAddItem={handleAddItem}
@@ -313,7 +301,6 @@ function AddItemForm({
       // If product creation is in progress, trigger the submit
       productFormSubmit();
     } else {
-      // No product creation needed, save the entry directly
       onSuccess(currentEntry, index);
       setOpen(false);
     }
@@ -449,6 +436,15 @@ function AddItemForm({
               onProductSubmit={(submitFn) => {
                 setProductFormSubmit(() => submitFn);
                 setIsProductCreationInProgress(true);
+              }}
+              onProductCreate={(product) => {
+                const updatedEntry = {
+                  ...currentEntry,
+                  supplied_item: product,
+                };
+                setCurrentEntry(updatedEntry);
+                onSuccess(updatedEntry, index);
+                setOpen(false);
               }}
               enabled={open}
               productKnowledgeId={currentEntry._product_knowledge?.id || ""}
