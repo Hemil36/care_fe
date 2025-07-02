@@ -247,7 +247,7 @@ export const ObservationVisualizer = ({
       {processedDataByGroup.map((group, groupIndex) => (
         <Card key={groupIndex} className="p-4">
           <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center">
               <h3 className="text-sm font-medium">{group.title}</h3>
               <Popover>
                 <PopoverTrigger>
