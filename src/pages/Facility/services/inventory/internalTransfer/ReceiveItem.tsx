@@ -203,7 +203,8 @@ export default function ReceiveItem({
 
   const handleCancel = () => {
     const path = `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive`;
-    navigate(makeUrl(path, qParams));
+    const { deliveryId: _, from: __, ...cleanParams } = qParams;
+    navigate(makeUrl(path, cleanParams));
   };
 
   const openDialog = (action: ActionType) => {
@@ -884,7 +885,7 @@ export default function ReceiveItem({
                   navigate(
                     makeUrl(
                       `/facility/${facilityId}/locations/${locationId}/internal_transfers/requests/${delivery.supply_request?.id}`,
-                      qParams,
+                      { ...qParams, from: "receive_item", deliveryId },
                     ),
                   )
                 }
