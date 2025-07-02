@@ -350,7 +350,7 @@ export default function ServiceRequestShow({
                     className="font-semibold"
                     onClick={() =>
                       navigate(
-                        `/facility/${facilityId}/diagnostic_reports/${request.diagnostic_reports[0].id}`,
+                        `/facility/${facilityId}/patient/${request.encounter.patient.id}/diagnostic_reports/${request.diagnostic_reports[0].id}`,
                       )
                     }
                   >
@@ -368,6 +368,7 @@ export default function ServiceRequestShow({
             <PatientHeader
               patient={request.encounter.patient}
               facilityId={facilityId}
+              encounterId={request.encounter.id}
             />
           </div>
 
@@ -524,6 +525,7 @@ export default function ServiceRequestShow({
                 diagnosticReports[0]?.status !==
                   DiagnosticReportStatus.final) && (
                 <DiagnosticReportForm
+                  patientId={request.encounter.patient.id}
                   facilityId={facilityId}
                   serviceRequestId={serviceRequestId}
                   observationDefinitions={observationRequirements}
@@ -538,6 +540,7 @@ export default function ServiceRequestShow({
           {diagnosticReports.length > 0 && (
             <DiagnosticReportReview
               facilityId={facilityId}
+              patientId={request.encounter.patient.id}
               serviceRequestId={serviceRequestId}
               diagnosticReports={diagnosticReports}
             />
