@@ -202,7 +202,7 @@ export default function ReceiveItem({
   };
 
   const handleCancel = () => {
-    const path = `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive?tab=receive_items&page=1`;
+    const path = `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive`;
     navigate(makeUrl(path, qParams));
   };
 
@@ -882,7 +882,10 @@ export default function ReceiveItem({
                 className="gap-1 underline hover:text-primary-700"
                 onClick={() =>
                   navigate(
-                    `/facility/${facilityId}/locations/${locationId}/internal_transfers/requests/${delivery.supply_request?.id}?from=receive_item&deliveryId=${deliveryId}`,
+                    makeUrl(
+                      `/facility/${facilityId}/locations/${locationId}/internal_transfers/requests/${delivery.supply_request?.id}`,
+                      qParams,
+                    ),
                   )
                 }
               >
@@ -895,7 +898,7 @@ export default function ReceiveItem({
 
         <ConfirmActionDialog
           open={dialog.open}
-          onOpenChange={(open) => setDialog({ ...dialog, open })}
+          onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
           title={dialog.title}
           description={dialog.description}
           onConfirm={dialog.onConfirm}

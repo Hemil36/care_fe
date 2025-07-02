@@ -3,7 +3,7 @@ import { formatDate } from "date-fns";
 import { MoreVertical } from "lucide-react";
 import { Link } from "raviger";
 import { useQueryParams } from "raviger";
-import { ReactNode, useState } from "react";
+import React, { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -102,13 +102,13 @@ export default function SupplyRequestDetail({
   const [dialog, setDialog] = useState<{
     open: boolean;
     title: string;
-    description: ReactNode;
+    description: React.ReactNode;
     onConfirm: () => void;
-    variant: "primary" | "destructive" | "default";
+    variant: "primary" | "destructive" | "default" | "outline_primary";
   }>({
     open: false,
     title: "",
-    description: null,
+    description: "",
     onConfirm: () => {},
     variant: "primary",
   });
@@ -131,7 +131,7 @@ export default function SupplyRequestDetail({
 
   const deliveries = deliveriesResponse?.results || [];
 
-  const { mutate: updateSupplyRequestStatus } = useMutation({
+  const { mutate: updateSupplyRequest } = useMutation({
     mutationFn: mutate(supplyRequestApi.updateSupplyRequest, {
       pathParams: { supplyRequestId: id },
     }),
@@ -139,7 +139,7 @@ export default function SupplyRequestDetail({
       queryClient.invalidateQueries({ queryKey: ["supplyRequest", id] });
       queryClient.invalidateQueries({ queryKey: ["supplyRequests"] });
       toast.success(t("status_updated_successfully"));
-      setDialog({ ...dialog, open: false });
+      setDialog((d) => ({ ...d, open: false }));
     },
     onError: () => {
       toast.error(t("error_updating_status"));
@@ -159,7 +159,7 @@ export default function SupplyRequestDetail({
       deliver_to: supplyRequest.deliver_to.id,
       item: supplyRequest.item.id,
     };
-    updateSupplyRequestStatus(data);
+    updateSupplyRequest(data);
   };
 
   const openDialog = (newStatus: SupplyRequestStatus) => {
@@ -231,6 +231,35 @@ export default function SupplyRequestDetail({
       .filter(Boolean);
   };
 
+  const hasCompletedDelivery = deliveries.some(
+    (delivery) => delivery.status === "completed",
+  );
+
+  const handleMarkAsFullyReceived = () => {
+    if (!supplyRequest) return;
+
+    setDialog({
+      open: true,
+      title: t("mark_as_fully_received"),
+      description: (
+        <>
+          <Trans
+            i18nKey="confirm_action_description"
+            values={{
+              action: t("mark_as_fully_received").toLowerCase(),
+            }}
+            components={{
+              1: <strong className="text-gray-900" />,
+            }}
+          />{" "}
+          {t("this_action_cannot_be_undone")}
+        </>
+      ),
+      onConfirm: () => handleStatusUpdate(SupplyRequestStatus.completed),
+      variant: "primary",
+    });
+  };
+
   if (isLoading || !supplyRequest) {
     return (
       <Page title={t("loading")} hideTitleOnPage>
@@ -247,6 +276,7 @@ export default function SupplyRequestDetail({
     qParams.from === "receive_item"
       ? makeUrl(
           `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive/${qParams.deliveryId}`,
+          qParams,
         )
       : makeUrl(
           `/facility/${facilityId}/locations/${locationId}/internal_transfers/to_receive`,
@@ -301,15 +331,28 @@ export default function SupplyRequestDetail({
         </div>
       </div>
 
-      <div>
-        <h5 className="text-lg font-bold text-gray-950">
-          {t("request") + " " + t("raised")}
-        </h5>
-        <p className="text-gray-600">
-          {t("request_raised_by")} {supplyRequest.deliver_to?.name}
-          {", "}
-          {`${deliveries.length} ${t("deliveries") + " " + t("have") + " " + t("been") + " " + t("received")}`}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h5 className="text-lg font-bold text-gray-950">
+            {t("request") + " " + t("raised")}
+          </h5>
+          <p className="text-gray-600">
+            {t("request_raised_by")} {supplyRequest.deliver_to?.name}
+            {", "}
+            {`${deliveries.length} ${t("deliveries") + " " + t("have") + " " + t("been") + " " + t("received")}`}
+          </p>
+        </div>
+        {hasCompletedDelivery &&
+          (supplyRequest.status === SupplyRequestStatus.active ||
+            supplyRequest.status === SupplyRequestStatus.processed) && (
+            <Button
+              variant="outline_primary"
+              onClick={handleMarkAsFullyReceived}
+              className="font-semibold"
+            >
+              {t("mark_as_fully_received")}
+            </Button>
+          )}
       </div>
 
       <Card className="shadow-sm rounded-md mt-4">
@@ -461,7 +504,7 @@ export default function SupplyRequestDetail({
       </div>
       <ConfirmActionDialog
         open={dialog.open}
-        onOpenChange={(open) => setDialog({ ...dialog, open })}
+        onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
         title={dialog.title}
         description={dialog.description}
         onConfirm={dialog.onConfirm}
