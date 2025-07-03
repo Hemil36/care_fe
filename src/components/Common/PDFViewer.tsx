@@ -4,6 +4,10 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 
 import { cn } from "@/lib/utils";
 
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 export default function PDFViewer(
   props: Readonly<{
     url: string;
@@ -13,10 +17,6 @@ export default function PDFViewer(
     className?: string;
   }>,
 ) {
-  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.mjs",
-    import.meta.url,
-  ).toString();
   return (
     <div className="flex h-full flex-col items-center justify-center">
       <div className={cn("w-full overflow-auto", props.className)}>
