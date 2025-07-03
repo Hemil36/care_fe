@@ -9,7 +9,7 @@ import { JSDOM } from "jsdom";
 import { marked } from "marked";
 import { createRequire } from "node:module";
 import path from "path";
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, normalizePath } from "vite";
 import checker from "vite-plugin-checker";
 import { VitePWA } from "vite-plugin-pwa";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -18,12 +18,10 @@ import { z } from "zod";
 import { careConsoleArt } from "./plugins/careConsoleArt";
 import { treeShakeCareIcons } from "./plugins/treeShakeCareIcons";
 
-const pdfWorkerPath = path.join(
-  path.dirname(
-    createRequire(import.meta.url).resolve("pdfjs-dist/package.json"),
-  ),
-  "build",
-  "pdf.worker.min.mjs",
+const require = createRequire(import.meta.url);
+
+const pdfjsDistPath = normalizePath(
+  path.dirname(require.resolve("pdfjs-dist/package.json")),
 );
 
 // Convert goal description markdown to HTML
@@ -208,7 +206,7 @@ export default defineConfig(({ mode }) => {
       viteStaticCopy({
         targets: [
           {
-            src: pdfWorkerPath,
+            src: pdfjsDistPath,
             dest: "",
           },
         ],
