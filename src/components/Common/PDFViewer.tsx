@@ -8,6 +8,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url,
 ).toString();
+
 export default function PDFViewer(
   props: Readonly<{
     url: string;
@@ -18,14 +19,13 @@ export default function PDFViewer(
   }>,
 ) {
   return (
-    <div className="flex h-full flex-col items-center justify-center">
-      <div className={cn("w-full overflow-auto", props.className)}>
+    <div className="flex h-full w-full flex-col items-center justify-center overflow-auto">
+      <div className="overflow-auto max-w-full max-h-full max-md:max-w-[50vw]">
         <Document
           file={props.url}
           onLoadSuccess={({ numPages }) =>
             props.onDocumentLoadSuccess(numPages)
           }
-          className="w-full"
         >
           <Page
             pageNumber={props.pageNumber}
