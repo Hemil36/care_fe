@@ -11,6 +11,7 @@ import path from "path";
 import { defineConfig, loadEnv } from "vite";
 import checker from "vite-plugin-checker";
 import { VitePWA } from "vite-plugin-pwa";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 import { z } from "zod";
 
 import { careConsoleArt } from "./plugins/careConsoleArt";
@@ -195,11 +196,14 @@ export default defineConfig(({ mode }) => {
             .describe("Optional: Space-separated list of CDN URLs"),
         },
       }),
-      // viteStaticCopy({
-      //   targets: [{
-
-      //   }],
-      // }),
+      viteStaticCopy({
+        targets: [
+          {
+            src: "node_modules/pdfjs-dist/build/pdf.worker.min.mjs",
+            dest: "",
+          },
+        ],
+      }),
       react(),
       reactScan({
         enable:
