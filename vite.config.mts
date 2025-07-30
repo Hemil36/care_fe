@@ -7,22 +7,14 @@ import DOMPurify from "dompurify";
 import fs from "fs";
 import { JSDOM } from "jsdom";
 import { marked } from "marked";
-import { createRequire } from "node:module";
 import path from "path";
-import { defineConfig, loadEnv, normalizePath } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import checker from "vite-plugin-checker";
 import { VitePWA } from "vite-plugin-pwa";
-import { viteStaticCopy } from "vite-plugin-static-copy";
 import { z } from "zod";
 
 import { careConsoleArt } from "./plugins/careConsoleArt";
 import { treeShakeCareIcons } from "./plugins/treeShakeCareIcons";
-
-const require = createRequire(import.meta.url);
-
-const pdfjsDistPath = normalizePath(
-  path.dirname(require.resolve("pdfjs-dist/package.json")),
-);
 
 // Convert goal description markdown to HTML
 function getDescriptionHtml(description: string) {
@@ -203,14 +195,11 @@ export default defineConfig(({ mode }) => {
             .describe("Optional: Space-separated list of CDN URLs"),
         },
       }),
-      viteStaticCopy({
-        targets: [
-          {
-            src: pdfjsDistPath,
-            dest: "",
-          },
-        ],
-      }),
+      // viteStaticCopy({
+      //   targets: [{
+
+      //   }],
+      // }),
       react(),
       reactScan({
         enable:
