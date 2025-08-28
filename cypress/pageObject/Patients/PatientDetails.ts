@@ -12,7 +12,8 @@ export class PatientDetails {
   }
 
   selectUserToAssign(username: string) {
-    cy.wait(1000);
+    // Wait for the selector container to be ready instead of arbitrary timeout
+    cy.get('[data-cy="patient-user-selector-container"]').should("be.visible");
     cy.typeAndSelectOption(
       '[data-cy="patient-user-selector-container"]',
       username,
@@ -36,7 +37,8 @@ export class PatientDetails {
 
   verifyUserAssignmentSuccess() {
     cy.verifyNotification("User added to patient successfully");
-    cy.wait(1000);
+    // Wait for the notification to be processed and UI to update
+    cy.get('[data-cy="patient-user-remove-button"]').should("be.visible");
     return this;
   }
 

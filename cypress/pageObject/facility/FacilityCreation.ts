@@ -20,7 +20,8 @@ export class FacilityCreation {
       "View facility details",
     );
     cy.get("[data-sidebar='rail']").click();
-    cy.wait(1000);
+    // Wait for sidebar animation to complete by checking for collapsed state
+    cy.get("[data-sidebar='rail']").should("have.attr", "data-state", "collapsed");
     return this;
   }
 

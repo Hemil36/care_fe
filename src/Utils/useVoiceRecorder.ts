@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const useVoiceRecorder = (handleMicPermission: (allowed: boolean) => void) => {
@@ -8,14 +8,39 @@ const useVoiceRecorder = (handleMicPermission: (allowed: boolean) => void) => {
   const [blob, setBlob] = useState<Blob | null>(null);
   const [waveform, setWaveform] = useState<number[]>([]); // Decibel waveform
 
-  let audioContext: AudioContext | null = null;
-  let analyser: AnalyserNode | null = null;
-  let source: MediaStreamAudioSourceNode | null = null;
+  // Use useRef to persist audio objects across renders and prevent memory leaks
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!isRecording && recorder && audioURL) {
       setRecorder(null);
     }
+
+    // Cleanup function to prevent memory leaks
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      if (sourceRef.current) {
+        sourceRef.current.disconnect();
+        sourceRef.current = null;
+      }
+      if (analyserRef.current) {
+        analyserRef.current.disconnect();
+        analyserRef.current = null;
+      }
+      if (
+        audioContextRef.current &&
+        audioContextRef.current.state !== "closed"
+      ) {
+        audioContextRef.current.close().catch(console.error);
+        audioContextRef.current = null;
+      }
+    };
   }, [isRecording, recorder, audioURL]);
 
   useEffect(() => {
@@ -48,8 +73,9 @@ const useVoiceRecorder = (handleMicPermission: (allowed: boolean) => void) => {
     } else {
       recorder.stream.getTracks().forEach((i) => i.stop());
       recorder.stop();
-      if (audioContext) {
-        audioContext.close();
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(console.error);
+        audioContextRef.current = null;
       }
     }
 
@@ -63,38 +89,48 @@ const useVoiceRecorder = (handleMicPermission: (allowed: boolean) => void) => {
     recorder.addEventListener("dataavailable", handleData);
     return () => {
       recorder.removeEventListener("dataavailable", handleData);
-      if (audioContext) {
-        audioContext.close();
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(console.error);
+        audioContextRef.current = null;
       }
     };
   }, [recorder, isRecording]);
 
   const setupAudioAnalyser = () => {
-    let animationFrameId: number;
-    audioContext = new (window.AudioContext ||
-      (window as any).webkitAudioContext)();
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 32;
-    const bufferLength = analyser.frequencyBinCount;
+    const AudioContextClass = window.AudioContext || 
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    audioContextRef.current = new AudioContextClass();
+    analyserRef.current = audioContextRef.current.createAnalyser();
+    analyserRef.current.fftSize = 32;
+    const bufferLength = analyserRef.current.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
-    source = audioContext.createMediaStreamSource(
+    sourceRef.current = audioContextRef.current.createMediaStreamSource(
       recorder?.stream as MediaStream,
     );
-    source.connect(analyser);
+    sourceRef.current.connect(analyserRef.current);
 
     const updateWaveform = () => {
-      if (isRecording) {
-        analyser?.getByteFrequencyData(dataArray);
+      if (isRecording && analyserRef.current) {
+        analyserRef.current.getByteFrequencyData(dataArray);
         const normalizedWaveform = Array.from(dataArray).map((value) =>
           Math.min(100, (value / 255) * 100),
         );
         setWaveform(normalizedWaveform);
-        animationFrameId = requestAnimationFrame(updateWaveform);
+        animationFrameRef.current = requestAnimationFrame(updateWaveform);
       } else {
-        cancelAnimationFrame(animationFrameId);
-        source?.disconnect();
-        analyser?.disconnect();
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
+        if (sourceRef.current) {
+          sourceRef.current.disconnect();
+          sourceRef.current = null;
+        }
+        if (analyserRef.current) {
+          analyserRef.current.disconnect();
+          analyserRef.current = null;
+        }
       }
     };
 
@@ -114,6 +150,24 @@ const useVoiceRecorder = (handleMicPermission: (allowed: boolean) => void) => {
     setAudioURL("");
     setBlob(null);
     setWaveform([]);
+
+    // Cleanup audio resources when resetting
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (sourceRef.current) {
+      sourceRef.current.disconnect();
+      sourceRef.current = null;
+    }
+    if (analyserRef.current) {
+      analyserRef.current.disconnect();
+      analyserRef.current = null;
+    }
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      audioContextRef.current.close().catch(console.error);
+      audioContextRef.current = null;
+    }
   };
 
   return {

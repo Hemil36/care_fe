@@ -125,7 +125,8 @@ export class PatientFiles {
       .should("be.visible")
       .should("be.enabled")
       .click();
-    cy.wait(2000);
+    // Wait for recording state to change instead of arbitrary timeout
+    cy.get('[data-cy="stop-recording-button"]').should("be.visible");
     return this;
   }
 
@@ -134,7 +135,8 @@ export class PatientFiles {
       .should("be.visible")
       .should("be.enabled")
       .click();
-    cy.wait(1000);
+    // Wait for save button to appear instead of arbitrary timeout
+    cy.get('[data-cy="save-recording-button"]').should("be.visible");
     return this;
   }
 
@@ -145,7 +147,8 @@ export class PatientFiles {
 
   clickStartAgainButton() {
     cy.get('[data-cy="start-again-button"]').click();
-    cy.wait(2000);
+    // Wait for start recording button to become available instead of arbitrary timeout
+    cy.get('[data-cy="start-recording-button"]').should("be.visible").should("be.enabled");
     return this;
   }
 
